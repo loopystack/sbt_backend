@@ -1,0 +1,76 @@
+import React, { useState } from "react";
+
+export default function LeftSidebar() {
+  const [selectedCountry, setSelectedCountry] = useState("United States");
+  
+  // Function to get flag URL
+  const getFlagUrl = (flagCode: string) => {
+    try {
+      return new URL(`../assets/flags/${flagCode}.svg`, import.meta.url).href;
+    } catch {
+      return '';
+    }
+  };
+  
+  const countries = [
+    { name: "United States", flag: "us" },
+    { name: "Ukraine", flag: "ua" },
+    { name: "Turkey", flag: "tr" },
+    { name: "Sweden", flag: "se" },
+    { name: "Slovenia", flag: "si" },
+    { name: "Slovakia", flag: "sl" },
+    { name: "Russia", flag: "ru" },
+    { name: "Romania", flag: "ro" },
+    { name: "Portugal", flag: "pt" },
+    { name: "Poland", flag: "pl" },
+    { name: "Norway", flag: "no" },
+    { name: "Netherlands", flag: "nl" },
+    { name: "Japan", flag: "jp" },
+    { name: "Italy", flag: "it" },
+    { name: "Iceland", flag: "is" },
+    { name: "Ireland", flag: "ie" },
+    { name: "India", flag: "in" },
+    { name: "Hungary", flag: "hu" },
+    { name: "Greece", flag: "gr" },
+    { name: "South Africa", flag: "za" },
+    { name: "Uruguay", flag: "uy" },
+    { name: "Uzbekistan", flag: "uz" }
+  ];
+
+  return (
+    <aside className="w-72 bg-surface border-r border-border p-4 space-y-6">
+      {/* Country Selector */}
+      <div>
+        <h3 className="text-sm font-semibold text-muted mb-3">COUNTRIES</h3>
+        <div className="space-y-2 max-h-200 overflow-y-auto">
+          {countries.map((country) => (
+            <button
+              key={country.name}
+              onClick={() => setSelectedCountry(country.name)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 ${
+                selectedCountry === country.name
+                  ? "bg-accent text-white"
+                  : "text-text hover:bg-white/5"
+              }`}
+            >
+              <img 
+                src={getFlagUrl(country.flag)}
+                alt={`${country.name} flag`}
+                className="w-5 h-4 object-contain"
+                onError={(e) => {
+                  // Fallback to text if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  const fallback = document.createElement('span');
+                  fallback.textContent = '🏳️';
+                  fallback.className = 'text-lg';
+                  e.currentTarget.parentNode?.insertBefore(fallback, e.currentTarget);
+                }}
+              />
+              <span>{country.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
