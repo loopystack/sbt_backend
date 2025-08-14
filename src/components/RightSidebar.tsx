@@ -17,19 +17,19 @@ export default function RightSidebar() {
     {
       id: "1",
       title: "Premier League",
-      image: "/src/assets/Favourite_league/1.jpg",
+      image: "/assets/Favourite_league/1.jpg",
       description: "England's top football division"
     },
     {
       id: "2", 
       title: "La Liga",
-      image: "/src/assets/Favourite_league/2.jpg",
+      image: "/assets/Favourite_league/2.jpg",
       description: "Spain's premier football league"
     },
     {
       id: "3",
       title: "Bundesliga",
-      image: "/src/assets/Favourite_league/3.jpg", 
+      image: "/assets/Favourite_league/3.jpg", 
       description: "Germany's top football competition"
     }
   ];

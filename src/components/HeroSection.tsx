@@ -50,7 +50,7 @@ export default function HeroSection() {
         {/* Left Side - Image positioned absolutely to align with card edges */}
         <div className="hidden lg:block absolute left-0 bottom-0 ">
           <img 
-            src="/src/assets/LeftMan.png" 
+            src="/assets/LeftMan.png" 
             alt="Betting Expert" 
             className="object-contain rounded-xl shadow-lg"
           />
