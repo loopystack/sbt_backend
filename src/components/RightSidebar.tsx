@@ -43,7 +43,7 @@ export default function RightSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-surface border-l border-border p-4 space-y-6">
+    <aside className="w-64 xl:w-72 bg-surface border-l border-border p-4 space-y-6">
       {/* FAVOURITES League Cards */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-3">FAVOURITES</h3>
@@ -51,7 +51,7 @@ export default function RightSidebar() {
           {favouriteLeagues.map((league) => (
             <div key={league.id} className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group">
               {/* League Image */}
-              <div className="relative h-24 overflow-hidden">
+              <div className="relative h-20 xl:h-24 overflow-hidden">
                 <img 
                   src={league.image} 
                   alt={league.title}
@@ -62,8 +62,8 @@ export default function RightSidebar() {
               
               {/* League Info */}
               <div className="p-3 space-y-2">
-                <h4 className="text-sm font-semibold text-text">{league.title}</h4>
-                <p className="text-xs text-muted">{league.description}</p>
+                <h4 className="text-sm font-semibold text-text truncate">{league.title}</h4>
+                <p className="text-xs text-muted line-clamp-2">{league.description}</p>
                 <button className="w-full bg-accent text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-accent/90 transition-colors">
                   View Matches
                 </button>
@@ -102,13 +102,13 @@ export default function RightSidebar() {
       {/* Alerts */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-3">ALERTS</h3>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {alerts.map((alert) => (
-            <div key={alert.id} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border border-gray-700 hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group hover:border-accent/30">
+            <div key={alert.id} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-3 xl:p-4 border border-gray-700 hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group hover:border-accent/30">
               {/* Alert Header with Icon and Time */}
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                <div className="flex items-center gap-2 xl:gap-3">
+                  <div className={`w-6 h-6 xl:w-8 xl:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     alert.type === 'odds' ? 'bg-gradient-to-br from-yellow-500 to-orange-600' :
                     alert.type === 'match' ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 
                     'bg-gradient-to-br from-green-500 to-green-600'
@@ -116,17 +116,17 @@ export default function RightSidebar() {
                     {alert.type === 'odds' ? '📊' : 
                      alert.type === 'match' ? '⚽' : '🎁'}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-100 leading-tight">{alert.message}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-100 leading-tight line-clamp-2">{alert.message}</p>
                     <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-gray-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-gray-500 rounded-full flex-shrink-0"></span>
                       {alert.time}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => removeAlert(alert.id)}
-                  className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-1 hover:bg-red-900/30 rounded-full group-hover:opacity-100 opacity-0"
+                  className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-1 hover:bg-red-900/30 rounded-full group-hover:opacity-100 opacity-0 flex-shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -135,7 +135,7 @@ export default function RightSidebar() {
               </div>
               
               {/* Alert Type Indicator */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     alert.type === 'odds' ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-700/50' :
@@ -148,7 +148,7 @@ export default function RightSidebar() {
                 </div>
                 
                 {/* Action Button */}
-                <button className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                <button className={`px-2 xl:px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex-shrink-0 ${
                   alert.type === 'odds' ? 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-600/25' :
                   alert.type === 'match' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25' : 
                   'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25'

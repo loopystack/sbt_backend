@@ -38,11 +38,11 @@ export default function LeftSidebar() {
   ];
 
   return (
-    <aside className="w-72 bg-surface border-r border-border p-4 space-y-6">
+    <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">
       {/* Country Selector */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-3">COUNTRIES</h3>
-        <div className="space-y-2 max-h-200 overflow-y-auto">
+        <div className="space-y-2 max-h-200 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {countries.map((country) => (
             <button
               key={country.name}
@@ -56,7 +56,7 @@ export default function LeftSidebar() {
               <img 
                 src={getFlagUrl(country.flag)}
                 alt={`${country.name} flag`}
-                className="w-5 h-4 object-contain"
+                className="w-5 h-4 object-contain flex-shrink-0"
                 onError={(e) => {
                   // Fallback to text if image fails to load
                   e.currentTarget.style.display = 'none';
@@ -66,7 +66,7 @@ export default function LeftSidebar() {
                   e.currentTarget.parentNode?.insertBefore(fallback, e.currentTarget);
                 }}
               />
-              <span>{country.name}</span>
+              <span className="truncate">{country.name}</span>
             </button>
           ))}
         </div>

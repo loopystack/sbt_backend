@@ -87,16 +87,16 @@ export default function OddsTable() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-text">Live Matches & Odds</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-text">Live Matches & Odds</h2>
         
         {/* Market Selector */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {markets.map((market) => (
             <button
               key={market}
               onClick={() => setSelectedMarket(market)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 selectedMarket === market
                   ? "bg-accent text-white shadow-lg"
                   : "bg-surface text-muted hover:text-text hover:bg-surface/80 border border-border"
@@ -108,7 +108,53 @@ export default function OddsTable() {
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl overflow-hidden">
+      {/* Mobile Cards View */}
+      <div className="block lg:hidden space-y-3">
+        {matches.map((match) => (
+          <div key={match.id} className="bg-surface border border-border rounded-xl p-4">
+            {/* Match Header */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-text text-sm sm:text-base leading-tight line-clamp-2">
+                  {match.teams}
+                </h3>
+                <p className="text-xs sm:text-sm text-muted mt-1">{match.sport} • {match.league}</p>
+              </div>
+              <div className="flex flex-col items-end gap-2 ml-3">
+                <span className="text-xs sm:text-sm font-semibold text-text">{match.time}</span>
+                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(match.status)}`}>
+                  {match.status}
+                </span>
+              </div>
+            </div>
+            
+            {/* Odds Grid */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {match.bookmakers.map((bookmaker, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-xs text-muted mb-1">{bookmaker.name}</div>
+                  <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.home}</div>
+                  <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.away}</div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Best Odds & Action */}
+            <div className="flex items-center justify-between pt-3 border-t border-border/50">
+              <div className="text-center">
+                <div className="text-xs text-muted">Best Odds</div>
+                <div className="text-sm font-bold text-accent">+155 / -260</div>
+              </div>
+              <button className="px-3 sm:px-4 py-2 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors hover:scale-105">
+                Compare
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block bg-surface border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-[1000px] w-full">
             <thead>
