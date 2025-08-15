@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import newlogo from "@/images/newlogo.png";
 
@@ -8,6 +8,29 @@ export default function Navigation() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeSport, setActiveSport] = useState("Football");
   const [showMoreSports, setShowMoreSports] = useState(false);
+  const moreSportsRef = useRef<HTMLDivElement>(null);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Click outside handler for more sports panel
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isOutsidePanel = moreSportsRef.current && !moreSportsRef.current.contains(target);
+      const isOutsideButton = moreButtonRef.current && !moreButtonRef.current.contains(target);
+      
+      if (isOutsidePanel && isOutsideButton) {
+        setShowMoreSports(false);
+      }
+    };
+
+    if (showMoreSports) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreSports]);
 
   // Update active tab based on current route
   useEffect(() => {
@@ -211,27 +234,27 @@ export default function Navigation() {
               </button>
             ))}
 
-            {/* More dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowMoreSports(!showMoreSports)}
-                className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
-              >
-                <span className="font-bold tracking-wide text-sm xl:text-base">More</span>
-                <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
-              </button>
+                                                   {/* More dropdown */}
+              <div className="relative">
+                                 <button
+                   ref={moreButtonRef}
+                   onClick={() => setShowMoreSports(!showMoreSports)}
+                   className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
+                 >
+                  <span className="font-bold tracking-wide text-sm xl:text-base">More</span>
+                  <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
+                </button>
 
-              {/* More Sports Dropdown Panel */}
-              {showMoreSports && (
-                <div className="fixed z-[99999]" style={{
-                  top: '100%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  marginTop: '8px'
-                }}>
-                  <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-80 max-h-96 overflow-y-auto backdrop-blur-sm">
-                    <div className="p-4">
-                      <div className="grid grid-cols-2 gap-3">
+                {/* More Sports Dropdown Panel */}
+                {showMoreSports && (
+                  <div ref={moreSportsRef} className="fixed z-[99999]" style={{
+                    top: '100%',
+                    transform: 'translateX(-50%)',
+                    marginTop: '8px'
+                  }}>
+                    <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
+                    <div className="p-1">
+                      <div className="grid grid-cols-2 ">
                         {moreSports.map((sport) => (
                           <button
                             key={sport.name}
@@ -239,7 +262,7 @@ export default function Navigation() {
                               setActiveSport(sport.name);
                               setShowMoreSports(false);
                             }}
-                            className="flex items-center gap-3 p-4 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
+                            className="flex items-center gap-3 p-1 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
                           >
                             <span className="text-lg group-hover:scale-110 transition-transform duration-200">{sport.icon}</span>
                             <div className="flex-1">
