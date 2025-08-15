@@ -17,7 +17,7 @@ export default function Navigation() {
       const target = event.target as Node;
       const isOutsidePanel = moreSportsRef.current && !moreSportsRef.current.contains(target);
       const isOutsideButton = moreButtonRef.current && !moreButtonRef.current.contains(target);
-      
+
       if (isOutsidePanel && isOutsideButton) {
         setShowMoreSports(false);
       }
@@ -60,7 +60,7 @@ export default function Navigation() {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
-    
+
     // Navigate to appropriate route
     switch (tabId) {
       case "home":
@@ -172,11 +172,10 @@ export default function Navigation() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl transition-all duration-300 font-medium text-sm relative overflow-hidden group whitespace-nowrap ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl transition-all duration-300 font-medium text-sm relative overflow-hidden group whitespace-nowrap ${activeTab === tab.id
                       ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg transform scale-105`
                       : "text-muted hover:text-text hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   {activeTab === tab.id && (
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-50"></div>
@@ -193,7 +192,7 @@ export default function Navigation() {
 
           {/* Right side - User Actions */}
           <div className="flex items-center gap-4 ml-8">
-            <button 
+            <button
               className="px-6 py-3 text-accent hover:text-accent/80 font-semibold hover:bg-accent/10 rounded-xl transition-all duration-300 hover:scale-105"
               onClick={() => navigate("/signin")}
             >
@@ -217,11 +216,10 @@ export default function Navigation() {
               <button
                 key={sport.name}
                 onClick={() => setActiveSport(sport.name)}
-                className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 relative overflow-hidden group ${
-                  activeSport === sport.name
+                className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 relative overflow-hidden group ${activeSport === sport.name
                     ? `bg-gradient-to-r ${sport.color} text-white shadow-lg transform scale-105 border-2 border-white/20`
                     : "text-muted hover:text-text hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:scale-105 border border-transparent hover:border-border/50"
-                }`}
+                  }`}
               >
                 {activeSport === sport.name && (
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30"></div>
@@ -234,25 +232,26 @@ export default function Navigation() {
               </button>
             ))}
 
-                                                   {/* More dropdown */}
-              <div className="relative">
-                                 <button
-                   ref={moreButtonRef}
-                   onClick={() => setShowMoreSports(!showMoreSports)}
-                   className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
-                 >
-                  <span className="font-bold tracking-wide text-sm xl:text-base">More</span>
-                  <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
-                </button>
+            {/* More dropdown */}
+            <div className="relative">
+              <button
+                ref={moreButtonRef}
+                onClick={() => setShowMoreSports(!showMoreSports)}
+                className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
+              >
+                
+                <span className="font-bold tracking-wide text-sm xl:text-base">More</span>
+                <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
+              </button>
 
-                {/* More Sports Dropdown Panel */}
-                {showMoreSports && (
-                  <div ref={moreSportsRef} className="fixed z-[99999]" style={{
-                    top: '100%',
-                    transform: 'translateX(-50%)',
-                    marginTop: '8px'
-                  }}>
-                    <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
+              {/* More Sports Dropdown Panel */}
+              {showMoreSports && (
+                <div ref={moreSportsRef} className="fixed z-[99999]" style={{
+                  top: '100%',
+                  transform: 'translateX(-50%)',
+                  marginTop: '8px'
+                }}>
+                  <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
                     <div className="p-1">
                       <div className="grid grid-cols-2 ">
                         {moreSports.map((sport) => (
