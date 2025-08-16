@@ -142,7 +142,7 @@ export default function Bookmakers() {
   ];
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-4 sm:space-y-8 max-w-full overflow-hidden">
       {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">

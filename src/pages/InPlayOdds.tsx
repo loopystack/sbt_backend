@@ -109,7 +109,7 @@ export default function InPlayOdds() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-900 border border-cyan-400/50 rounded-xl p-5 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-400 relative overflow-hidden group">

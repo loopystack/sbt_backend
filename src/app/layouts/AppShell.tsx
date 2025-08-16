@@ -38,7 +38,7 @@ export default function AppShell() {
       )}
       
       {/* Mobile Menu */}
-      <div className={`fixed top-16 left-0 w-64 h-full bg-surface border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+      <div className={`fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="p-4">
@@ -79,7 +79,7 @@ export default function AppShell() {
           isLeftSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
         }`}>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsLeftSidebarOpen(false)} />
-          <div className="fixed top-16 left-0 w-72 h-full bg-surface border-r border-border z-50">
+          <div className="fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50">
             <LeftSidebar />
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function AppShell() {
         </div>
         
         {/* Main Content */}
-        <main className={`flex-1 px-4 sm:px-6 py-4 sm:py-6 transition-all duration-300 ${
+        <main className={`flex-1 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 transition-all duration-300 ${
           isLeftSidebarOpen || isRightSidebarOpen ? 'lg:ml-0' : ''
         }`}>
           <Outlet />
@@ -101,7 +101,7 @@ export default function AppShell() {
           isRightSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
         }`}>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsRightSidebarOpen(false)} />
-          <div className="fixed top-16 right-0 w-64 h-full bg-surface border-l border-border z-50">
+          <div className="fixed top-16 right-0 w-72 sm:w-80 h-full bg-surface border-l border-border z-50">
             <RightSidebar />
           </div>
         </div>

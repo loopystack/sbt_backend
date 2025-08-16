@@ -53,6 +53,92 @@
   -webkit-line-clamp: 3;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Touch-friendly button sizes */
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better mobile spacing */
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  /* Mobile-optimized scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Better mobile container */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Mobile card improvements */
+  .mobile-card {
+    border-radius: 12px;
+    margin: 0.5rem;
+  }
+  
+  /* Mobile text sizing */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  .mobile-text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  /* Ensure content fits mobile viewport */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Mobile grid improvements */
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Mobile overflow handling */
+  .mobile-overflow-hidden {
+    overflow: hidden;
+    width: 100%;
+  }
+  
+  /* Mobile text wrapping */
+  .mobile-text-wrap {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
 /* Responsive utilities */
 @media (max-width: 640px) {
   .container {
@@ -83,6 +169,99 @@
 @media (min-width: 1280px) {
   .xl\:container {
     max-width: 1280px;
+  }
+}
+
+/* Additional mobile optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Better mobile grid layouts */
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Mobile-friendly spacing */
+  .mobile-space-y > * + * {
+    margin-top: 1rem;
+  }
+  
+  .mobile-space-x > * + * {
+    margin-left: 1rem;
+  }
+  
+  /* Mobile viewport fixes */
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  /* Mobile content width control */
+  .mobile-content {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Mobile grid system */
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Mobile flex improvements */
+  .mobile-flex-col {
+    flex-direction: column;
+  }
+  
+  .mobile-flex-wrap {
+    flex-wrap: wrap;
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .landscape-mobile {
+    padding: 0.5rem;
+  }
+  
+  .landscape-mobile .mobile-card {
+    margin: 0.25rem;
+  }
+}
+
+/* Critical mobile fixes */
+@media (max-width: 480px) {
+  /* Ultra-mobile optimizations */
+  .ultra-mobile {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Ultra-mobile spacing */
+  .ultra-mobile-padding {
+    padding: 0.75rem;
+  }
+  
+  /* Ultra-mobile grid */
+  .ultra-mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  /* Ultra-mobile buttons */
+  .ultra-mobile-button {
+    padding: 0.75rem 1rem;
+    font-size: 14px;
   }
 }
   

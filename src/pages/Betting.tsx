@@ -86,7 +86,7 @@ export default function Betting() {
   };
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-4 sm:space-y-8 max-w-full overflow-hidden">
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="text-sm uppercase tracking-wider text-muted">

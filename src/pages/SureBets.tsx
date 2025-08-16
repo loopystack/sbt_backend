@@ -51,53 +51,53 @@ export default function SureBets() {
   const hasSureBets = false;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Promotional Banners */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                  <span className="text-white font-bold text-sm">BC</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                  <span className="text-white font-bold text-xs sm:text-sm">BC</span>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">BC.GAME</h3>
-                  <p className="text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base sm:text-lg">BC.GAME</h3>
+                  <p className="text-xs sm:text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
                 </div>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">bet365</h3>
-                <p className="text-sm opacity-95">Choose: First Bet Safety Net or Bet $5 & Get $150</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex-1">
+                <h3 className="font-bold text-base sm:text-lg">bet365</h3>
+                <p className="text-xs sm:text-sm opacity-95">Choose: First Bet Safety Net or Bet $5 & Get $150</p>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group md:col-span-2 lg:col-span-1">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">BETINASIA</h3>
-                <p className="text-sm opacity-95">Get 100% First Deposit Bonus!</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex-1">
+                <h3 className="font-bold text-base sm:text-lg">BETINASIA</h3>
+                <p className="text-xs sm:text-sm opacity-95">Get 100% First Deposit Bonus!</p>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
@@ -106,13 +106,13 @@ export default function SureBets() {
       </div>
 
       {/* Breadcrumbs */}
-      <div className="text-sm text-muted">
+      <div className="text-sm text-muted px-2">
         Home &gt; Sure Bets
       </div>
 
       {/* Main Heading and Description */}
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-text">
+      <div className="space-y-3 sm:space-y-4 px-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-text">
           OddsPortal Sure Bets - Find Sure Odds Today
         </h1>
         <p className="text-muted text-sm max-w-4xl leading-relaxed">
@@ -134,14 +134,14 @@ export default function SureBets() {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-surface border border-border rounded-lg p-4 shadow-sm">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="bg-surface border border-border rounded-lg p-3 sm:p-4 shadow-sm mx-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <span className="text-sm font-medium text-muted">Filter:</span>
           
           <select
             value={selectedTimeFilter}
             onChange={(e) => setSelectedTimeFilter(e.target.value)}
-            className="px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
+            className="w-full sm:w-auto px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
           >
             {timeFilters.map((filter) => (
               <option key={filter.id} value={filter.id}>
@@ -153,68 +153,56 @@ export default function SureBets() {
       </div>
 
       {/* Sport Tabs */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide px-2 pb-2">
         {sports.map((sport) => (
           <button
             key={sport.name}
             onClick={() => setSelectedSport(sport.name)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors duration-200 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 flex-shrink-0 ${
               selectedSport === sport.name
                 ? "text-accent border-b-2 border-accent"
                 : "text-muted hover:text-accent hover:bg-bg"
             }`}
           >
-            <span className="text-lg">{sport.icon}</span>
-            <span className="font-medium">{sport.name}</span>
+            <span className="text-base sm:text-lg">{sport.icon}</span>
+            <span className="font-medium text-sm sm:text-base">{sport.name}</span>
           </button>
         ))}
         
-        <button className="flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg">
-          <span className="font-medium">More</span>
-          <span className="text-lg">⌄</span>
+        <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg flex-shrink-0">
+          <span className="font-medium text-sm sm:text-base">More</span>
+          <span className="text-base sm:text-lg">⌄</span>
         </button>
       </div>
 
       {/* Sure Bets Content */}
       {hasSureBets ? (
-        <div className="space-y-6">
-          {/* Column Headers */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
-            <div className="col-span-3 text-sm font-medium text-muted">Match</div>
-            <div className="col-span-2 text-sm font-medium text-muted">Date/Time</div>
-            <div className="col-span-2 text-sm font-medium text-muted text-center">Bet 1</div>
-            <div className="col-span-2 text-sm font-medium text-muted text-center">Bet 2</div>
-            <div className="col-span-3 text-sm font-medium text-muted text-center">Profit & Stakes</div>
-          </div>
-
-          {/* Sure Bets Listings */}
-          <div className="space-y-4">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Mobile Sure Bets View */}
+          <div className="block lg:hidden space-y-3 px-2">
             {sampleSureBets.map((bet) => (
-              <div key={bet.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
-                <div className="grid grid-cols-12 gap-4 items-center">
+              <div key={bet.id} className="bg-surface border border-border rounded-lg p-3 sm:p-4 hover:bg-bg/50 transition-colors cursor-pointer">
+                <div className="space-y-3">
                   {/* Match Info */}
-                  <div className="col-span-3">
-                    <div className="font-medium text-text">{bet.teams}</div>
-                    <div className="text-sm text-muted">{bet.sport} • {bet.league}</div>
+                  <div className="space-y-1">
+                    <div className="font-medium text-text text-sm sm:text-base">{bet.teams}</div>
+                    <div className="text-xs sm:text-sm text-muted">{bet.sport} • {bet.league}</div>
+                    <div className="text-xs text-muted">{bet.date}</div>
                   </div>
 
-                  {/* Date/Time */}
-                  <div className="col-span-2 text-sm text-muted">
-                    {bet.date}
-                  </div>
-
-                  {/* Bet 1 */}
-                  <div className="col-span-2 text-center">
-                    <div className="space-y-1">
+                  {/* Bets Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Bet 1 */}
+                    <div className="text-center p-2 bg-bg rounded-lg">
+                      <div className="text-xs text-muted mb-1">Bet 1</div>
                       <div className="text-sm font-medium text-text">{bet.bet1.outcome}</div>
                       <div className="text-xs text-muted">{bet.bet1.odds}</div>
                       <div className="text-xs text-accent">{bet.bet1.bookmaker}</div>
                     </div>
-                  </div>
 
-                  {/* Bet 2 */}
-                  <div className="col-span-2 text-center">
-                    <div className="space-y-1">
+                    {/* Bet 2 */}
+                    <div className="text-center p-2 bg-bg rounded-lg">
+                      <div className="text-xs text-muted mb-1">Bet 2</div>
                       <div className="text-sm font-medium text-text">{bet.bet2.outcome}</div>
                       <div className="text-xs text-muted">{bet.bet2.odds}</div>
                       <div className="text-xs text-accent">{bet.bet2.bookmaker}</div>
@@ -222,37 +210,93 @@ export default function SureBets() {
                   </div>
 
                   {/* Profit & Stakes */}
-                  <div className="col-span-3 text-center">
-                    <div className="space-y-1">
-                      <div className="text-sm font-bold text-green-400">{bet.profit} Profit</div>
-                      <div className="text-xs text-muted">Stake: {bet.stake}</div>
-                      <div className="text-xs text-muted">Return: {bet.return}</div>
-                    </div>
+                  <div className="text-center pt-2 border-t border-border/50">
+                    <div className="text-sm font-bold text-green-400 mb-1">{bet.profit} Profit</div>
+                    <div className="text-xs text-muted">Stake: {bet.stake} | Return: {bet.return}</div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Desktop Sure Bets View */}
+          <div className="hidden lg:block">
+            {/* Column Headers */}
+            <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
+              <div className="col-span-3 text-sm font-medium text-muted">Match</div>
+              <div className="col-span-2 text-sm font-medium text-muted">Date/Time</div>
+              <div className="col-span-2 text-sm font-medium text-muted text-center">Bet 1</div>
+              <div className="col-span-2 text-sm font-medium text-muted text-center">Bet 2</div>
+              <div className="col-span-3 text-sm font-medium text-muted text-center">Profit & Stakes</div>
+            </div>
+
+            {/* Sure Bets Listings */}
+            <div className="space-y-4">
+              {sampleSureBets.map((bet) => (
+                <div key={bet.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    {/* Match Info */}
+                    <div className="col-span-3">
+                      <div className="font-medium text-text">{bet.teams}</div>
+                      <div className="text-sm text-muted">{bet.sport} • {bet.league}</div>
+                    </div>
+
+                    {/* Date/Time */}
+                    <div className="col-span-2 text-sm text-muted">
+                      {bet.date}
+                    </div>
+
+                    {/* Bet 1 */}
+                    <div className="col-span-2 text-center">
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-text">{bet.bet1.outcome}</div>
+                        <div className="text-xs text-muted">{bet.bet1.odds}</div>
+                        <div className="text-xs text-accent">{bet.bet1.bookmaker}</div>
+                      </div>
+                    </div>
+
+                    {/* Bet 2 */}
+                    <div className="col-span-2 text-center">
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-text">{bet.bet2.outcome}</div>
+                        <div className="text-xs text-muted">{bet.bet2.odds}</div>
+                        <div className="text-xs text-accent">{bet.bet2.bookmaker}</div>
+                      </div>
+                    </div>
+
+                    {/* Profit & Stakes */}
+                    <div className="col-span-3 text-center">
+                      <div className="space-y-1">
+                        <div className="text-sm font-bold text-green-400">{bet.profit} Profit</div>
+                        <div className="text-xs text-muted">Stake: {bet.stake}</div>
+                        <div className="text-xs text-muted">Return: {bet.return}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         /* No Sure Bets Available Message */
-        <div className="bg-surface border border-border rounded-lg p-6">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-bold">i</span>
+        <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-400 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs sm:text-sm font-bold">i</span>
             </div>
-            <span className="text-white font-medium">There are currently no sure bets available!</span>
+            <span className="text-white font-medium text-sm sm:text-base">There are currently no sure bets available!</span>
           </div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-xs sm:text-sm text-center">
             Check back later for new arbitrage opportunities or try adjusting your filters.
           </p>
         </div>
       )}
 
       {/* Additional Information */}
-      <div className="bg-surface border border-border rounded-lg p-6">
+      <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">How Sure Bets Work</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-3">
             <h4 className="font-medium text-text">What are Sure Bets?</h4>
             <p className="text-sm text-muted leading-relaxed">

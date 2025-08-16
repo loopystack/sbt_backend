@@ -191,53 +191,53 @@ export default function AllEvents() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Promotional Banners */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-0 h-0 border-l-[50px] border-l-transparent border-t-[50px] border-t-white/20"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30 transform rotate-45">
-                  <span className="text-white font-bold text-sm transform -rotate-45">BC</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30 transform rotate-45">
+                  <span className="text-white font-bold text-xs sm:text-sm transform -rotate-45">BC</span>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">BC.GAME</h3>
-                  <p className="text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base sm:text-lg">BC.GAME</h3>
+                  <p className="text-xs sm:text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
                 </div>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-b-[50px] border-b-white/20"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">bet365</h3>
-                <p className="text-sm opacity-95">First Bet Safety Net or Bet $5 & Get $150</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex-1">
+                <h3 className="font-bold text-base sm:text-lg">bet365</h3>
+                <p className="text-xs sm:text-sm opacity-95">First Bet Safety Net or Bet $5 & Get $150</p>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group md:col-span-2 lg:col-span-1">
           <div className="absolute top-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-t-[50px] border-t-white/20"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">BETINASIA</h3>
-                <p className="text-sm opacity-95">100% First Deposit Bonus!</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+              <div className="flex-1">
+                <h3 className="font-bold text-base sm:text-lg">BETINASIA</h3>
+                <p className="text-xs sm:text-sm opacity-95">100% First Deposit Bonus!</p>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105">
+              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
                 CLAIM
               </button>
             </div>
@@ -246,13 +246,13 @@ export default function AllEvents() {
       </div>
 
       {/* Breadcrumbs */}
-      <div className="text-sm text-muted">
+      <div className="text-sm text-muted px-2">
         Home &gt; All Events
       </div>
 
       {/* Main Heading and Description */}
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-text">
+      <div className="space-y-3 sm:space-y-4 px-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-text">
           All Events - Complete Sports Betting Coverage
         </h1>
         <p className="text-muted text-sm max-w-4xl leading-relaxed">
@@ -263,73 +263,63 @@ export default function AllEvents() {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-surface border border-border rounded-lg p-4 shadow-sm">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="bg-surface border border-border rounded-lg p-3 sm:p-4 shadow-sm mx-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <span className="text-sm font-medium text-muted">Filters:</span>
           
-          <select
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
-          >
-            {dateFilters.map((filter) => (
-              <option key={filter.id} value={filter.id}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
+            >
+              {dateFilters.map((filter) => (
+                <option key={filter.id} value={filter.id}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={selectedLeague}
-            onChange={(e) => setSelectedLeague(e.target.value)}
-            className="px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
-          >
-            {leagueFilters.map((filter) => (
-              <option key={filter.id} value={filter.id}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
+            <select
+              value={selectedLeague}
+              onChange={(e) => setSelectedLeague(e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 bg-bg border border-border rounded-lg text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-200"
+            >
+              {leagueFilters.map((filter) => (
+                <option key={filter.id} value={filter.id}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Sport Tabs */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide px-2 pb-2">
         {sports.map((sport) => (
           <button
             key={sport.name}
             onClick={() => setSelectedSport(sport.name)}
-            className={`flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors duration-200 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 flex-shrink-0 ${
               selectedSport === sport.name
                 ? "text-accent border-b-2 border-accent"
                 : "text-muted hover:text-accent hover:bg-bg"
             }`}
           >
-            <span className="text-lg">{sport.icon}</span>
-            <span className="font-medium">{sport.name}</span>
+            <span className="text-base sm:text-lg">{sport.icon}</span>
+            <span className="font-medium text-sm sm:text-base">{sport.name}</span>
           </button>
         ))}
         
-        <button className="flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg">
-          <span className="font-medium">More</span>
-          <span className="text-lg">⌄</span>
+        <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg flex-shrink-0">
+          <span className="font-medium text-sm sm:text-base">More</span>
+          <span className="text-base sm:text-lg">⌄</span>
         </button>
       </div>
 
-      {/* Column Headers */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
-        <div className="col-span-1 text-sm font-medium text-muted text-center">Date</div>
-        <div className="col-span-1 text-sm font-medium text-muted text-center">Time</div>
-        <div className="col-span-4 text-sm font-medium text-muted">Match</div>
-        <div className="col-span-1 text-sm font-medium text-muted text-center">1</div>
-        <div className="col-span-1 text-sm font-medium text-muted text-center">X</div>
-        <div className="col-span-1 text-sm font-medium text-muted text-center">2</div>
-        <div className="col-span-2 text-sm font-medium text-muted text-center">B's</div>
-      </div>
-
-      {/* Events Content */}
-      <div className="space-y-6">
-        {/* Group events by sport/league */}
+      {/* Mobile Events View */}
+      <div className="block lg:hidden space-y-3 px-2">
         {Object.entries(allEvents.reduce((groups, event) => {
           const key = `${event.sport} / ${event.country} / ${event.league}`;
           if (!groups[key]) {
@@ -338,63 +328,53 @@ export default function AllEvents() {
           groups[key].push(event);
           return groups;
         }, {} as Record<string, typeof allEvents>)).map(([key, group]) => (
-          <div key={key} className="space-y-4">
+          <div key={key} className="space-y-3">
             {/* League Header */}
             <div className="flex items-center gap-2 text-sm text-muted">
               <span>{key.includes('Football') ? '⚽' : key.includes('Basketball') ? '🏀' : key.includes('Tennis') ? '🎾' : key.includes('Baseball') ? '⚾' : key.includes('Hockey') ? '🏒' : '🏆'}</span>
-              <span>{key}</span>
+              <span className="text-xs sm:text-sm">{key}</span>
             </div>
 
-            {/* Event Rows */}
+            {/* Event Cards */}
             {group.map((event) => {
               const bestOdds = getBestOdds(event.odds1, event.oddsX, event.odds2);
               return (
-                <div key={event.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
-                  <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* Date */}
-                    <div className="col-span-1 text-center">
-                      <div className="text-sm text-muted">{event.date}</div>
-                    </div>
-
-                    {/* Time */}
-                    <div className="col-span-1 text-center">
-                      <div className="text-sm font-medium text-text">{event.time}</div>
+                <div key={event.id} className="bg-surface border border-border rounded-lg p-3 sm:p-4 hover:bg-bg/50 transition-colors cursor-pointer">
+                  <div className="space-y-3">
+                    {/* Header with Date, Time, and Status */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted">{event.date}</span>
+                        <span className="text-sm font-medium text-text">{event.time}</span>
+                      </div>
+                      <span className="text-xs text-muted">{event.bookmakers} bookmakers</span>
                     </div>
 
                     {/* Match Info */}
-                    <div className="col-span-4">
-                      <div className="space-y-1">
-                        <div className="font-medium text-text">{event.team1} vs {event.team2}</div>
-                        <div className="text-xs text-muted">{event.sport} • {event.country} • {event.league}</div>
-                      </div>
+                    <div className="space-y-1">
+                      <div className="font-medium text-text text-sm sm:text-base">{event.team1} vs {event.team2}</div>
+                      <div className="text-xs text-muted">{event.sport} • {event.country} • {event.league}</div>
                     </div>
 
-                    {/* Odds 1 */}
-                    <div className="col-span-1 text-center">
-                      <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds1) ? 'text-green-500' : 'text-text'}`}>
-                        {event.odds1}
+                    {/* Odds Row */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">1</div>
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds1) ? 'text-green-500' : 'text-text'}`}>
+                          {event.odds1}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Odds X */}
-                    <div className="col-span-1 text-center">
-                      <div className={`text-sm font-medium ${bestOdds === parseFloat(event.oddsX) ? 'text-green-500' : 'text-text'}`}>
-                        {event.oddsX === 'N/A' ? '-' : event.oddsX}
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">X</div>
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.oddsX) ? 'text-green-500' : 'text-text'}`}>
+                          {event.oddsX === 'N/A' ? '-' : event.oddsX}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Odds 2 */}
-                    <div className="col-span-1 text-center">
-                      <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds2) ? 'text-green-500' : 'text-text'}`}>
-                        {event.odds2}
-                      </div>
-                    </div>
-
-                    {/* Bookmakers */}
-                    <div className="col-span-2 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-sm text-muted">{event.bookmakers}</span>
-                        <span className="text-xs text-muted">bookmakers</span>
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">2</div>
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds2) ? 'text-green-500' : 'text-text'}`}>
+                          {event.odds2}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -405,22 +385,113 @@ export default function AllEvents() {
         ))}
       </div>
 
+      {/* Desktop Events View */}
+      <div className="hidden lg:block">
+        {/* Column Headers */}
+        <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
+          <div className="col-span-1 text-sm font-medium text-muted text-center">Date</div>
+          <div className="col-span-1 text-sm font-medium text-muted text-center">Time</div>
+          <div className="col-span-4 text-sm font-medium text-muted">Match</div>
+          <div className="col-span-1 text-sm font-medium text-muted text-center">1</div>
+          <div className="col-span-1 text-sm font-medium text-muted text-center">X</div>
+          <div className="col-span-1 text-sm font-medium text-muted text-center">2</div>
+          <div className="col-span-2 text-sm font-medium text-muted text-center">B's</div>
+        </div>
+
+        {/* Events Content */}
+        <div className="space-y-4">
+          {Object.entries(allEvents.reduce((groups, event) => {
+            const key = `${event.sport} / ${event.country} / ${event.league}`;
+            if (!groups[key]) {
+              groups[key] = [];
+            }
+            groups[key].push(event);
+            return groups;
+          }, {} as Record<string, typeof allEvents>)).map(([key, group]) => (
+            <div key={key} className="space-y-4">
+              {/* League Header */}
+              <div className="flex items-center gap-2 text-sm text-muted">
+                <span>{key.includes('Football') ? '⚽' : key.includes('Basketball') ? '🏀' : key.includes('Tennis') ? '🎾' : key.includes('Baseball') ? '⚾' : key.includes('Hockey') ? '🏒' : '🏆'}</span>
+                <span>{key}</span>
+              </div>
+
+              {/* Event Rows */}
+              {group.map((event) => {
+                const bestOdds = getBestOdds(event.odds1, event.oddsX, event.odds2);
+                return (
+                  <div key={event.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
+                    <div className="grid grid-cols-12 gap-4 items-center">
+                      {/* Date */}
+                      <div className="col-span-1 text-center">
+                        <div className="text-sm text-muted">{event.date}</div>
+                      </div>
+
+                      {/* Time */}
+                      <div className="col-span-1 text-center">
+                        <div className="text-sm font-medium text-text">{event.time}</div>
+                      </div>
+
+                      {/* Match Info */}
+                      <div className="col-span-4">
+                        <div className="space-y-1">
+                          <div className="font-medium text-text">{event.team1} vs {event.team2}</div>
+                          <div className="text-xs text-muted">{event.sport} • {event.country} • {event.league}</div>
+                        </div>
+                      </div>
+
+                      {/* Odds 1 */}
+                      <div className="col-span-1 text-center">
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds1) ? 'text-green-500' : 'text-text'}`}>
+                          {event.odds1}
+                        </div>
+                      </div>
+
+                      {/* Odds X */}
+                      <div className="col-span-1 text-center">
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.oddsX) ? 'text-green-500' : 'text-text'}`}>
+                          {event.oddsX === 'N/A' ? '-' : event.oddsX}
+                        </div>
+                      </div>
+
+                      {/* Odds 2 */}
+                      <div className="col-span-1 text-center">
+                        <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds2) ? 'text-green-500' : 'text-text'}`}>
+                          {event.odds2}
+                        </div>
+                      </div>
+
+                      {/* Bookmakers */}
+                      <div className="col-span-2 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm text-muted">{event.bookmakers}</span>
+                          <span className="text-xs text-muted">bookmakers</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Events Summary */}
-      <div className="bg-surface border border-border rounded-lg p-6">
+      <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">Events Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">{allEvents.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-accent">{allEvents.length}</div>
             <div className="text-sm text-muted">Total Events</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">
+            <div className="text-xl sm:text-2xl font-bold text-accent">
               {allEvents.filter(event => event.sport === 'Football').length}
             </div>
             <div className="text-sm text-muted">Football Events</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-accent">
+            <div className="text-xl sm:text-2xl font-bold text-accent">
               {allEvents.filter(event => event.sport === 'Basketball').length}
             </div>
             <div className="text-sm text-muted">Basketball Events</div>
@@ -429,9 +500,9 @@ export default function AllEvents() {
       </div>
 
       {/* Additional Information */}
-      <div className="bg-surface border border-border rounded-lg p-6">
+      <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">About All Events</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="space-y-3">
             <h4 className="font-medium text-text">Comprehensive Coverage</h4>
             <p className="text-sm text-muted leading-relaxed">
