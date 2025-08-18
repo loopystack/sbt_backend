@@ -33,6 +33,30 @@ body {
   display: none;
 }
 
+/* Responsive navigation styles */
+.nav-scroll-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure navigation buttons maintain proper sizing on all screens */
+.nav-button {
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
+/* Smooth transitions for responsive text hiding/showing */
+.nav-text {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Ensure proper spacing on very small screens */
+@media (max-width: 640px) {
+  .nav-button {
+    min-width: 44px; /* Minimum touch target size */
+  }
+}
+
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;

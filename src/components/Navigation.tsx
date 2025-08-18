@@ -172,7 +172,8 @@ export default function Navigation() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl transition-all duration-300 font-medium text-sm relative overflow-hidden group whitespace-nowrap ${activeTab === tab.id
+                  title={tab.name}
+                  className={`flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 font-medium text-sm relative overflow-hidden group ${activeTab === tab.id
                       ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg transform scale-105`
                       : "text-muted hover:text-text hover:bg-white/10"
                     }`}
@@ -181,7 +182,7 @@ export default function Navigation() {
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-50"></div>
                   )}
                   <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200">{tab.icon}</span>
-                  <span className="relative z-10 font-bold tracking-wide text-sm xl:text-base">{tab.name}</span>
+                  <span className="relative z-10 font-bold tracking-wide text-sm xl:text-base hidden md:block">{tab.name}</span>
                   {activeTab === tab.id && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/50 rounded-full"></div>
                   )}
@@ -203,11 +204,14 @@ export default function Navigation() {
 
         {/* Sports Categories - Centered in the middle */}
         <div className="border-t border-border/30 from-bg/50 to-surface/50">
-          <div className="flex items-center justify-center gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
+          <div className="flex items-center justify-center gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
             {/* Favorites */}
-            <button className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-yellow-400/20 hover:to-orange-400/20 hover:scale-105 group border border-transparent hover:border-yellow-400/30">
+            <button
+              title="Favorites"
+              className="flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-yellow-400/20 hover:to-orange-400/20 hover:scale-105 group border border-transparent hover:border-yellow-400/30"
+            >
               <span className="text-lg group-hover:scale-110 transition-transform duration-200">⭐</span>
-              <span className="font-bold tracking-wide text-sm xl:text-base">Favorites</span>
+              <span className="font-bold tracking-wide text-sm xl:text-base hidden md:block">Favorites</span>
               <span className="text-xs bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2.5 py-1.5 rounded-full font-bold tracking-wide shadow-sm">0</span>
             </button>
 
@@ -216,7 +220,8 @@ export default function Navigation() {
               <button
                 key={sport.name}
                 onClick={() => setActiveSport(sport.name)}
-                className={`flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 relative overflow-hidden group ${activeSport === sport.name
+                title={sport.name}
+                className={`flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 relative overflow-hidden group ${activeSport === sport.name
                     ? `bg-gradient-to-r ${sport.color} text-white shadow-lg transform scale-105 border-2 border-white/20`
                     : "text-muted hover:text-text hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:scale-105 border border-transparent hover:border-border/50"
                   }`}
@@ -225,7 +230,7 @@ export default function Navigation() {
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30"></div>
                 )}
                 <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200">{sport.icon}</span>
-                <span className="font-bold tracking-wide text-sm xl:text-base relative z-10">{sport.name}</span>
+                <span className="font-bold tracking-wide text-sm xl:text-base relative z-10 hidden md:block">{sport.name}</span>
                 {activeSport === sport.name && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/50 rounded-full"></div>
                 )}
@@ -237,10 +242,11 @@ export default function Navigation() {
               <button
                 ref={moreButtonRef}
                 onClick={() => setShowMoreSports(!showMoreSports)}
-                className="flex items-center gap-3 px-3 xl:px-5 py-3 xl:py-3.5 rounded-xl whitespace-nowrap transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
+                title="More Sports"
+                className="flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-purple-400/20 hover:to-indigo-400/20 hover:scale-105 group border border-transparent hover:border-purple-400/30"
               >
-                
-                <span className="font-bold tracking-wide text-sm xl:text-base">More</span>
+
+                <span className="font-bold tracking-wide text-sm xl:text-base hidden md:block">More</span>
                 <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
               </button>
 

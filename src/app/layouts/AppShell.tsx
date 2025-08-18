@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
+import Footer from "@/components/Footer";
+import ScrollToFooter from "@/components/ScrollToFooter";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default function AppShell() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Close mobile menu when screen size changes
   useEffect(() => {
@@ -22,6 +26,11 @@ export default function AppShell() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <div className="min-h-screen">
@@ -46,16 +55,66 @@ export default function AppShell() {
             <div className="border-b border-border pb-4">
               <h3 className="text-lg font-semibold text-text mb-3">Navigation</h3>
               <nav className="space-y-2">
-                <a href="/" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">🏠 Home</a>
-                <a href="/matches" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">📅 Matches</a>
-                <a href="/dropping-odds" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">📉 Dropping Odds</a>
-                <a href="/sure-bets" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">🎯 Sure Bets</a>
-                <a href="/in-play-odds" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">⚡ In Play</a>
-                <a href="/all-events" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">📊 All Events</a>
-                <a href="/betting" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">💰 Betting</a>
-                <a href="/bookmakers" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">🏢 Bookmakers</a>
-                <a href="/bonuses" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">🎁 Bonuses</a>
-                <a href="/dashboard" className="block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors">📊 Dashboard</a>
+                <button 
+                  onClick={() => handleNavigation("/")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  🏠 Home
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/matches")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  📅 Matches
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/dropping-odds")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  📉 Dropping Odds
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/sure-bets")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  🎯 Sure Bets
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/in-play-odds")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  ⚡ In Play
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/all-events")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  📊 All Events
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/betting")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  💰 Betting
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/bookmakers")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  🏢 Bookmakers
+                </button>
+                {/* <button 
+                  onClick={() => handleNavigation("/bonuses")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  🎁 Bonuses
+                </button>
+                <button 
+                  onClick={() => handleNavigation("/dashboard")}
+                  className="w-full text-left block px-3 py-2 text-muted hover:text-text hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  📊 Dashboard
+                </button> */}
               </nav>
             </div>
             
@@ -111,6 +170,15 @@ export default function AppShell() {
           <RightSidebar />
         </div>
       </div>
+      
+      {/* Footer */}
+      <Footer />
+      
+      {/* Floating Scroll to Footer Button */}
+      <ScrollToFooter />
+      
+      {/* Floating Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }
