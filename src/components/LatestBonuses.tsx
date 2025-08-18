@@ -1,4 +1,5 @@
 import React from "react";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function LatestBonuses() {
   const bonuses = [
@@ -126,7 +127,10 @@ export default function LatestBonuses() {
             </div>
             
             {/* Claim Button */}
-            <button className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors group-hover:scale-105">
+            <button 
+              onClick={() => openBettingSiteByName(bonus.bookmaker)}
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors group-hover:scale-105"
+            >
               Claim Bonus
             </button>
           </div>

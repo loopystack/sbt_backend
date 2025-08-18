@@ -16,28 +16,20 @@ Your SportsBetting site now has a comprehensive navigation system that includes 
 - **Feature Highlights**: Real-time Analytics, AI-Powered Insights, Secure Platform
 - **Legal Links**: Privacy Policy, Terms of Service, Cookie Policy
 
-### 2. **ScrollToFooter Button** (`ScrollToFooter.tsx`)
+### 2. **Smart Scroll Button** (`ScrollToFooter.tsx`)
 - **Position**: Bottom-right corner of the screen
-- **Appearance**: Shows after scrolling 300px down
+- **Smart Appearance**: Shows after scrolling 300px down
 - **Design**: 64x64px round button with accent color
+- **Intelligent Functionality**: 
+  - **First half of page**: Down arrow (↓) - scrolls to footer
+  - **Second half of page**: Up arrow (↑) - scrolls to top
 - **Animations**: 
   - Floating motion (up and down)
   - Glowing effect
   - Multiple pulse rings
   - Bouncing arrow icon
-- **Functionality**: Smooth scroll to footer
-- **Tooltip**: "🚀 Go to Footer" on hover
-
-### 3. **ScrollToTop Button** (`ScrollToTop.tsx`)
-- **Position**: Bottom-left corner of the screen
-- **Appearance**: Shows when user is in last 30% of page
-- **Design**: 56x56px round button with surface background and accent border
-- **Animations**: 
-  - Floating motion
-  - Pulse ring effect
-  - Bouncing up arrow
-- **Functionality**: Smooth scroll to top of page
-- **Tooltip**: "⬆️ Back to Top" on hover
+- **Dynamic Tooltip**: Changes based on current function
+- **Smart Adaptation**: Automatically adjusts to user's position
 
 ## 🎨 **Visual Features**
 
@@ -69,16 +61,17 @@ Your SportsBetting site now has a comprehensive navigation system that includes 
 
 ## 📱 **User Experience**
 
-### **Navigation Flow**
-1. **User scrolls down** → ScrollToFooter button appears
+### **Smart Navigation Flow**
+1. **User scrolls down** → Smart scroll button appears with down arrow (↓)
 2. **User clicks button** → Smooth scroll to footer
 3. **User reads footer** → Access to company info, team, contact details
-4. **User near bottom** → ScrollToTop button appears
+4. **User scrolls past middle** → Button automatically changes to up arrow (↑)
 5. **User clicks button** → Smooth scroll back to top
+6. **User scrolls back to first half** → Button automatically changes back to down arrow (↓)
 
 ### **Smart Visibility**
-- **ScrollToFooter**: Appears after 300px scroll (not overwhelming)
-- **ScrollToTop**: Appears in last 30% of page (when needed)
+- **Smart Scroll Button**: Appears after 300px scroll (not overwhelming)
+- **Intelligent Adaptation**: Automatically changes function based on scroll position
 - **Footer**: Always visible at bottom of page
 - **Responsive**: Works perfectly on all devices
 
@@ -91,10 +84,11 @@ Your SportsBetting site now has a comprehensive navigation system that includes 
 - **Quick Navigation**: Jump to any section instantly
 
 ### **Enhanced Navigation**
+- **Smart Adaptation**: Single button that adapts to user's needs
 - **No More Scrolling**: Quick access to footer from anywhere
-- **Easy Return**: Quick return to top of page
-- **Visual Cues**: Attractive animations draw attention
-- **Professional Look**: Polished, modern interface
+- **Easy Return**: Quick return to top of page when needed
+- **Visual Cues**: Dynamic arrows show current function
+- **Professional Look**: Polished, modern interface with intelligent behavior
 
 ## 🚀 **How to Use**
 

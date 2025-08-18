@@ -1,96 +1,136 @@
 # ScrollToFooter Component
 
 ## Overview
-The ScrollToFooter component is a floating action button that provides users with a quick way to navigate to the footer section of the website. It features attractive animations and appears when users scroll down the page.
+The `ScrollToFooter` component is a smart floating button that provides intelligent navigation based on the user's scroll position. It automatically adapts its functionality and appearance to provide the most useful navigation option at any given time.
 
 ## Features
 
-### Visual Design
-- **Floating Button**: Fixed position at bottom-right corner of the screen
-- **Round Design**: 64x64px circular button with accent color theme
-- **Responsive**: Adapts to different screen sizes
-- **High Z-Index**: Ensures visibility above other content
+### Smart Arrow Behavior
+- **Down Arrow (↓)**: Appears when scrolling in the first half of the page
+  - **Function**: Scrolls to the footer
+  - **Use Case**: Quick access to footer content when browsing early sections
 
-### Animations
-- **Float Animation**: Gentle up-and-down floating motion
-- **Glow Effect**: Pulsing glow animation around the button
-- **Bounce Icon**: Arrow icon with bouncing animation
-- **Multiple Pulse Rings**: Layered pulse animations with different delays
-- **Hover Effects**: Scale and shadow transitions on hover
+- **Up Arrow (↑)**: Appears when scrolling past the middle of the page
+  - **Function**: Scrolls to the top of the page
+  - **Use Case**: Quick return to top when deep into page content
 
-### Functionality
-- **Smart Visibility**: Only appears when user scrolls down (after 300px)
-- **Smooth Scrolling**: Smooth scroll animation to footer
-- **Tooltip**: Hover tooltip with rocket emoji and "Go to Footer" text
-- **Accessibility**: Proper ARIA labels and keyboard support
+### Visual Indicators
+- **Dynamic Icon**: Arrow direction changes based on scroll position
+- **Dynamic Tooltip**: Shows appropriate action ("Go to Footer" or "Go to Top")
+- **Smooth Animations**: Floating, glowing, and pulsing effects
+- **Responsive Design**: Adapts to different screen sizes
 
-## Technical Details
+## Technical Implementation
 
-### Animation Classes
-- `animate-float`: Custom floating animation (3s duration)
-- `animate-glow`: Custom glow effect (2s duration)
-- `animate-pulse-ring`: Custom pulse ring animation (2s duration)
-- `animate-bounce`: Tailwind's bounce animation for the arrow
-- `animate-ping`: Tailwind's ping animation for pulse rings
-- `animate-pulse`: Tailwind's pulse animation for glow effect
-
-### Custom CSS Animations
-```css
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); }
-  50% { box-shadow: 0 0 30px rgba(255, 193, 7, 0.6), 0 0 40px rgba(255, 193, 7, 0.3); }
-}
-
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 1; }
-  100% { transform: scale(2.4); opacity: 0; }
-}
+### State Management
+```typescript
+const [isVisible, setIsVisible] = useState(false);
+const [isPastMiddle, setIsPastMiddle] = useState(false);
 ```
 
-### Scroll Behavior
-- **Trigger Point**: Button appears after scrolling 300px down
-- **Scroll Method**: Uses `scrollIntoView` with smooth behavior
-- **Target**: Automatically finds and scrolls to the footer element
+### Scroll Position Logic
+```typescript
+const scrollPosition = window.pageYOffset;
+const windowHeight = window.innerHeight;
+const documentHeight = document.documentElement.scrollHeight;
+const middlePoint = documentHeight / 2;
 
-## Usage
-
-The ScrollToFooter component is automatically included in the AppShell layout and will appear on all pages when users scroll down. No additional configuration is required.
-
-## Customization
-
-### Position
-To change the button position, modify these classes:
-```tsx
-className="fixed bottom-6 right-6" // Change bottom-6 and right-6
+// Check if past middle of the page
+setIsPastMiddle(scrollPosition + windowHeight > middlePoint);
 ```
 
-### Size
-To change the button size, modify the width and height:
-```tsx
-className="w-16 h-16" // Change to w-14 h-14 for smaller, w-20 h-20 for larger
+### Dynamic Functionality
+```typescript
+const handleScroll = () => {
+  if (isPastMiddle) {
+    // Go to top if past middle
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    // Go to footer if in first half
+    const footer = document.querySelector('footer');
+    if (footer) {
+      footer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+};
 ```
 
-### Colors
-The button uses the accent color from your theme. To change colors, modify the CSS variables in `theme.css`.
+## User Experience
 
-### Animation Timing
-To adjust animation speeds, modify the CSS keyframes in `theme.css`:
-```css
-.animate-float { animation: float 3s ease-in-out infinite; } // Change 3s
-.animate-glow { animation: glow 2s ease-in-out infinite; }   // Change 2s
-```
+### First Half of Page
+- **Button appears** after scrolling down 300px
+- **Down arrow** indicates footer navigation
+- **Tooltip shows** "🚀 Go to Footer"
+- **Click action** smoothly scrolls to footer
 
-## Dependencies
-- React (useState, useEffect)
-- Tailwind CSS
-- Custom CSS animations (defined in theme.css)
+### Second Half of Page
+- **Button remains visible** with updated appearance
+- **Up arrow** indicates top navigation
+- **Tooltip shows** "⬆️ Go to Top"
+- **Click action** smoothly scrolls to top
 
-## Browser Support
-- Modern browsers with CSS animations support
-- Smooth scrolling behavior requires modern browsers
-- Gracefully degrades on older browsers
+### Smooth Transitions
+- **Arrow changes** dynamically as user scrolls
+- **Tooltip updates** to match current functionality
+- **No jarring changes** - smooth user experience
+
+## Styling and Animations
+
+### Base Styling
+- **Fixed positioning**: Bottom-right corner
+- **Accent colors**: Matches site theme
+- **Rounded design**: Circular button with shadows
+- **Hover effects**: Scale and shadow transformations
+
+### Animation Effects
+- **Floating**: Gentle up/down movement
+- **Glowing**: Pulsing light effect
+- **Pulse rings**: Multiple animated circles
+- **Smooth transitions**: All state changes are animated
+
+## Accessibility
+
+### Screen Reader Support
+- **Dynamic aria-label**: Updates based on current function
+- **Semantic button**: Proper button element with click handler
+- **Keyboard navigation**: Accessible via keyboard
+
+### Visual Feedback
+- **Clear indicators**: Arrow direction shows function
+- **Tooltip information**: Hover reveals current action
+- **Smooth scrolling**: Predictable navigation behavior
+
+## Integration
+
+### Placement
+- **AppShell layout**: Integrated into main application shell
+- **Z-index**: Positioned above other content (z-50)
+- **Responsive**: Works on all screen sizes
+
+### Dependencies
+- **No external libraries**: Pure React implementation
+- **CSS animations**: Uses custom keyframes from theme
+- **Scroll events**: Listens to window scroll events
+
+## Performance Considerations
+
+### Event Handling
+- **Throttled updates**: Scroll events are handled efficiently
+- **Conditional rendering**: Only renders when needed
+- **Memory efficient**: Proper cleanup of event listeners
+
+### Smooth Scrolling
+- **Native behavior**: Uses browser's smooth scrolling
+- **Performance optimized**: Minimal impact on scroll performance
+- **Cross-browser**: Works on all modern browsers
+
+## Future Enhancements
+
+### Potential Improvements
+- **Custom scroll targets**: Allow configuration of scroll points
+- **Animation customization**: User preferences for animation speed
+- **Keyboard shortcuts**: Additional navigation methods
+- **Scroll history**: Remember user's preferred navigation patterns
+
+## Conclusion
+The ScrollToFooter component provides an intelligent, user-friendly navigation solution that automatically adapts to the user's current position on the page. By combining footer and top navigation into a single, smart button, it reduces UI clutter while maintaining excellent usability and accessibility.

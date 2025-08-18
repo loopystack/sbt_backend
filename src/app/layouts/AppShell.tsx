@@ -5,7 +5,7 @@ import LeftSidebar from "@/components/LeftSidebar";
 import RightSidebar from "@/components/RightSidebar";
 import Footer from "@/components/Footer";
 import ScrollToFooter from "@/components/ScrollToFooter";
-import ScrollToTop from "@/components/ScrollToTop";
+
 
 export default function AppShell() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -177,8 +177,7 @@ export default function AppShell() {
       {/* Floating Scroll to Footer Button */}
       <ScrollToFooter />
       
-      {/* Floating Scroll to Top Button */}
-      <ScrollToTop />
+
     </div>
   );
 }

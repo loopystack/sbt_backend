@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function AllEvents() {
   const [selectedSport, setSelectedSport] = useState("All sports");
@@ -207,7 +208,10 @@ export default function AllEvents() {
                   <p className="text-xs sm:text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
                 </div>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("BC.GAME")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>
@@ -222,7 +226,10 @@ export default function AllEvents() {
                 <h3 className="font-bold text-base sm:text-lg">bet365</h3>
                 <p className="text-xs sm:text-sm opacity-95">First Bet Safety Net or Bet $5 & Get $150</p>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bet365")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>
@@ -237,7 +244,10 @@ export default function AllEvents() {
                 <h3 className="font-bold text-base sm:text-lg">BETINASIA</h3>
                 <p className="text-xs sm:text-sm opacity-95">100% First Deposit Bonus!</p>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("BETINASIA")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>

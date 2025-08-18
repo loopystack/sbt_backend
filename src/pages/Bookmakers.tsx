@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function Bookmakers() {
   const [selectedTab, setSelectedTab] = useState("BOOKIE INFO");
@@ -159,7 +160,10 @@ export default function Bookmakers() {
                   <p className="text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
                 </div>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg">
+              <button 
+                onClick={() => openBettingSiteByName("BC.GAME")}
+                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+              >
                 CLAIM
               </button>
             </div>
@@ -180,7 +184,10 @@ export default function Bookmakers() {
                   <p className="text-sm opacity-95">Get up to $1,500 paid back in bonus bets, if you don't win!</p>
                 </div>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg">
+              <button 
+                onClick={() => openBettingSiteByName("BETMGM")}
+                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+              >
                 CLAIM
               </button>
             </div>
@@ -196,7 +203,10 @@ export default function Bookmakers() {
                 <h3 className="font-bold text-lg">bet-at-home</h3>
                 <p className="text-sm opacity-95">Get a 300€ Welcome bonus!</p>
               </div>
-              <button className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg">
+              <button 
+                onClick={() => openBettingSiteByName("bet-at-home")}
+                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+              >
                 CLAIM
               </button>
             </div>

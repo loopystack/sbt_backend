@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function DroppingOdds() {
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("12-hours");
@@ -118,7 +119,10 @@ export default function DroppingOdds() {
             <div className="text-center">
               <h3 className="font-bold text-base sm:text-lg mb-2">BETINASIA</h3>
               <p className="text-xs sm:text-sm opacity-90 mb-3">Get 100% First Deposit Bonus!</p>
-              <button className="w-full bg-blue-500 text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("BETINASIA")}
+                className="w-full bg-blue-500 text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 text-sm"
+              >
                 CLAIM OFFER
               </button>
             </div>
@@ -131,7 +135,10 @@ export default function DroppingOdds() {
             <div className="text-center">
               <h3 className="font-bold text-base sm:text-lg mb-2">bet-at-home</h3>
               <p className="text-xs sm:text-sm opacity-90 mb-3">Get a 300€ Welcome bonus!</p>
-              <button className="w-full bg-white/20 backdrop-blur-sm text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-white/30 transition-all duration-300 transform hover:scale-105 border border-white/30 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bet-at-home")}
+                className="w-full bg-white/20 backdrop-blur-sm text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-white/30 transition-all duration-300 transform hover:scale-105 border border-white/30 text-sm"
+              >
                 CLAIM OFFER
               </button>
             </div>
@@ -144,7 +151,10 @@ export default function DroppingOdds() {
             <div className="text-center">
               <h3 className="font-bold text-base sm:text-lg mb-2">bets.io</h3>
               <p className="text-xs sm:text-sm opacity-90 mb-3">First Deposit Sport Bonus</p>
-              <button className="w-full bg-white/20 backdrop-blur-sm text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-white/30 transition-all duration-300 transform hover:scale-105 border border-white/30 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bets.io")}
+                className="w-full bg-white/20 backdrop-blur-sm text-white py-2 sm:py-3 rounded-2xl font-semibold hover:bg-white/30 transition-all duration-300 transform hover:scale-105 border border-white/30 text-sm"
+              >
                 CLAIM OFFER
               </button>
             </div>

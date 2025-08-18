@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function Matches() {
   const [selectedDate, setSelectedDate] = useState("today");
@@ -107,7 +108,10 @@ export default function Matches() {
                 <p className="text-xs sm:text-sm text-blue-200/80 mb-2">Get 100% First Deposit Bonus!</p>
                 <div className="text-xs text-blue-300 font-medium">🎯 Best Value</div>
               </div>
-              <button className="w-full sm:w-auto bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-blue-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("BETINASIA")}
+                className="w-full sm:w-auto bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-blue-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>
@@ -124,7 +128,10 @@ export default function Matches() {
                 <p className="text-xs sm:text-sm text-emerald-200/80 mb-2">Get a 300€ Welcome bonus!</p>
                 <div className="text-xs text-emerald-300 font-medium">🔥 Hot Deal</div>
               </div>
-              <button className="w-full sm:w-auto bg-emerald-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-emerald-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bet-at-home")}
+                className="w-full sm:w-auto bg-emerald-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-emerald-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>
@@ -141,7 +148,10 @@ export default function Matches() {
                 <p className="text-xs sm:text-sm text-purple-200/80 mb-2">First Deposit Sport Bonus</p>
                 <div className="text-xs text-purple-300 font-medium">⭐ Premium</div>
               </div>
-              <button className="w-full sm:w-auto bg-purple-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bets.io")}
+                className="w-full sm:w-auto bg-purple-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+              >
                 CLAIM
               </button>
             </div>

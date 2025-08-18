@@ -4,6 +4,7 @@ import PopularSports from "@/components/PopularSports";
 import HotPicks from "@/components/HotPicks";
 import LatestBonuses from "@/components/LatestBonuses";
 import OddsTable from "@/components/OddsTable";
+import { openBettingSiteByName } from "@/config/bettingSites";
 
 export default function Home() {
   return (
@@ -19,7 +20,10 @@ export default function Home() {
                 <p className="text-sm opacity-95 mb-2 sm:mb-3">Get 100% First Deposit Bonus!</p>
                 <div className="text-xs opacity-80">Limited Time Offer</div>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("BETINASIA")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
+              >
                 CLAIM NOW
               </button>
             </div>
@@ -35,7 +39,10 @@ export default function Home() {
                 <p className="text-sm opacity-95 mb-2 sm:mb-3">Get a 300€ Welcome bonus!</p>
                 <div className="text-xs opacity-80">New Players Only</div>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bet-at-home")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
+              >
                 CLAIM NOW
               </button>
             </div>
@@ -51,7 +58,10 @@ export default function Home() {
                 <p className="text-sm opacity-95 mb-2 sm:mb-3">First Deposit Sport Bonus</p>
                 <div className="text-xs opacity-80">Exclusive Deal</div>
               </div>
-              <button className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm">
+              <button 
+                onClick={() => openBettingSiteByName("bets.io")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
+              >
                 CLAIM NOW
               </button>
             </div>
