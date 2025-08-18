@@ -594,7 +594,7 @@ export default function Betting() {
                   {/* Featured Article 1 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide1.png" 
+                      src="/assets/Betting_guide/guide1.png" 
                       alt="Lucky 15 Bet Guide" 
                       className="w-full h-48 object-cover"
                     />
@@ -610,7 +610,7 @@ export default function Betting() {
                   {/* Featured Article 2 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide2.png" 
+                      src="/assets/Betting_guide/guide2.png" 
                       alt="Trixie Bet Guide" 
                       className="w-full h-48 object-cover"
                     />
@@ -626,7 +626,7 @@ export default function Betting() {
                   {/* Featured Article 3 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide3.png" 
+                      src="/assets/Betting_guide/guide3.png" 
                       alt="Asian Handicap Guide" 
                       className="w-full h-48 object-cover"
                     />
@@ -648,7 +648,7 @@ export default function Betting() {
                   {/* Guide 4 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide4.png" 
+                      src="/assets/Betting_guide/guide4.png" 
                       alt="Lucky 31 Bet Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -662,7 +662,7 @@ export default function Betting() {
                   {/* Guide 5 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide5.png" 
+                      src="/assets/Betting_guide/guide5.png" 
                       alt="Patent Bet Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -676,7 +676,7 @@ export default function Betting() {
                   {/* Guide 6 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide6.png" 
+                      src="/assets/Betting_guide/guide6.png" 
                       alt="Heinz Bet Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -690,7 +690,7 @@ export default function Betting() {
                   {/* Guide 7 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide7.png" 
+                      src="/assets/Betting_guide/guide7.png" 
                       alt="Handball Betting Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -704,7 +704,7 @@ export default function Betting() {
                   {/* Guide 8 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide8.png" 
+                      src="/assets/Betting_guide/guide8.png" 
                       alt="Volleyball Betting Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -718,7 +718,7 @@ export default function Betting() {
                   {/* Guide 9 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide9.png" 
+                      src="/assets/Betting_guide/guide9.png" 
                       alt="eSports Betting Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -732,7 +732,7 @@ export default function Betting() {
                   {/* Guide 10 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide10.png" 
+                      src="/assets/Betting_guide/guide10.png" 
                       alt="Draw No Bet Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -746,7 +746,7 @@ export default function Betting() {
                   {/* Guide 11 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide11.png" 
+                      src="/assets/Betting_guide/guide11.png" 
                       alt="Formula 1 Betting Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -760,7 +760,7 @@ export default function Betting() {
                   {/* Guide 12 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide12.png" 
+                      src="/assets/Betting_guide/guide12.png" 
                       alt="Half Time Full Time Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
@@ -774,7 +774,7 @@ export default function Betting() {
                   {/* Guide 13 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
-                      src="/src/assets/Betting_guide/guide13.png" 
+                      src="/assets/Betting_guide/guide13.png" 
                       alt="3-Way Handicap Guide" 
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                     />
