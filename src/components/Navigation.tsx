@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import newlogo from "@/images/newlogo.png";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("home");
   const [activeSport, setActiveSport] = useState("Football");
   const [showMoreSports, setShowMoreSports] = useState(false);
@@ -99,37 +101,37 @@ export default function Navigation() {
   };
 
   const sports = [
-    { name: "Football", icon: "⚽", count: 156, color: "from-green-500 to-emerald-600" },
-    { name: "Tennis", icon: "🎾", count: 67, color: "from-yellow-500 to-orange-500" },
-    { name: "Basketball", icon: "🏀", count: 89, color: "from-orange-500 to-red-500" },
-    { name: "Hockey", icon: "🏒", count: 23, color: "from-blue-500 to-indigo-600" },
-    { name: "Golf", icon: "⛳", count: 34, color: "from-emerald-500 to-green-600" },
-    { name: "Volleyball", icon: "🏐", count: 45, color: "from-purple-500 to-pink-500" },
-    { name: "Baseball", icon: "⚾", count: 56, color: "from-red-500 to-pink-600" },
-    { name: "Snooker", icon: "🎱", count: 12, color: "from-gray-600 to-gray-800" }
+    { name: "Football", icon: "/assets/sports_icons/football.png", count: 156, color: "from-green-500 to-emerald-600" },
+    { name: "Tennis", icon: "/assets/sports_icons/tennis.png", count: 67, color: "from-yellow-500 to-orange-500" },
+    { name: "Basketball", icon: "/assets/sports_icons/basketball.png", count: 89, color: "from-orange-500 to-red-500" },
+    { name: "Hockey", icon: "/assets/sports_icons/hockey.png", count: 23, color: "from-blue-500 to-indigo-600" },
+    { name: "Golf", icon: "/assets/sports_icons/golf.png", count: 34, color: "from-emerald-500 to-green-600" },
+    { name: "Volleyball", icon: "/assets/sports_icons/volleyball.png", count: 45, color: "from-purple-500 to-pink-500" },
+    { name: "Baseball", icon: "/assets/sports_icons/player.png", count: 56, color: "from-red-500 to-pink-600" },
+    { name: "Snooker", icon: "/assets/sports_icons/snooker.png", count: 12, color: "from-gray-600 to-gray-800" }
   ];
 
   const moreSports = [
     { name: "American Football", icon: "🏈", count: 1 },
     { name: "Australian Rules", icon: "🏉", count: 2 },
     { name: "Badminton", icon: "🏸", count: 0 },
-    { name: "Bandy", icon: "🏒", count: 0 },
-    { name: "Beach Soccer", icon: "⚽", count: 0 },
-    { name: "Beach Volleyball", icon: "🏐", count: 14 },
+    { name: "Bandy", icon: "/assets/sports_icons/hockey.png", count: 0 },
+    { name: "Beach Soccer", icon: "/assets/sports_icons/football.png", count: 0 },
+    { name: "Beach Volleyball", icon: "/assets/sports_icons/volleyball.png", count: 14 },
     { name: "Boxing", icon: "🥊", count: 0 },
     { name: "Cricket", icon: "🏏", count: 8 },
     { name: "Cycling", icon: "🚴", count: 3 },
     { name: "Darts", icon: "🎯", count: 10 },
     { name: "Esports", icon: "🎮", count: 9 },
-    { name: "Field Hockey", icon: "🏑", count: 4 },
-    { name: "Floorball", icon: "🏒", count: 0 },
-    { name: "Futsal", icon: "⚽", count: 2 },
+    { name: "Field Hockey", icon: "/assets/sports_icons/hockey.png", count: 4 },
+    { name: "Floorball", icon: "/assets/sports_icons/hockey.png", count: 0 },
+    { name: "Futsal", icon: "/assets/sports_icons/football.png", count: 2 },
     { name: "Handball", icon: "🤾", count: 24 },
     { name: "Horse Racing", icon: "🏇", count: 148 },
     { name: "Kabaddi", icon: "🤼", count: 0 },
     { name: "MMA", icon: "🥋", count: 0 },
     { name: "Motorsport", icon: "🏁", count: 1 },
-    { name: "Netball", icon: "🏐", count: 0 },
+    { name: "Netball", icon: "/assets/sports_icons/volleyball.png", count: 0 },
     { name: "Pesäpallo", icon: "🏏", count: 9 },
     { name: "Rugby League", icon: "🏉", count: 1 },
     { name: "Rugby Union", icon: "🏉", count: 0 },
@@ -139,14 +141,14 @@ export default function Navigation() {
   ];
 
   const navigationTabs = [
-    { id: "home", name: "Home", icon: "🏠", gradient: "from-blue-500 to-cyan-500" },
-    { id: "next-matches", name: "Next Matches", icon: "📅", gradient: "from-green-500 to-emerald-500" },
-    { id: "dropping-odds", name: "Dropping Odds", icon: "📉", gradient: "from-red-500 to-pink-500" },
-    { id: "sure-bets", name: "Sure Bets", icon: "🎯", gradient: "from-purple-500 to-indigo-500" },
-    { id: "in-play-odds", name: "In Play Odds", icon: "⚡", gradient: "from-yellow-500 to-orange-500" },
-    { id: "all-events", name: "All Events", icon: "📊", gradient: "from-indigo-500 to-blue-500" },
-    { id: "betting", name: "Betting", icon: "💰", gradient: "from-emerald-500 to-green-500" },
-    { id: "bookmakers", name: "BookMakers", icon: "🏢", gradient: "from-gray-600 to-gray-700" }
+    { id: "home", name: "Home", icon: "/assets/tab_icons/Home.png", gradient: "from-blue-500 to-cyan-500" },
+    { id: "next-matches", name: "Next Matches", icon: "/assets/tab_icons/Next_Matches.png", gradient: "from-green-500 to-emerald-500" },
+    { id: "dropping-odds", name: "Dropping Odds", icon: "/assets/tab_icons/Dropping_Odds.png", gradient: "from-red-500 to-pink-500" },
+    { id: "sure-bets", name: "Sure Bets", icon: "/assets/tab_icons/Sure_Bets.png", gradient: "from-purple-500 to-indigo-500" },
+    { id: "in-play-odds", name: "In Play Odds", icon: "/assets/tab_icons/In_Play_Odds.png", gradient: "from-yellow-500 to-orange-500" },
+    { id: "all-events", name: "All Events", icon: "/assets/tab_icons/All_Events.png", gradient: "from-indigo-500 to-blue-500" },
+    { id: "betting", name: "Betting", icon: "/assets/tab_icons/Betting.png", gradient: "from-emerald-500 to-green-500" },
+    { id: "bookmakers", name: "BookMakers", icon: "/assets/tab_icons/Bookmakers.png", gradient: "from-gray-600 to-gray-700" }
   ];
 
   return (
@@ -181,7 +183,15 @@ export default function Navigation() {
                   {activeTab === tab.id && (
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-50"></div>
                   )}
-                  <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200">{tab.icon}</span>
+                  {tab.icon.startsWith('/') ? (
+                    <img 
+                      src={tab.icon} 
+                      alt={tab.name}
+                      className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-200 icon-yellow"
+                    />
+                  ) : (
+                    <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200 text-accent">{tab.icon}</span>
+                  )}
                   <span className="relative z-10 font-bold tracking-wide text-sm xl:text-base hidden md:block">{tab.name}</span>
                   {activeTab === tab.id && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/50 rounded-full"></div>
@@ -193,6 +203,23 @@ export default function Navigation() {
 
           {/* Right side - User Actions */}
           <div className="flex items-center gap-4 ml-8">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-3 text-accent hover:text-accent/80 hover:bg-accent/10 rounded-xl transition-all duration-300 hover:scale-105"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            >
+              {theme === 'light' ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+            </button>
+            
             <button
               className="px-6 py-3 text-accent hover:text-accent/80 font-semibold hover:bg-accent/10 rounded-xl transition-all duration-300 hover:scale-105"
               onClick={() => navigate("/signin")}
@@ -229,7 +256,15 @@ export default function Navigation() {
                 {activeSport === sport.name && (
                   <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30"></div>
                 )}
-                <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200">{sport.icon}</span>
+                {sport.icon.startsWith('/') ? (
+                  <img 
+                    src={sport.icon} 
+                    alt={sport.name}
+                    className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-200 icon-yellow"
+                  />
+                ) : (
+                  <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200 text-accent">{sport.icon}</span>
+                )}
                 <span className="font-bold tracking-wide text-sm xl:text-base relative z-10 hidden md:block">{sport.name}</span>
                 {activeSport === sport.name && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/50 rounded-full"></div>
@@ -269,7 +304,15 @@ export default function Navigation() {
                             }}
                             className="flex items-center gap-3 p-1 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
                           >
-                            <span className="text-lg group-hover:scale-110 transition-transform duration-200">{sport.icon}</span>
+                            {sport.icon.startsWith('/') ? (
+                              <img 
+                                src={sport.icon} 
+                                alt={sport.name}
+                                className="w-5 h-5 group-hover:scale-110 transition-transform duration-200 icon-yellow"
+                              />
+                            ) : (
+                              <span className="text-lg group-hover:scale-110 transition-transform duration-200 text-accent">{sport.icon}</span>
+                            )}
                             <div className="flex-1">
                               <span className="font-bold tracking-wide text-sm text-text group-hover:text-accent transition-colors duration-200">{sport.name}</span>
                               {sport.count > 0 && (

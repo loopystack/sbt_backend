@@ -1,12 +1,44 @@
 :root {
-    --bg: 220 15% 5%;
-    --surface: 220 15% 10%;
-    --border: 220 15% 20%;
-    --text: 0 0% 96%;
-    --muted: 0 0% 70%;
-    --accent: 45 70% 50% / 0.7;
-    --accent-2: 140 100% 50%;
-  }
+  /* Dark theme (default) */
+  --bg: 220 15% 5%;
+  --surface: 220 15% 10%;
+  --border: 220 15% 20%;
+  --text: 0 0% 96%;
+  --muted: 0 0% 70%;
+  /* Circle-like gray (approx Tailwind gray-600): hsl(215 14% 34%) */
+  --accent: 215 14% 34%;
+  --accent-2: 215 14% 34%;
+  --button-text: 0 0% 0%;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg: 0 0% 98%;
+  --surface: 0 0% 96%;
+  --border: 0 0% 85%;
+  --text: 0 0% 15%;
+  --muted: 0 0% 45%;
+  --accent: 215 14% 34%;
+  --accent-2: 215 14% 34%;
+  --button-text: 0 0% 0%;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --bg: 220 15% 5%;
+  --surface: 220 15% 10%;
+  --border: 220 15% 20%;
+  --text: 0 0% 96%;
+  --muted: 0 0% 70%;
+  --accent: 215 14% 34%;
+  --accent-2: 215 14% 34%;
+  --button-text: 0 0% 0%;
+}
+
+/* Theme transition for smooth switching */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
 
 /* Custom scrollbar utilities */
 .scrollbar-hide {
@@ -305,5 +337,107 @@
 
 .animate-pulse-ring {
   animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* Icon color utilities */
+/* Dark theme: Turns black PNG icons into yellow */
+[data-theme="dark"] .icon-yellow {
+  filter: brightness(0) saturate(100%) invert(83%) sepia(67%) saturate(748%) hue-rotate(359deg) brightness(105%) contrast(102%);
+}
+
+/* Light theme: Keeps black PNG icons as black for better contrast */
+[data-theme="light"] .icon-yellow {
+  filter: none;
+}
+
+/* Theme-specific icon colors */
+[data-theme="light"] .icon-yellow {
+  filter: none;
+}
+
+[data-theme="dark"] .icon-yellow {
+  filter: brightness(0) saturate(100%) invert(83%) sepia(67%) saturate(748%) hue-rotate(359deg) brightness(105%) contrast(102%);
+}
+
+ /* Theme-specific color overrides for better contrast */
+ [data-theme="light"] {
+   /* Card borders: pure black for maximum visibility */
+   .border-white,
+   .border-gray-100,
+   .border-gray-200,
+   .border-gray-300,
+   .border-gray-400,
+   .border-gray-500,
+   .border-gray-600 {
+     border-color: #000000 !important;
+   }
+   
+  /* Override any remaining yellow backgrounds to black */
+  .bg-yellow-400,
+  .bg-yellow-500,
+  .bg-yellow-600,
+  .from-yellow-400,
+  .to-yellow-400,
+  .hover:from-yellow-400,
+  .hover:to-yellow-400 {
+    background-color: hsl(0 0% 15%) !important;
+    background-image: none !important;
+  }
+  
+  /* Override yellow text to black */
+  .text-yellow-400,
+  .text-yellow-500,
+  .text-yellow-600 {
+    color: hsl(0 0% 15%) !important;
+  }
+  
+  /* Override yellow borders to black */
+  .border-yellow-400,
+  .border-yellow-500,
+  .border-yellow-600,
+  .hover:border-yellow-400 {
+    border-color: hsl(0 0% 15%) !important;
+  }
+  
+  /* Override gradient backgrounds that contain yellow */
+  .from-yellow-400\/20,
+  .to-yellow-400\/20,
+  .hover:from-yellow-400\/20,
+  .hover:to-yellow-400\/20 {
+    background: hsl(0 0% 15% / 0.2) !important;
+  }
+  
+  /* Specific overrides for the three circled elements */
+  /* 1. United States country selection - override any yellow background */
+  [data-theme="light"] .bg-yellow-400,
+  [data-theme="light"] .bg-yellow-500,
+  [data-theme="light"] .bg-yellow-600 {
+    background-color: hsl(0 0% 15%) !important;
+  }
+  
+  /* 2. Search button - override yellow background */
+  [data-theme="light"] button:has(.bg-yellow-400),
+  [data-theme="light"] button:has(.bg-yellow-500),
+  [data-theme="light"] button:has(.bg-yellow-600) {
+    background-color: hsl(0 0% 15%) !important;
+  }
+  
+  /* 3. View Matches button - override yellow background */
+  [data-theme="light"] .bg-gradient-to-r.from-yellow-400.to-orange-400,
+  [data-theme="light"] .bg-gradient-to-r.from-yellow-500.to-orange-500 {
+    background: linear-gradient(to right, hsl(0 0% 15%), hsl(0 0% 15%)) !important;
+  }
+  
+  /* Override any remaining yellow elements with a catch-all rule */
+  [data-theme="light"] *[class*="yellow"] {
+    color: hsl(0 0% 15%) !important;
+    background-color: hsl(0 0% 15%) !important;
+    border-color: hsl(0 0% 15%) !important;
+  }
+}
+
+/* Dark theme maintains yellow colors */
+[data-theme="dark"] {
+  /* Keep existing yellow colors for dark theme */
 }
   

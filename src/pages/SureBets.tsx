@@ -293,9 +293,9 @@ export default function SureBets() {
         <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-400 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs sm:text-sm font-bold">i</span>
+              <span className="text-text text-xs sm:text-sm font-bold">i</span>
             </div>
-            <span className="text-white font-medium text-sm sm:text-base">There are currently no sure bets available!</span>
+            <span className="text-text font-medium text-sm sm:text-base">There are currently no sure bets available!</span>
           </div>
           <p className="text-gray-500 text-xs sm:text-sm text-center">
             Check back later for new arbitrage opportunities or try adjusting your filters.

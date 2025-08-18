@@ -36,10 +36,10 @@ export default function Footer() {
             <div className="mb-4">
               <h4 className="text-sm font-medium text-text mb-2">Our Services</h4>
               <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">AI Trading</span>
-                <span className="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">Sports Analytics</span>
-                <span className="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">Predictive Markets</span>
-                <span className="px-2 py-1 bg-accent/20 text-accent text-xs rounded-full">Real-time Data</span>
+                <span className="px-2 py-1 bg-accent/20 text-accent/200 text-xs rounded-full">AI Trading</span>
+                <span className="px-2 py-1 bg-accent/20 text-accent/200 text-xs rounded-full">Sports Analytics</span>
+                <span className="px-2 py-1 bg-accent/20 text-accent/200 text-xs rounded-full">Predictive Markets</span>
+                <span className="px-2 py-1 bg-accent/20 text-accent/200 text-xs rounded-full">Real-time Data</span>
               </div>
             </div>
             <div className="flex space-x-4">
@@ -66,7 +66,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-text mb-4">Our Team</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-10 h-10  bg-gray-400 rounded-full flex items-center justify-center">
                   <span className="text-black font-bold text-sm">HS</span>
                 </div>
                 <div>
@@ -75,7 +75,7 @@ export default function Footer() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
                   <span className="text-black font-bold text-sm">BZ</span>
                 </div>
                 <div>
@@ -84,7 +84,7 @@ export default function Footer() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
                   <span className="text-black font-bold text-sm">CS</span>
                 </div>
                 <div>
@@ -164,7 +164,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold text-text mb-4">Let's Contact!</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
                   <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
@@ -175,7 +175,7 @@ export default function Footer() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
                   <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -186,7 +186,7 @@ export default function Footer() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
                   <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -208,7 +208,7 @@ export default function Footer() {
                   placeholder="Enter your email"
                   className="flex-1 px-3 py-2 bg-bg border border-border rounded-l-lg text-sm text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
-                <button className="px-4 py-2 bg-accent text-black font-medium rounded-r-lg hover:bg-accent/80 transition-colors text-sm">
+                <button className="px-4 py-2 bg-accent text-white font-medium rounded-r-lg hover:bg-accent/80 transition-colors text-sm">
                   Subscribe
                 </button>
               </div>
@@ -228,7 +228,7 @@ export default function Footer() {
         {/* Additional Features Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-border">
           <div className="text-center">
-            <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
@@ -238,7 +238,7 @@ export default function Footer() {
           </div>
           
           <div className="text-center">
-            <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -248,7 +248,7 @@ export default function Footer() {
           </div>
           
           <div className="text-center">
-            <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -270,7 +270,7 @@ export default function Footer() {
             <div className="flex items-center space-x-4">
               <span className="text-sm text-muted">Powered by</span>
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-accent rounded flex items-center justify-center">
+                <div className="w-6 h-6 bg-gray-400 rounded flex items-center justify-center">
                   <span className="text-black font-bold text-xs">AI</span>
                 </div>
                 <span className="text-sm font-medium text-text">QBiT AI Technology</span>

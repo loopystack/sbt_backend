@@ -104,7 +104,7 @@ export default function RightSidebar() {
         <h3 className="text-sm font-semibold text-muted mb-2 sm:mb-3">ALERTS</h3>
         <div className="space-y-2 sm:space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {alerts.map((alert) => (
-            <div key={alert.id} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-2.5 sm:p-3 xl:p-4 border border-gray-700 hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group hover:border-accent/30">
+            <div key={alert.id} className="bg-gradient-to-br from-surface to-bg rounded-xl p-2.5 sm:p-3 xl:p-4 border border-border hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group hover:border-accent/30">
               {/* Alert Header with Icon and Time */}
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className="flex items-center gap-2 xl:gap-3">
@@ -117,16 +117,16 @@ export default function RightSidebar() {
                      alert.type === 'match' ? '⚽' : '🎁'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-100 leading-tight line-clamp-2">{alert.message}</p>
-                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-gray-500 rounded-full flex-shrink-0"></span>
+                    <p className="text-xs sm:text-sm font-medium text-text leading-tight line-clamp-2">{alert.message}</p>
+                    <p className="text-xs text-muted mt-1 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-muted rounded-full flex-shrink-0"></span>
                       {alert.time}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => removeAlert(alert.id)}
-                  className="text-gray-500 hover:text-red-400 transition-colors duration-200 p-1 hover:bg-red-900/30 rounded-full group-hover:opacity-100 opacity-0 flex-shrink-0"
+                  className="text-muted hover:text-red-400 transition-colors duration-200 p-1 hover:bg-red-900/30 rounded-full group-hover:opacity-100 opacity-0 flex-shrink-0"
                 >
                   <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -161,13 +161,13 @@ export default function RightSidebar() {
           ))}
           {alerts.length === 0 && (
             <div className="text-center py-6 sm:py-8">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 border border-gray-700">
-                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 border border-border">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-400">No alerts yet</p>
-              <p className="text-xs text-gray-500 mt-1">We'll notify you of important updates</p>
+              <p className="text-sm text-muted">No alerts yet</p>
+              <p className="text-xs text-muted mt-1">We'll notify you of important updates</p>
             </div>
           )}
         </div>

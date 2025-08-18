@@ -52,7 +52,7 @@ export default function ScrollToFooter() {
   return (
     <button
       onClick={handleScroll}
-      className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-accent hover:bg-accent/80 text-black rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 group animate-float animate-glow"
+      className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-yellow-300 hover:bg-yellow-400 text-black rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 group animate-float animate-glow"
       aria-label={isPastMiddle ? "Scroll to top" : "Scroll to footer"}
     >
       {/* Main button content */}
@@ -84,15 +84,15 @@ export default function ScrollToFooter() {
         </svg>
         
         {/* Multiple pulse animation rings */}
-        <div className="absolute inset-0 rounded-full bg-accent/20 animate-ping"></div>
-        <div className="absolute inset-0 rounded-full bg-accent/10 animate-ping" style={{ animationDelay: '0.5s' }}></div>
-        <div className="absolute inset-0 rounded-full bg-accent/5 animate-ping" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute inset-0 rounded-full bg-yellow-300/20 animate-ping"></div>
+        <div className="absolute inset-0 rounded-full bg-yellow-300/10 animate-ping" style={{ animationDelay: '0.5s' }}></div>
+        <div className="absolute inset-0 rounded-full bg-yellow-300/5 animate-ping" style={{ animationDelay: '1s' }}></div>
         
         {/* Custom pulse ring */}
-        <div className="absolute inset-0 rounded-full bg-accent/15 animate-pulse-ring"></div>
+        <div className="absolute inset-0 rounded-full bg-yellow-300/15 animate-pulse-ring"></div>
         
         {/* Glowing effect */}
-        <div className="absolute inset-0 rounded-full bg-accent/30 animate-pulse"></div>
+        <div className="absolute inset-0 rounded-full bg-yellow-300/30 animate-pulse"></div>
       </div>
       
       {/* Dynamic tooltip */}

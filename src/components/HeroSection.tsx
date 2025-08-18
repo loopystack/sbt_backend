@@ -52,7 +52,7 @@ export default function HeroSection() {
           <img 
             src="/assets/LeftMan.png" 
             alt="Betting Expert" 
-            className="object-contain rounded-xl shadow-lg"
+            className="object-contain rounded-xl"
           />
         </div>
         
