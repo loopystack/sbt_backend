@@ -109,9 +109,9 @@ export default function HotPicks() {
             <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
               <div className="text-center">
                 <span className="text-xs text-muted block">Best Odds</span>
-                <span className="text-xl sm:text-2xl font-bold text-accent">{pick.odds}</span>
+                <span className="text-xl sm:text-2xl font-bold text-text">{pick.odds}</span>
               </div>
-              <button className="px-3 sm:px-4 py-2 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors group-hover:scale-105 flex-shrink-0">
+              <button className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105 flex-shrink-0">
                 Compare Odds
               </button>
             </div>

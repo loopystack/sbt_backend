@@ -64,7 +64,7 @@ export default function RightSidebar() {
               <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
                 <h4 className="text-sm font-semibold text-text truncate">{league.title}</h4>
                 <p className="text-xs text-muted line-clamp-2">{league.description}</p>
-                <button className="w-full bg-accent text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium hover:bg-accent/90 transition-colors">
+                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
                   View Matches
                 </button>
               </div>

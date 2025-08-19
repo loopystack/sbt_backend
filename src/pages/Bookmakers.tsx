@@ -263,8 +263,8 @@ export default function Bookmakers() {
             <div key={bookmaker.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
               {/* Payout Information */}
               {bookmaker.payout && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm text-blue-800">
+                <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <div className="text-sm text-gray-800 dark:text-gray-200">
                     <span className="font-semibold">{bookmaker.payout}</span> {bookmaker.payoutLabel}
                     {bookmaker.inPlayPayout && (
                       <span className="ml-4">
@@ -280,7 +280,7 @@ export default function Bookmakers() {
                 <div className="space-y-4">
                   {/* Logo and Rating */}
                   <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 ${bookmaker.logoColor} rounded-lg flex items-center justify-center font-bold text-lg`}>
+                    <div className={`w-16 h-16 ${bookmaker.logoColor} rounded-lg flex items-center justify-center font-bold text-lg text-center`}>
                       {bookmaker.logo}
                     </div>
                     <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export default function Bookmakers() {
                   <div className="space-y-2">
                     {bookmaker.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <span className="text-black text-sm">✓</span>
+                        <span className="text-black dark:text-white text-sm">✓</span>
                         <span className="text-sm text-text">{feature}</span>
                       </div>
                     ))}
@@ -310,7 +310,7 @@ export default function Bookmakers() {
                 {/* Right Column - Action Button */}
                 <div className="lg:col-span-2 flex items-center justify-center">
                   <div className="text-center space-y-3">
-                    <button className="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors hover:scale-105">
+                    <button className="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors hover:scale-105">
                       Visit Bookmaker
                     </button>
                     <div>

@@ -129,7 +129,7 @@ export default function LatestBonuses() {
             {/* Claim Button */}
             <button 
               onClick={() => openBettingSiteByName(bonus.bookmaker)}
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors group-hover:scale-105"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105"
             >
               Claim Bonus
             </button>

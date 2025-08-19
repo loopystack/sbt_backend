@@ -75,7 +75,7 @@ export default function HeroSection() {
                 placeholder="Search for teams, leagues, or matches..."
                 className="w-full px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 bg-bg border border-border rounded-xl text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm sm:text-base"
               />
-              <button className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 px-3 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors text-xs sm:text-sm">
+              <button className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 px-3 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg transition-colors text-xs sm:text-sm">
                 Search
               </button>
             </div>
@@ -84,15 +84,15 @@ export default function HeroSection() {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-4xl mx-auto px-2">
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent mb-1 sm:mb-2">50+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">50+</div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Bookmakers</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent mb-1 sm:mb-2">20+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">20+</div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Sports</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-accent mb-1 sm:mb-2">1000+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">1000+</div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Daily Matches</div>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function HeroSection() {
                 </span>
                 <div className="text-right">
                   <div className="text-xs sm:text-sm text-muted">{match.date}</div>
-                  <div className="text-sm sm:text-base lg:text-lg font-bold text-accent">{match.time}</div>
+                  <div className="text-sm sm:text-base lg:text-lg font-bold text-text">{match.time}</div>
                 </div>
               </div>
               
@@ -162,7 +162,7 @@ export default function HeroSection() {
               </div>
               
               {/* Action */}
-              <button className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors group-hover:scale-105">
+              <button className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105">
                 Compare Odds
               </button>
             </div>

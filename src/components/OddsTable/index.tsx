@@ -145,7 +145,7 @@ export default function OddsTable() {
                 <div className="text-xs text-muted">Best Odds</div>
                 <div className="text-sm font-bold text-accent">+155 / -260</div>
               </div>
-              <button className="px-3 sm:px-4 py-2 bg-accent text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors hover:scale-105">
+              <button className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors hover:scale-105">
                 Compare
               </button>
             </div>
@@ -213,7 +213,7 @@ export default function OddsTable() {
                     </div>
                   </td>
                   <td className="text-center p-4">
-                    <button className="px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors hover:scale-105">
+                    <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors hover:scale-105">
                       Compare
                     </button>
                   </td>

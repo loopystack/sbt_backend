@@ -491,17 +491,17 @@ export default function AllEvents() {
         <h3 className="text-lg font-semibold text-text mb-4">Events Overview</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-accent">{allEvents.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-text">{allEvents.length}</div>
             <div className="text-sm text-muted">Total Events</div>
           </div>
           <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-accent">
+            <div className="text-xl sm:text-2xl font-bold text-text">
               {allEvents.filter(event => event.sport === 'Football').length}
             </div>
             <div className="text-sm text-muted">Football Events</div>
           </div>
           <div className="text-center">
-            <div className="text-xl sm:text-2xl font-bold text-accent">
+            <div className="text-xl sm:text-2xl font-bold text-text">
               {allEvents.filter(event => event.sport === 'Basketball').length}
             </div>
             <div className="text-sm text-muted">Basketball Events</div>

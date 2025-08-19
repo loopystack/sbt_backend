@@ -8,6 +8,8 @@ export default function Betting() {
   const [showBettingBonusesModal, setShowBettingBonusesModal] = useState(false);
   const [showBettingGuidesModal, setShowBettingGuidesModal] = useState(false);
   const [showBestBettingAppsModal, setShowBestBettingAppsModal] = useState(false);
+  const [showSweepstakesCasinosModal, setShowSweepstakesCasinosModal] = useState(false);
+  const [showSweepstakesPromoCodesModal, setShowSweepstakesPromoCodesModal] = useState(false);
 
   const categories = [
     "Best Social Casinos",
@@ -108,19 +110,23 @@ export default function Betting() {
           <div 
             key={category.name} 
             className="bg-surface border border-border rounded-lg p-4 text-center hover:shadow-lg transition-all duration-300 cursor-pointer group"
-            onClick={() => {
-              if (category.name === "Betting Sites") {
-                setShowBettingSitesModal(true);
-              } else if (category.name === "Betting Bonuses") {
-                setShowBettingBonusesModal(true);
-              } else if (category.name === "Betting Guides") {
-                setShowBettingGuidesModal(true);
-              } else if (category.name === "Best Betting Apps") {
-                setShowBestBettingAppsModal(true);
-              }
-            }}
+                         onClick={() => {
+               if (category.name === "Betting Sites") {
+                 setShowBettingSitesModal(true);
+               } else if (category.name === "Betting Bonuses") {
+                 setShowBettingBonusesModal(true);
+               } else if (category.name === "Betting Guides") {
+                 setShowBettingGuidesModal(true);
+               } else if (category.name === "Best Betting Apps") {
+                 setShowBestBettingAppsModal(true);
+               } else if (category.name === "Sweepstakes Casinos") {
+                 setShowSweepstakesCasinosModal(true);
+               } else if (category.name === "Sweepstakes Casinos Promo Codes") {
+                 setShowSweepstakesPromoCodesModal(true);
+               }
+             }}
           >
-            <div className="w-12 h-12 mx-auto mb-3 text-2xl flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 mx-auto mb-3 text-4xl flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
               {category.icon}
             </div>
             <h3 className="font-semibold text-text text-sm mb-1">{category.name}</h3>
@@ -360,11 +366,21 @@ export default function Betting() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bettingSites.map((site) => (
                   <div key={site.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 group">
-                    {/* Site Header */}
-                    <div className="text-center mb-4">
-                      <div className="w-16 h-16 bg-accent text-black rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
-                        {site.name.charAt(0)}
-                      </div>
+                                         {/* Site Header */}
+                     <div className="text-center mb-4">
+                                               <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold text-white ${
+                          site.id === "1" ? "bg-gradient-to-r from-yellow-400 to-orange-500" :
+                          site.id === "2" ? "bg-gradient-to-r from-pink-400 to-rose-500" :
+                          site.id === "3" ? "bg-gradient-to-r from-purple-400 to-indigo-500" :
+                          site.id === "4" ? "bg-gradient-to-r from-green-400 to-emerald-500" :
+                          site.id === "5" ? "bg-gradient-to-r from-blue-400 to-cyan-500" :
+                          site.id === "6" ? "bg-gradient-to-r from-red-400 to-pink-500" :
+                          site.id === "7" ? "bg-gradient-to-r from-indigo-400 to-purple-500" :
+                          site.id === "8" ? "bg-gradient-to-r from-emerald-400 to-teal-500" :
+                          "bg-gradient-to-r from-orange-400 to-red-500"
+                        }`}>
+                         {site.name.charAt(0)}
+                       </div>
                       <h3 className="text-lg font-bold text-text mb-1">{site.name}</h3>
                       <div className="flex items-center justify-center gap-1 mb-2">
                         {[...Array(5)].map((_, i) => (
@@ -392,13 +408,13 @@ export default function Betting() {
                       </div>
                     </div>
 
-                    {/* Claim Button */}
-                    <button
-                      onClick={() => openBettingSite(site.id)}
-                      className="w-full bg-accent hover:bg-accent/80 text-black font-semibold py-3 px-4 rounded-lg"
-                    >
-                      Claim Bonus
-                    </button>
+                                         {/* Claim Button */}
+                     <button
+                       onClick={() => openBettingSite(site.id)}
+                       className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300"
+                     >
+                       Claim Bonus
+                     </button>
                   </div>
                 ))}
               </div>
@@ -470,10 +486,10 @@ export default function Betting() {
                 {bettingSites.map((site, index) => (
                   <div key={site.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                     <div className="flex items-start gap-4">
-                      {/* Ranking */}
-                      <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center text-xl font-bold">
-                        {index + 1}
-                      </div>
+                                             {/* Ranking */}
+                       <div className="w-12 h-12 bg-accent/30 dark:bg-accent/20 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                         {index + 1}
+                       </div>
                       
                       {/* Site Info */}
                       <div className="flex-1">
@@ -598,13 +614,13 @@ export default function Betting() {
                       alt="Lucky 15 Bet Guide" 
                       className="w-full h-48 object-cover"
                     />
-                    <div className="p-4">
-                      <h4 className="font-bold text-text mb-2">What Is a Lucky 15 Bet? How It Works and When to Use It</h4>
-                      <p className="text-sm text-muted mb-3">Jim Knight - 07.07.2025</p>
-                      <button className="w-full bg-accent hover:bg-accent/80 text-black font-semibold py-2 px-4 rounded-lg">
-                        Read Guide
-                      </button>
-                    </div>
+                                         <div className="p-4">
+                       <h4 className="font-bold text-text mb-2">What Is a Lucky 15 Bet? How It Works and When to Use It</h4>
+                       <p className="text-sm text-muted mb-3">Jim Knight - 07.07.2025</p>
+                       <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300">
+                         Read Guide
+                       </button>
+                     </div>
                   </div>
 
                   {/* Featured Article 2 */}
@@ -614,13 +630,13 @@ export default function Betting() {
                       alt="Trixie Bet Guide" 
                       className="w-full h-48 object-cover"
                     />
-                    <div className="p-4">
-                      <h4 className="font-bold text-text mb-2">What Is a Trixie Bet? Full Explanation and Examples</h4>
-                      <p className="text-sm text-muted mb-3">Jim Knight - 07.07.2025</p>
-                      <button className="w-full bg-accent hover:bg-accent/80 text-black font-semibold py-2 px-4 rounded-lg">
-                        Read Guide
-                      </button>
-                    </div>
+                                         <div className="p-4">
+                       <h4 className="font-bold text-text mb-2">What Is a Trixie Bet? Full Explanation and Examples</h4>
+                       <p className="text-sm text-muted mb-3">Jim Knight - 07.07.2025</p>
+                       <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300">
+                         Read Guide
+                       </button>
+                     </div>
                   </div>
 
                   {/* Featured Article 3 */}
@@ -630,13 +646,13 @@ export default function Betting() {
                       alt="Asian Handicap Guide" 
                       className="w-full h-48 object-cover"
                     />
-                    <div className="p-4">
-                      <h4 className="font-bold text-text mb-2">Asian Handicap Betting Explained: Complete Guide for 2025</h4>
-                      <p className="text-sm text-muted mb-3">Jim Knight - 24.06.2025</p>
-                      <button className="w-full bg-accent hover:bg-accent/80 text-black font-semibold py-2 px-4 rounded-lg">
-                        Read Guide
-                      </button>
-                    </div>
+                                         <div className="p-4">
+                       <h4 className="font-bold text-text mb-2">Asian Handicap Betting Explained: Complete Guide for 2025</h4>
+                       <p className="text-sm text-muted mb-3">Jim Knight - 24.06.2025</p>
+                       <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300">
+                         Read Guide
+                       </button>
+                     </div>
                   </div>
                 </div>
               </div>
@@ -854,10 +870,10 @@ export default function Betting() {
                  {/* App 1: Stake */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                     {/* Ranking */}
-                     <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center text-xl font-bold">
-                       1
-                     </div>
+                                           {/* Ranking */}
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        1
+                      </div>
                      
                      {/* App Info */}
                      <div className="flex-1">
@@ -946,10 +962,10 @@ export default function Betting() {
                  {/* App 2: BC.GAME */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                     {/* Ranking */}
-                     <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center text-xl font-bold">
-                       2
-                     </div>
+                                           {/* Ranking */}
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        2
+                      </div>
                      
                      {/* App Info */}
                      <div className="flex-1">
@@ -1029,10 +1045,10 @@ export default function Betting() {
                  {/* App 3: GG.Bet */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                     {/* Ranking */}
-                     <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center text-xl font-bold">
-                       3
-                     </div>
+                                           {/* Ranking */}
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
+                        3
+                      </div>
                      
                      {/* App Info */}
                      <div className="flex-1">
@@ -1125,7 +1141,452 @@ export default function Betting() {
              </div>
            </div>
          </div>
-       )}
-     </section>
-   );
- }
+               )}
+
+        {/* Sweepstakes Casinos Modal */}
+        {showSweepstakesCasinosModal && (
+          <div 
+            className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
+            onClick={() => setShowSweepstakesCasinosModal(false)}
+          >
+            <div 
+              className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-text">Best Sweepstakes Casinos Online with Expert Ratings & Promotions</h2>
+                  <p className="text-muted text-sm mt-1">Discover the top sweepstakes casinos for 2025 with exclusive bonuses and expert reviews</p>
+                </div>
+                <button
+                  onClick={() => setShowSweepstakesCasinosModal(false)}
+                  className="text-muted hover:text-text transition-colors p-2"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="px-6 pb-4">
+                <div className="flex gap-1 border-b border-border">
+                  {["Best Social Casinos", "New Social Casinos", "Highest Bonus", "Number of Slots"].map((tab) => (
+                    <button
+                      key={tab}
+                      className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                        tab === "Best Social Casinos"
+                          ? "text-accent border-b-2 border-accent"
+                          : "text-muted hover:text-accent"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                {/* Featured Casinos Section */}
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-text mb-6">Top 3 Online Sweepstakes Casino Sites: Expert-Reviewed</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Featured Casino 1 */}
+                    <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino1.png" 
+                        alt="Stake.us Casino" 
+                        className="w-full h-48 object-cover"
+                      />
+                                             <div className="p-4">
+                         <h4 className="font-bold text-text mb-2">Stake.us - Best Online Sweepstakes Casino for Welcome Bonus</h4>
+                         <p className="text-sm text-muted mb-3">James Leeland - 08.08.2025</p>
+                         <div className="space-y-2 mb-3">
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">260K GC & 55 SC welcome bonus</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Original games from in-house developers</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Live dealer games</span>
+                           </div>
+                         </div>
+                         <button 
+                           onClick={() => window.open('https://stake.us', '_blank')}
+                           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                         >
+                           Visit Casino
+                         </button>
+                       </div>
+                    </div>
+
+                    {/* Featured Casino 2 */}
+                    <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino2.png" 
+                        alt="WOW Vegas Casino" 
+                        className="w-full h-48 object-cover"
+                      />
+                                             <div className="p-4">
+                         <h4 className="font-bold text-text mb-2">WOW Vegas - Best Sweepstake Casino Online for Slot Games</h4>
+                         <p className="text-sm text-muted mb-3">James Leeland - 08.08.2025</p>
+                         <div className="space-y-2 mb-3">
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">860+ casino-style games</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">250k WOW Coins and 5 SC welcome bonus</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Star system VIP club</span>
+                           </div>
+                         </div>
+                         <button 
+                           onClick={() => window.open('https://wowvegas.com', '_blank')}
+                           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                         >
+                           Visit Casino
+                         </button>
+                       </div>
+                    </div>
+
+                    {/* Featured Casino 3 */}
+                    <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino3.png" 
+                        alt="Pulsz Casino" 
+                        className="w-full h-48 object-cover"
+                      />
+                                             <div className="p-4">
+                         <h4 className="font-bold text-text mb-2">Pulsz - Best Sweepstakes Casino for Prize Redemption</h4>
+                         <p className="text-sm text-muted mb-3">James Leeland - 08.08.2025</p>
+                         <div className="space-y-2 mb-3">
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Bank, Skrill, and gift card redemption</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">16k GC and 3.2 SC welcome offer</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Android and iOS mobile apps</span>
+                           </div>
+                         </div>
+                         <button 
+                           onClick={() => window.open('https://pulsz.com', '_blank')}
+                           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300"
+                         >
+                           Visit Casino
+                         </button>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* All Casinos Section */}
+                <div>
+                  <h3 className="text-xl font-bold text-text mb-6">All Sweepstakes Casinos</h3>
+                  <div className="space-y-4">
+                    {/* Casino 4 */}
+                    <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino4.png" 
+                        alt="Casino 4" 
+                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-text mb-2">High5Casino - Premium Social Gaming Experience</h4>
+                        <p className="text-sm text-muted mb-2">High5Casino offers a premium social gaming experience with high-quality graphics, regular tournaments, and a generous rewards system...</p>
+                        <p className="text-xs text-muted">James Leeland - 07.08.2025</p>
+                      </div>
+                    </div>
+
+                    {/* Casino 5 */}
+                    <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino5.png" 
+                        alt="Casino 5" 
+                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-text mb-2">Fortune Coins - Daily Rewards & Tournaments</h4>
+                        <p className="text-sm text-muted mb-2">Fortune Coins features daily rewards, exciting tournaments, and a wide variety of slot games with stunning visuals and engaging gameplay...</p>
+                        <p className="text-xs text-muted">James Leeland - 06.08.2025</p>
+                      </div>
+                    </div>
+
+                    {/* Casino 6 */}
+                    <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
+                      <img 
+                        src="/assets/sweepstakes/casino6.png" 
+                        alt="Casino 6" 
+                        className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-text mb-2">Chumba Casino - Licensed & Regulated Gaming</h4>
+                        <p className="text-sm text-muted mb-2">Chumba Casino provides a licensed and regulated gaming environment with secure transactions, fair play, and excellent customer support...</p>
+                        <p className="text-xs text-muted">James Leeland - 05.08.2025</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t border-border p-6 text-center">
+                <p className="text-sm text-muted mb-4">
+                  All sweepstakes casinos are licensed and regulated. Please gamble responsibly and use these guides to make informed decisions.
+                </p>
+                <button
+                  onClick={() => setShowSweepstakesCasinosModal(false)}
+                  className="bg-muted hover:bg-muted/80 text-text px-6 py-2 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+                 )}
+
+         {/* Sweepstakes Casinos Promo Codes Modal */}
+         {showSweepstakesPromoCodesModal && (
+           <div 
+             className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
+             onClick={() => setShowSweepstakesPromoCodesModal(false)}
+           >
+             <div 
+               className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+             >
+               {/* Modal Header */}
+               <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
+                 <div>
+                   <h2 className="text-2xl font-bold text-text">The Best Sweepstake Casino Promo Codes in 2025</h2>
+                   <p className="text-muted text-sm mt-1">Discover exclusive promo codes and bonuses for sweepstakes casinos</p>
+                 </div>
+                 <button
+                   onClick={() => setShowSweepstakesPromoCodesModal(false)}
+                   className="text-muted hover:text-text transition-colors p-2"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+
+               {/* Filter Tabs */}
+               <div className="px-6 pb-4">
+                 <div className="flex gap-1 border-b border-border">
+                   {["Best Social Casino Bonus", "Welcome Bonuses", "1st Deposit Bonuses", "No Deposit Bonuses"].map((tab) => (
+                     <button
+                       key={tab}
+                       className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                         tab === "Best Social Casino Bonus"
+                           ? "text-accent border-b-2 border-accent"
+                           : "text-muted hover:text-accent"
+                       }`}
+                     >
+                       {tab}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
+               {/* Modal Content */}
+               <div className="p-6">
+                 {/* Compare Bonuses Section */}
+                 <div className="mb-8">
+                   <h3 className="text-xl font-bold text-text mb-4">Compare the top bonuses offered at social and sweepstakes casinos in August</h3>
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     {/* Stake.us Section */}
+                     <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
+                       <h4 className="text-lg font-bold text-text mb-4">Stake.us - Notable Welcome Bonus by Using Our Promo Code</h4>
+                       <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div className="text-center">
+                           <img 
+                             src="/assets/sweepstakes/casino1.png" 
+                             alt="Stake.us mobile casino" 
+                             className="w-full h-32 object-cover rounded-lg mb-2"
+                           />
+                           <p className="text-xs text-muted">Stake.us mobile casino</p>
+                         </div>
+                         <div className="text-center">
+                           <img 
+                             src="/assets/sweepstakes/casino2.png" 
+                             alt="Stake.us slot games" 
+                             className="w-full h-32 object-cover rounded-lg mb-2"
+                           />
+                           <p className="text-xs text-muted">Stake.us slot games</p>
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div className="space-y-2">
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Weekly Raffles</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Valuable Promo Code</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">50m GC Daily Races</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Slot Battle Promotion</span>
+                           </div>
+                         </div>
+                         <div className="space-y-2">
+                           <div className="flex items-center gap-2">
+                             <span className="text-red-500 text-sm">✗</span>
+                             <span className="text-sm text-text">No mobile app</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-red-500 text-sm">✗</span>
+                             <span className="text-sm text-text">Verification May Take Longer</span>
+                           </div>
+                         </div>
+                       </div>
+                       <p className="text-sm text-muted mb-4">
+                         Stake.us is known for its brand ambassadors and unique promo code offers. Use the Odds Portal promo code "STAKEOP" for 260k GC, 55 SC, and a 5% Rakeback at Stake.us! Also enjoy the 50M GC Daily Races promo that doesn't require a code.
+                       </p>
+                       <button 
+                         onClick={() => window.open('https://stake.us', '_blank')}
+                         className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300"
+                       >
+                         Use Promo Code
+                       </button>
+                     </div>
+
+                     {/* Sportzino Section */}
+                     <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
+                       <h4 className="text-lg font-bold text-text mb-4">Sportzino - Straightforward Welcome Bonus with Quick Sign Up Steps and No Promo Code</h4>
+                       <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div className="text-center">
+                           <img 
+                             src="/assets/sweepstakes/casino3.png" 
+                             alt="Sportzino mobile casino" 
+                             className="w-full h-32 object-cover rounded-lg mb-2"
+                           />
+                           <p className="text-xs text-muted">Sportzino mobile casino</p>
+                         </div>
+                         <div className="text-center">
+                           <img 
+                             src="/assets/sweepstakes/casino4.png" 
+                             alt="Sportzino casino games" 
+                             className="w-full h-32 object-cover rounded-lg mb-2"
+                           />
+                           <p className="text-xs text-muted">Sportzino casino games</p>
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4 mb-4">
+                         <div className="space-y-2">
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Welcome Bonus of 1.5M GC and 41 SC</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">5-League VIP Program</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Cherry Blossom Raffle</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-green-500 text-sm">✓</span>
+                             <span className="text-sm text-text">Refer a Friend Bonus</span>
+                           </div>
+                         </div>
+                         <div className="space-y-2">
+                           <div className="flex items-center gap-2">
+                             <span className="text-red-500 text-sm">✗</span>
+                             <span className="text-sm text-text">No Table Games</span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <span className="text-red-500 text-sm">✗</span>
+                             <span className="text-sm text-text">No Live Casino</span>
+                           </div>
+                         </div>
+                       </div>
+                       <p className="text-sm text-muted mb-4">
+                         The Sportzino welcome bonus offers GC 1.5k and SC 6. Simple actions contribute to these prizes, making it easy to earn rewards.
+                       </p>
+                       <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 mb-4">
+                         <div className="text-xs text-muted mb-2">Action</div>
+                         <div className="space-y-1 text-xs">
+                           <div className="flex justify-between">
+                             <span>Registration:</span>
+                             <span className="font-semibold">20,000 GC, 1 SC</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span>Connecting Facebook:</span>
+                             <span className="font-semibold">20,000 GC, 1 SC</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span>Phone verification:</span>
+                             <span className="font-semibold">30,000 GC, 1 SC</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span>Email notifications:</span>
+                             <span className="font-semibold">30,000 GC, 1 SC</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span>SMS notifications:</span>
+                             <span className="font-semibold">30,000 GC, 1 SC</span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span>First Daily Login:</span>
+                             <span className="font-semibold">20,000 GC, 1 SC</span>
+                           </div>
+                         </div>
+                       </div>
+                       <button 
+                         onClick={() => window.open('https://sportzino.com', '_blank')}
+                         className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300"
+                       >
+                         Get Welcome Bonus
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* Additional Info */}
+                 <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-center">
+                   <p className="text-sm text-text">
+                     Get an extra 1,350,000 Gold Coins and 35 free Sweepstake Coins by completing all actions!
+                   </p>
+                 </div>
+               </div>
+
+               {/* Modal Footer */}
+               <div className="border-t border-border p-6 text-center">
+                 <p className="text-sm text-muted mb-4">
+                   All promo codes are subject to terms and conditions. Please gamble responsibly and use these codes to maximize your gaming experience.
+                 </p>
+                 <button
+                   onClick={() => setShowSweepstakesPromoCodesModal(false)}
+                   className="bg-muted hover:bg-muted/80 text-text px-6 py-2 rounded-lg transition-colors"
+                 >
+                   Close
+                 </button>
+               </div>
+             </div>
+           </div>
+         )}
+       </section>
+     );
+   }
