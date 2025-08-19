@@ -54,6 +54,84 @@ export default function HeroSection() {
             alt="Betting Expert" 
             className="object-contain rounded-xl"
           />
+          
+          {/* Animated Dollar Signs Spraying from Phone */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Dollar Sign 1 - Top Right of Phone */}
+            <div className="absolute top-1/3 right-1/6 animate-money-spray-1">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 2 - Top Left of Phone */}
+            <div className="absolute top-1/3 right-1/3 animate-money-spray-2">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 3 - Middle Right of Phone */}
+            <div className="absolute top-2/5 right-1/8 animate-money-spray-3">
+              <span className="text-yellow-400 text-3xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 4 - Middle Left of Phone */}
+            <div className="absolute top-2/5 right-1/4 animate-money-spray-4">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 5 - Bottom Right of Phone */}
+            <div className="absolute top-3/5 right-1/6 animate-money-spray-5">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 6 - Bottom Left of Phone */}
+            <div className="absolute top-3/5 right-1/3 animate-money-spray-6">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 7 - Upper Right of Phone */}
+            <div className="absolute top-1/4 right-1/10 animate-money-spray-7">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 8 - Upper Left of Phone */}
+            <div className="absolute top-1/4 right-1/5 animate-money-spray-8">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 9 - Center Right of Phone */}
+            <div className="absolute top-1/2 right-1/12 animate-money-spray-9">
+              <span className="text-yellow-400 text-3xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 10 - Center Left of Phone */}
+            <div className="absolute top-1/2 right-1/4 animate-money-spray-10">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 11 - Additional Right */}
+            <div className="absolute top-1/3 right-0 animate-money-spray-11">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 12 - Additional Left */}
+            <div className="absolute top-2/5 right-1/2 animate-money-spray-12">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 13 - Additional Upper */}
+            <div className="absolute top-1/6 right-1/8 animate-money-spray-13">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 14 - Additional Lower */}
+            <div className="absolute top-4/5 right-1/4 animate-money-spray-14">
+              <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
+            </div>
+            
+            {/* Dollar Sign 15 - Additional Center */}
+            <div className="absolute top-3/5 right-1/8 animate-money-spray-15">
+              <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
+            </div>
+          </div>
         </div>
         
         {/* Right Side - Keep original layout unchanged */}
