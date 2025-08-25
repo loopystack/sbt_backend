@@ -11,6 +11,7 @@ import Bookmakers from "@/pages/Bookmakers";
 import Bonuses from "@/pages/Bonuses";
 import Dashboard from "@/pages/Dashboard";
 import SignInSignUp from "@/pages/SignInSignUp";
+import ForgotPassword from "@/pages/ForgotPassword";
 
 export const routes: RouteObject[] = [
   {
@@ -32,5 +33,9 @@ export const routes: RouteObject[] = [
   {
     path: "/signin",
     element: <SignInSignUp />
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />
   }
 ];

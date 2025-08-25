@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function RightSidebar() {
   const [favorites, setFavorites] = useState([
@@ -47,29 +47,69 @@ export default function RightSidebar() {
       {/* FAVOURITES League Cards */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-2 sm:mb-3">FAVOURITES</h3>
-        <div className="space-y-2 sm:space-y-3">
-          {favouriteLeagues.map((league) => (
-            <div key={league.id} className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group">
-              {/* League Image */}
+        <div className="space-y-2 sm:mb-3 relative overflow-hidden h-25">
+          {/* Animated Cards Container */}
+          <div className="animate-favourites-scroll relative">
+            {/* Card 1 - Premier League */}
+            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
               <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
                 <img 
-                  src={league.image} 
-                  alt={league.title}
+                  src={favouriteLeagues[0].image} 
+                  alt={favouriteLeagues[0].title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               </div>
               
-              {/* League Info */}
               <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
-                <h4 className="text-sm font-semibold text-text truncate">{league.title}</h4>
-                <p className="text-xs text-muted line-clamp-2">{league.description}</p>
+                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[0].title}</h4>
+                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[0].description}</p>
                 <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
                   View Matches
                 </button>
               </div>
             </div>
-          ))}
+
+            {/* Card 2 - La Liga */}
+            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
+              <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
+                <img 
+                  src={favouriteLeagues[1].image} 
+                  alt={favouriteLeagues[1].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              </div>
+              
+              <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[1].title}</h4>
+                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[1].description}</p>
+                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
+                  View Matches
+                </button>
+              </div>
+            </div>
+
+            {/* Card 3 - Bundesliga */}
+            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
+              <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
+                <img 
+                  src={favouriteLeagues[2].image} 
+                  alt={favouriteLeagues[2].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+              </div>
+              
+              <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[2].title}</h4>
+                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[2].description}</p>
+                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
+                  View Matches
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

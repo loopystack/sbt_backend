@@ -13,6 +13,7 @@ import SureBets from './pages/SureBets';
 import Bookmakers from './pages/Bookmakers';
 import DroppingOdds from './pages/DroppingOdds';
 import SignInSignUp from './pages/SignInSignUp';
+import ForgotPassword from './pages/ForgotPassword';
 import './App.css';
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
               <Route path="dropping-odds" element={<DroppingOdds />} />
               <Route path="signin" element={<SignInSignUp />} />
             </Route>
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Routes>
         </div>
       </Router>
