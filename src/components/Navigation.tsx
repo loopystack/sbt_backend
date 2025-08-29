@@ -3,6 +3,50 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import newlogo from "@/images/newlogo.png";
 import { useTheme } from "@/contexts/ThemeContext";
 
+// Hook to determine which sports should be visible and if text should be shown
+const useVisibleSports = () => {
+  const [visibleCount, setVisibleCount] = useState(8); // Start with all sports visible
+  const [showText, setShowText] = useState(true); // Start with text visible
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkVisibility = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const containerWidth = container.offsetWidth;
+      
+      // Check if we should show text for top navigation
+      const shouldShowText = containerWidth > 1400; // Much larger breakpoint for earlier text hiding
+      setShowText(shouldShowText);
+      
+      // Calculate how many sports can fit
+      // Each sport button is approximately 120px wide, plus gaps
+      const buttonWidth = 120;
+      const gap = 8;
+      const favoritesWidth = 120; // Favorites button
+      const moreButtonWidth = 80; // More button
+      
+      // Reduce the available width to make sports collapse sooner
+      let availableWidth = containerWidth - favoritesWidth - moreButtonWidth - 32 - 200; // 200px extra buffer
+      let canFit = 0;
+      
+      while (canFit * (buttonWidth + gap) <= availableWidth && canFit < 8) {
+        canFit++;
+      }
+      
+      setVisibleCount(Math.max(1, canFit)); // At least show 1 sport
+    };
+
+    checkVisibility();
+    window.addEventListener('resize', checkVisibility);
+    
+    return () => window.removeEventListener('resize', checkVisibility);
+  }, []);
+
+  return { visibleCount, showText, containerRef };
+};
+
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -12,6 +56,8 @@ export default function Navigation() {
   const [showMoreSports, setShowMoreSports] = useState(false);
   const moreSportsRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
+  
+  const { visibleCount, showText, containerRef } = useVisibleSports();
 
   // Click outside handler for more sports panel
   useEffect(() => {
@@ -192,7 +238,7 @@ export default function Navigation() {
                   ) : (
                     <span className="text-lg relative z-10 group-hover:scale-110 transition-transform duration-200 text-accent">{tab.icon}</span>
                   )}
-                  <span className="relative z-10 font-bold tracking-wide text-sm xl:text-base hidden md:block">{tab.name}</span>
+                  <span className="relative z-10 font-bold tracking-wide text-sm xl:text-base">{showText ? tab.name : ''}</span>
                   {activeTab === tab.id && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/50 rounded-full"></div>
                   )}
@@ -231,7 +277,7 @@ export default function Navigation() {
 
         {/* Sports Categories - Centered in the middle */}
         <div className="border-t border-border/30 from-bg/50 to-surface/50">
-          <div className="flex items-center justify-center gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
+          <div ref={containerRef} className="flex items-center justify-center gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
             {/* Favorites */}
             <button
               title="Favorites"
@@ -243,7 +289,7 @@ export default function Navigation() {
             </button>
 
             {/* Sports */}
-            {sports.map((sport) => (
+            {sports.slice(0, visibleCount).map((sport) => (
               <button
                 key={sport.name}
                 onClick={() => setActiveSport(sport.name)}
@@ -282,6 +328,11 @@ export default function Navigation() {
               >
 
                 <span className="font-bold tracking-wide text-sm xl:text-base hidden md:block">More</span>
+                {visibleCount < sports.length && (
+                  <span className="text-xs bg-gradient-to-r from-purple-400 to-indigo-400 text-white px-2.5 py-1.5 rounded-full font-bold tracking-wide shadow-sm">
+                    {sports.length - visibleCount}
+                  </span>
+                )}
                 <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
               </button>
 
@@ -294,7 +345,41 @@ export default function Navigation() {
                 }}>
                   <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
                     <div className="p-1">
-                      <div className="grid grid-cols-2 ">
+                      {/* Hidden sports from main list */}
+                      {visibleCount < sports.length && (
+                        <div className="mb-3 pb-3 border-b border-border/30">
+                          <div className="text-xs text-muted font-semibold mb-2 px-2">Hidden Sports</div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {sports.slice(visibleCount).map((sport) => (
+                              <button
+                                key={sport.name}
+                                onClick={() => {
+                                  setActiveSport(sport.name);
+                                  setShowMoreSports(false);
+                                }}
+                                className="flex items-center gap-3 p-2 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
+                              >
+                                {sport.icon.startsWith('/') ? (
+                                  <img 
+                                    src={sport.icon} 
+                                    alt={sport.name}
+                                    className="w-5 h-5 group-hover:scale-110 transition-transform duration-200 icon-yellow"
+                                  />
+                                ) : (
+                                  <span className="text-lg group-hover:scale-110 transition-transform duration-200 text-accent">{sport.icon}</span>
+                                )}
+                                <div className="flex-1">
+                                  <span className="font-bold tracking-wide text-sm text-text group-hover:text-accent transition-colors duration-200">{sport.name}</span>
+                                  <span className="text-xs text-muted ml-2 bg-muted/50 px-2.5 py-1.5 rounded-full font-bold tracking-wide">({sport.count})</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Additional sports */}
+                      <div className="grid grid-cols-2 gap-2">
                         {moreSports.map((sport) => (
                           <button
                             key={sport.name}
@@ -302,7 +387,7 @@ export default function Navigation() {
                               setActiveSport(sport.name);
                               setShowMoreSports(false);
                             }}
-                            className="flex items-center gap-3 p-1 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
+                            className="flex items-center gap-3 p-2 rounded-xl text-left hover:bg-gradient-to-r hover:from-accent/10 hover:to-accent/5 transition-all duration-300 hover:scale-105 group border border-transparent hover:border-accent/20"
                           >
                             {sport.icon.startsWith('/') ? (
                               <img 
