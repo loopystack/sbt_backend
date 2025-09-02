@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import newlogo from "@/images/newlogo.png";
+import newlogo from "../images/newlogo.png";
 import Navigation from "./Navigation";
 
 interface HeaderProps {

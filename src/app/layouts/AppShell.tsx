@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
-import LeftSidebar from "@/components/LeftSidebar";
-import RightSidebar from "@/components/RightSidebar";
-import Footer from "@/components/Footer";
-import ScrollToFooter from "@/components/ScrollToFooter";
+import Header from "../../components/Header";
+import LeftSidebar from "../../components/LeftSidebar";
+import RightSidebar from "../../components/RightSidebar";
+import Footer from "../../components/Footer";
+import ScrollToFooter from "../../components/ScrollToFooter";
 
 
 export default function AppShell() {

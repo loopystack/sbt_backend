@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { openBettingSiteByName } from "@/config/bettingSites";
+import { openBettingSiteByName } from "../config/bettingSites";
 
 export default function Matches() {
   const [selectedDate, setSelectedDate] = useState("today");

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { openBettingSiteByName } from "@/config/bettingSites";
+import { openBettingSiteByName } from "../config/bettingSites";
 
 export default function DroppingOdds() {
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("12-hours");

@@ -1,17 +1,17 @@
 import type { RouteObject } from "react-router-dom";
 import AppShell from "./layouts/AppShell";
-import Home from "@/pages/Home";
-import Matches from "@/pages/Matches";
-import DroppingOdds from "@/pages/DroppingOdds";
-import SureBets from "@/pages/SureBets";
-import InPlayOdds from "@/pages/InPlayOdds";
-import AllEvents from "@/pages/AllEvents";
-import Betting from "@/pages/Betting";
-import Bookmakers from "@/pages/Bookmakers";
-import Bonuses from "@/pages/Bonuses";
-import Dashboard from "@/pages/Dashboard";
-import SignInSignUp from "@/pages/SignInSignUp";
-import ForgotPassword from "@/pages/ForgotPassword";
+import Home from "../pages/Home";
+import Matches from "../pages/Matches";
+import DroppingOdds from "../pages/DroppingOdds";
+import SureBets from "../pages/SureBets";
+import InPlayOdds from "../pages/InPlayOdds";
+import AllEvents from "../pages/AllEvents";
+import Betting from "../pages/Betting";
+import Bookmakers from "../pages/Bookmakers";
+import Bonuses from "../pages/Bonuses";
+import Dashboard from "../pages/Dashboard";
+import SignInSignUp from "../pages/SignInSignUp";
+import ForgotPassword from "../pages/ForgotPassword";
 
 export const routes: RouteObject[] = [
   {

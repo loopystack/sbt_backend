@@ -1,1 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><defs><clipPath id="a"><path fill-opacity=".7" d="M-53 0h682v512H-53z"/></clipPath></defs><g clip-path="url(#a)" transform="translate(50) scale(.9375)"><g fill-rule="evenodd" stroke-width="1pt"><path fill="#006aa7" d="M-121 0h256v205h-256zm0 307h256v205h-256z"/><path fill="#fecc00" d="M-121 205h256v102h-256z"/><path fill="#fecc00" d="M134 0h102v512H134z"/><path fill="#fecc00" d="M233 205h461v102H233z"/><path fill="#006aa7" d="M236 307h461v205H236zm0-307h461v205H236z"/></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-se" viewBox="0 0 640 480">
+  <path fill="#005293" d="M0 0h640v480H0z"/>
+  <path fill="#fecb00" d="M176 0v192H0v96h176v192h96V288h368v-96H272V0z"/>
+</svg>

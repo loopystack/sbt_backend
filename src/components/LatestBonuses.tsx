@@ -1,5 +1,5 @@
 import React from "react";
-import { openBettingSiteByName } from "@/config/bettingSites";
+import { openBettingSiteByName } from "../config/bettingSites";
 
 export default function LatestBonuses() {
   const bonuses = [

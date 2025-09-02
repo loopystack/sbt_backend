@@ -1,12 +1,25 @@
 import React from "react";
-import HeroSection from "@/components/HeroSection";
-import PopularSports from "@/components/PopularSports";
-import HotPicks from "@/components/HotPicks";
-import LatestBonuses from "@/components/LatestBonuses";
-import OddsTable from "@/components/OddsTable";
-import { openBettingSiteByName } from "@/config/bettingSites";
+import HeroSection from "../components/HeroSection";
+import PopularSports from "../components/PopularSports";
+import HotPicks from "../components/HotPicks";
+import LatestBonuses from "../components/LatestBonuses";
+import OddsTable from "../components/OddsTable";
+import { useCountry } from "../contexts/CountryContext";
+import { openBettingSiteByName } from "../config/bettingSites";
 
 export default function Home() {
+  const { selectedLeague } = useCountry();
+
+  // If a league is selected, show only the odds table
+  if (selectedLeague) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <OddsTable />
+      </div>
+    );
+  }
+
+  // Otherwise show the normal home content
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Promotional Banners */}

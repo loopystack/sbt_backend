@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { bettingSites, openBettingSite } from "@/config/bettingSites";
+import { bettingSites, openBettingSite } from "../config/bettingSites";
 
 export default function Betting() {
   const [selectedCategory, setSelectedCategory] = useState("Best Social Casinos");

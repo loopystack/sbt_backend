@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import newlogo from "@/images/newlogo.png";
-import { useTheme } from "@/contexts/ThemeContext";
+import newlogo from "../images/newlogo.png";
+import { useTheme } from "../contexts/ThemeContext";
+import { useCountry } from "../contexts/CountryContext";
 
 // Hook to determine which sports should be visible and if text should be shown
 const useVisibleSports = () => {
@@ -51,6 +52,7 @@ export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { setSelectedLeague } = useCountry();
   const [activeTab, setActiveTab] = useState("home");
   const [activeSport, setActiveSport] = useState("Football");
   const [showMoreSports, setShowMoreSports] = useState(false);
@@ -93,7 +95,7 @@ export default function Navigation() {
       setActiveTab("sure-bets");
     } else if (path === "/in-play-odds") {
       setActiveTab("in-play-odds");
-    } else if (path === "/all-events") {
+    } else if (path === "/all-events") {   
       setActiveTab("all-events");
     } else if (path === "/betting") {
       setActiveTab("betting");
@@ -112,6 +114,7 @@ export default function Navigation() {
     // Navigate to appropriate route
     switch (tabId) {
       case "home":
+        setSelectedLeague(null); // Clear selected league when Home is clicked
         navigate("/");
         break;
       case "next-matches":

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCountry } from "../../contexts/CountryContext";
 
 type Match = {
   id: string;
@@ -14,12 +15,16 @@ type Match = {
     draw?: string;
     overUnder?: string;
   }[];
+  date?: string;
+  bookmakerCount?: number;
 };
 
 export default function OddsTable() {
+  const { selectedCountry, selectedLeague } = useCountry();
   const [selectedMarket, setSelectedMarket] = useState("Match Winner");
   
-  const matches: Match[] = [
+  // Default matches when no country is selected
+  const defaultMatches = [
     {
       id: "1",
       time: "LIVE",
@@ -28,9 +33,9 @@ export default function OddsTable() {
       sport: "Football",
       league: "NFL",
       bookmakers: [
-        { name: "Bet365", home: "+150", away: "-180" },
-        { name: "DraftKings", home: "+155", away: "-175" },
-        { name: "FanDuel", home: "+145", away: "-185" }
+        { name: "Bet365", home: "+150", away: "-180", draw: undefined },
+        { name: "DraftKings", home: "+155", away: "-175", draw: undefined },
+        { name: "FanDuel", home: "+145", away: "-185", draw: undefined }
       ]
     },
     {
@@ -41,39 +46,59 @@ export default function OddsTable() {
       sport: "Basketball",
       league: "NBA",
       bookmakers: [
-        { name: "Bet365", home: "-110", away: "-110" },
-        { name: "DraftKings", home: "-105", away: "-115" },
-        { name: "FanDuel", home: "-108", away: "-112" }
-      ]
-    },
-    {
-      id: "3",
-      time: "20:00",
-      status: "Upcoming",
-      teams: "Djokovic vs Medvedev",
-      sport: "Tennis",
-      league: "Grand Slam",
-      bookmakers: [
-        { name: "Bet365", home: "+200", away: "-250" },
-        { name: "DraftKings", home: "+195", away: "-245" },
-        { name: "FanDuel", home: "+210", away: "-260" }
-      ]
-    },
-    {
-      id: "4",
-      time: "21:00",
-      status: "Upcoming",
-      teams: "Yankees vs Red Sox",
-      sport: "Baseball",
-      league: "MLB",
-      bookmakers: [
-        { name: "Bet365", home: "-120", away: "+100" },
-        { name: "DraftKings", home: "-125", away: "+105" },
-        { name: "FanDuel", home: "-118", away: "+102" }
+        { name: "Bet365", home: "-110", away: "-110", draw: undefined },
+        { name: "DraftKings", home: "-105", away: "-115", draw: undefined },
+        { name: "FanDuel", home: "-108", away: "-112", draw: undefined }
       ]
     }
   ];
 
+  // Get matches based on selected country
+  const getMatches = () => {
+    if (selectedLeague && selectedLeague.matches.length > 0) {
+      // Return matches from the selected league
+      return selectedLeague.matches.map(match => ({
+        id: match.id,
+        time: match.time,
+        status: "Upcoming" as const,
+        teams: `${match.team1} vs ${match.team2}`,
+        sport: "Football",
+        league: selectedLeague.name,
+        bookmakers: [
+          { name: "Bet365", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+          { name: "DraftKings", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+          { name: "FanDuel", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds }
+        ],
+        date: match.date,
+        bookmakerCount: match.bookmakers
+      }));
+    }
+    
+    if (!selectedCountry) return defaultMatches;
+    
+    // Get all matches from all leagues of the selected country
+    const allMatches = selectedCountry.leagues.flatMap(league => 
+      league.matches.map(match => ({
+        id: match.id,
+        time: match.time,
+        status: "Upcoming" as const,
+        teams: `${match.team1} vs ${match.team2}`,
+        sport: "Football",
+        league: league.name,
+        bookmakers: [
+          { name: "Bet365", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+          { name: "DraftKings", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+          { name: "FanDuel", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds }
+        ],
+        date: match.date,
+        bookmakerCount: match.bookmakers
+      }))
+    );
+    
+    return allMatches;
+  };
+
+  const matches = getMatches();
   const markets = ["Match Winner", "Over/Under", "Handicap", "Both Teams Score"];
 
   const getStatusColor = (status: string) => {
@@ -87,8 +112,28 @@ export default function OddsTable() {
 
   return (
     <section>
+      {/* Breadcrumbs */}
+      {selectedLeague && (
+        <div className="text-sm text-muted mb-4 px-2">
+          Home {'>'} Football {'>'} {selectedCountry?.name} {'>'} {selectedLeague.name}
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
-        <h2 className="text-xl sm:text-2xl font-bold text-text">Live Matches & Odds</h2>
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-text">
+            {selectedLeague ? `${selectedLeague.name} Betting Odds & Fixtures` : selectedCountry ? `${selectedCountry.name} - ${selectedCountry.leagues[0]?.name || 'Football'}` : 'Live Matches & Odds'}
+          </h2>
+          {selectedLeague ? (
+            <p className="text-sm text-muted mt-1">
+              {selectedLeague.matchCount} matches
+            </p>
+          ) : selectedCountry && (
+            <p className="text-sm text-muted mt-1">
+              {selectedCountry.leagues.length} leagues • {selectedCountry.leagues.reduce((total, league) => total + league.matchCount, 0)} matches
+            </p>
+          )}
+        </div>
         
         {/* Market Selector */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -119,6 +164,9 @@ export default function OddsTable() {
                   {match.teams}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted mt-1">{match.sport} • {match.league}</p>
+                {(match as any).date && (
+                  <p className="text-xs text-muted mt-1">{(match as any).date}</p>
+                )}
               </div>
               <div className="flex flex-col items-end gap-2 ml-3">
                 <span className="text-xs sm:text-sm font-semibold text-text">{match.time}</span>
@@ -135,6 +183,9 @@ export default function OddsTable() {
                   <div className="text-xs text-muted mb-1">{bookmaker.name}</div>
                   <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.home}</div>
                   <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.away}</div>
+                  {bookmaker.draw && (
+                    <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.draw}</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -143,7 +194,9 @@ export default function OddsTable() {
             <div className="flex items-center justify-between pt-3 border-t border-border/50">
               <div className="text-center">
                 <div className="text-xs text-muted">Best Odds</div>
-                <div className="text-sm font-bold text-accent">+155 / -260</div>
+                <div className="text-sm font-bold text-accent">
+                  {match.bookmakers[0]?.home} / {match.bookmakers[0]?.away}
+                </div>
               </div>
               <button className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors hover:scale-105">
                 Compare
@@ -160,12 +213,13 @@ export default function OddsTable() {
             <thead>
               <tr className="bg-bg border-b border-border">
                 <th className="text-left p-4 font-semibold text-text">Match</th>
+                <th className="text-center p-4 font-semibold text-text">Date</th>
                 <th className="text-center p-4 font-semibold text-text">Time</th>
                 <th className="text-center p-4 font-semibold text-text">Status</th>
-                <th className="text-center p-4 font-semibold text-text">Bet365</th>
-                <th className="text-center p-4 font-semibold text-text">DraftKings</th>
-                <th className="text-center p-4 font-semibold text-text">FanDuel</th>
-                <th className="text-center p-4 font-semibold text-text">Best Odds</th>
+                <th className="text-center p-4 font-semibold text-text">1</th>
+                <th className="text-center p-4 font-semibold text-text">X</th>
+                <th className="text-center p-4 font-semibold text-text">2</th>
+                <th className="text-center p-4 font-semibold text-text">B's</th>
                 <th className="text-center p-4 font-semibold text-text">Action</th>
               </tr>
             </thead>
@@ -181,6 +235,9 @@ export default function OddsTable() {
                     </div>
                   </td>
                   <td className="text-center p-4">
+                    <span className="text-sm text-muted">{(match as any).date || '-'}</span>
+                  </td>
+                  <td className="text-center p-4">
                     <span className="text-sm font-semibold text-text">{match.time}</span>
                   </td>
                   <td className="text-center p-4">
@@ -188,29 +245,17 @@ export default function OddsTable() {
                       {match.status}
                     </span>
                   </td>
-                  {match.bookmakers.map((bookmaker, index) => (
-                    <td key={index} className="text-center p-4">
-                      <div className="space-y-2">
-                        <div className="text-sm">
-                          <span className="text-muted text-xs block">Home</span>
-                          <span className="font-semibold text-text">{bookmaker.home}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="text-muted text-xs block">Away</span>
-                          <span className="font-semibold text-text">{bookmaker.away}</span>
-                        </div>
-                      </div>
-                    </td>
-                  ))}
                   <td className="text-center p-4">
-                    <div className="space-y-2">
-                      <div className="text-sm font-bold text-accent">
-                        +155
-                      </div>
-                      <div className="text-sm font-bold text-accent">
-                        -260
-                      </div>
-                    </div>
+                    <span className="font-semibold text-text">{match.bookmakers[0]?.home}</span>
+                  </td>
+                  <td className="text-center p-4">
+                    <span className="font-semibold text-text">{match.bookmakers[0]?.draw || '-'}</span>
+                  </td>
+                  <td className="text-center p-4">
+                    <span className="font-semibold text-text">{match.bookmakers[0]?.away}</span>
+                  </td>
+                  <td className="text-center p-4">
+                    <span className="text-sm text-muted">{(match as any).bookmakerCount || match.bookmakers.length}</span>
                   </td>
                   <td className="text-center p-4">
                     <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors hover:scale-105">
