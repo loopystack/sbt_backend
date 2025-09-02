@@ -83,7 +83,7 @@ export default function LeftSidebar() {
                   {country.leagues.map((league) => (
                     <button
                       key={league.name}
-                      onClick={() => handleLeagueClick(league)}
+                      onClick={() => handleLeagueClick(league)} 
                       className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors flex items-center justify-between hover:bg-white/5 ${
                         selectedLeague?.name === league.name
                           ? "bg-green-500/20 text-green-600 border border-green-500/30"
