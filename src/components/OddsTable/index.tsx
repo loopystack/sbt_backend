@@ -19,12 +19,20 @@ type Match = {
   bookmakerCount?: number;
 };
 
+type Bookmaker = {
+  name: string;
+  home: string;
+  away: string;
+  draw?: string;
+  overUnder?: string;
+};
+
 export default function OddsTable() {
   const { selectedCountry, selectedLeague } = useCountry();
   const [selectedMarket, setSelectedMarket] = useState("Match Winner");
   
   // Default matches when no country is selected
-  const defaultMatches = [
+  const defaultMatches: Match[] = [
     {
       id: "1",
       time: "LIVE",
@@ -54,10 +62,10 @@ export default function OddsTable() {
   ];
 
   // Get matches based on selected country
-  const getMatches = () => {
+  const getMatches = (): Match[] => {
     if (selectedLeague && selectedLeague.matches.length > 0) {
       // Return matches from the selected league
-      return selectedLeague.matches.map(match => ({
+      return selectedLeague.matches.map((match: any) => ({
         id: match.id,
         time: match.time,
         status: "Upcoming" as const,
@@ -77,8 +85,8 @@ export default function OddsTable() {
     if (!selectedCountry) return defaultMatches;
     
     // Get all matches from all leagues of the selected country
-    const allMatches = selectedCountry.leagues.flatMap(league => 
-      league.matches.map(match => ({
+    const allMatches: Match[] = selectedCountry.leagues.flatMap((league: any) => 
+      league.matches.map((match: any) => ({
         id: match.id,
         time: match.time,
         status: "Upcoming" as const,
@@ -155,7 +163,7 @@ export default function OddsTable() {
 
       {/* Mobile Cards View */}
       <div className="block lg:hidden space-y-3">
-        {matches.map((match) => (
+        {matches.map((match: Match) => (
           <div key={match.id} className="bg-surface border border-border rounded-xl p-4">
             {/* Match Header */}
             <div className="flex items-start justify-between mb-3">
@@ -164,8 +172,8 @@ export default function OddsTable() {
                   {match.teams}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted mt-1">{match.sport} • {match.league}</p>
-                {(match as any).date && (
-                  <p className="text-xs text-muted mt-1">{(match as any).date}</p>
+                {match.date && (
+                  <p className="text-xs text-muted mt-1">{match.date}</p>
                 )}
               </div>
               <div className="flex flex-col items-end gap-2 ml-3">
@@ -178,7 +186,7 @@ export default function OddsTable() {
             
             {/* Odds Grid */}
             <div className="grid grid-cols-3 gap-2 mb-3">
-              {match.bookmakers.map((bookmaker, index) => (
+              {match.bookmakers.map((bookmaker: Bookmaker, index: number) => (
                 <div key={index} className="text-center">
                   <div className="text-xs text-muted mb-1">{bookmaker.name}</div>
                   <div className="text-xs sm:text-sm font-semibold text-text">{bookmaker.home}</div>
@@ -224,7 +232,7 @@ export default function OddsTable() {
               </tr>
             </thead>
             <tbody>
-              {matches.map((match, index) => (
+              {matches.map((match: Match, index: number) => (
                 <tr key={match.id} className={`border-b border-border/50 hover:bg-bg/50 transition-colors ${
                   index % 2 === 0 ? 'bg-surface' : 'bg-surface/50'
                 }`}>
@@ -235,7 +243,7 @@ export default function OddsTable() {
                     </div>
                   </td>
                   <td className="text-center p-4">
-                    <span className="text-sm text-muted">{(match as any).date || '-'}</span>
+                    <span className="text-sm text-muted">{match.date || '-'}</span>
                   </td>
                   <td className="text-center p-4">
                     <span className="text-sm font-semibold text-text">{match.time}</span>
@@ -255,7 +263,7 @@ export default function OddsTable() {
                     <span className="font-semibold text-text">{match.bookmakers[0]?.away}</span>
                   </td>
                   <td className="text-center p-4">
-                    <span className="text-sm text-muted">{(match as any).bookmakerCount || match.bookmakers.length}</span>
+                    <span className="text-sm text-muted">{match.bookmakerCount || match.bookmakers.length}</span>
                   </td>
                   <td className="text-center p-4">
                     <button className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors hover:scale-105">
