@@ -46,6 +46,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     root.setAttribute('data-theme', theme);
     
     // Update CSS custom properties
+    
     if (theme === 'light') {
       root.style.setProperty('--bg', '0 0% 98%');
       root.style.setProperty('--surface', '0 0% 96%');

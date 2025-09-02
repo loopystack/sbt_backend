@@ -69,7 +69,7 @@ export default function LeftSidebar() {
                   <span className="truncate">{country.name}</span>
                 </div>
                 <span 
-                  className={`text-xs transition-transform duration-200 ${
+                  className={`text-[10px] transition-transform duration-200 ${
                     expandedCountries.includes(country.name) ? 'rotate-90' : ''
                   }`}
                 >
