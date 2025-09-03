@@ -13,6 +13,8 @@ type Match = {
   teams: string;
   sport: string;
   league: string;
+  result?: string;
+  isHistorical?: boolean;
   bookmakers: {
     name: string;
     home: string;
@@ -35,8 +37,11 @@ export default function OddsTable() {
   const { selectedCountry, selectedLeague } = useCountry();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [selectedMarket, setSelectedMarket] = useState("Match Winner");
+  const [selectedMarket, setSelectedMarket] = useState("Results");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const matchesPerPage = 20;
   const [selectedOdds, setSelectedOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -91,13 +96,38 @@ export default function OddsTable() {
     if (matchingInfo && matchingInfo.length > 0) {
       let filteredMatches = matchingInfo;
       
-      if (selectedCountry) {
+      const today = new Date();
+      
+      if (selectedYear) {
+        filteredMatches = matchingInfo.filter(match => {
+          const matchDate = new Date(match.date + 'T00:00:00');
+          const now = new Date();
+          const matchYear = matchDate.getFullYear();
+          const isPastMatch = matchDate.getTime() < now.getTime();
+          
+          return matchYear === selectedYear && isPastMatch;
+        });
+      } else if (selectedMarket === "Results") {
+        filteredMatches = matchingInfo.filter(match => {
+          const matchDate = new Date(match.date + 'T00:00:00'); 
+          const now = new Date();
+          const isPastMatch = matchDate.getTime() < now.getTime();
+          return isPastMatch;
+        });
+      } else if (selectedMarket === "Next Matches") {
+        filteredMatches = matchingInfo.filter(match => {
+          const matchDate = new Date(match.date + 'T00:00:00'); 
+          const now = new Date();
+          const isFutureMatch = matchDate.getTime() >= now.getTime();
+          return isFutureMatch;
+        });
+      } else if (selectedCountry) {
         filteredMatches = matchingInfo.filter(match => 
           match.country.toLowerCase() === selectedCountry.name.toLowerCase()
         );
       }
       
-      if (filteredMatches.length === 0) {
+      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear) {
         filteredMatches = matchingInfo;
       }
       
@@ -147,7 +177,7 @@ export default function OddsTable() {
     return defaultMatches;
   };
   const matches = getMatches();
-  const markets = ["Match Winner", "Over/Under", "Handicap", "Both Teams Score"];
+  const markets = ["Results", "Next Matches"];
   const groupMatchesByDate = (matches: Match[]) => {
     const grouped: { [key: string]: Match[] } = {};
     
@@ -165,9 +195,26 @@ export default function OddsTable() {
         if (dateB === 'No Date') return -1;
         return new Date(dateA).getTime() - new Date(dateB).getTime();
       })
-      .map(([date, matches]) => ({ date, matches }));
+      .map(([date, matches]) => ({ 
+        date, 
+        matches: matches.sort((a, b) => {
+          const timeA = a.time.replace(':', '');
+          const timeB = b.time.replace(':', '');
+          return parseInt(timeA) - parseInt(timeB);
+        })
+      }));
   };
-  const groupedMatches = groupMatchesByDate(matches);
+  const allGroupedMatches = groupMatchesByDate(matches);
+  
+  const allMatches = allGroupedMatches.flatMap(({ matches }) => matches);
+  const totalMatches = allMatches.length;
+  const totalPages = Math.ceil(totalMatches / matchesPerPage);
+  
+  const startIndex = (currentPage - 1) * matchesPerPage;
+  const endIndex = startIndex + matchesPerPage;
+  const paginatedMatches = allMatches.slice(startIndex, endIndex);
+  
+  const groupedMatches = groupMatchesByDate(paginatedMatches);
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
     const selectedBet = {
       matchId: match.id,
@@ -255,7 +302,6 @@ export default function OddsTable() {
   }
     return (
     <section>
-      {/* Breadcrumbs */}
       {selectedLeague && (
         <div className="text-sm text-muted mb-4 px-2">
           Home {'>'} Football {'>'} {selectedCountry?.name} {'>'} {selectedLeague.name}
@@ -265,16 +311,50 @@ export default function OddsTable() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-text">
-            {selectedLeague ? `${selectedLeague.name} Betting Odds & Fixtures` : selectedCountry ? `${selectedCountry.name} - Football` : 'Live Matches & Odds'}
+            {selectedYear 
+              ? `${selectedYear} Historical Results Only` 
+              : selectedMarket === "Results"
+                ? "Historical Match Results"
+                : selectedMarket === "Next Matches"
+                  ? "Upcoming Matches & Odds"
+                  : selectedLeague 
+                    ? `${selectedLeague.name} Betting Odds & Fixtures` 
+                    : selectedCountry 
+                      ? `${selectedCountry.name} - Football` 
+                      : 'Live Matches & Odds'
+            }
           </h2>
           <p className="text-sm text-muted mt-1">
-            {matches.length} matches {matchingInfo.length > 0 && `(from database)`}
+            {matches.length} matches 
+            {selectedYear && ` (finished matches from ${selectedYear} only)`} 
+            {selectedMarket === "Results" && !selectedYear && ` (historical odds for comparison)`}
+            {selectedMarket === "Next Matches" && ` (upcoming with betting options)`}
+            {matchingInfo.length > 0 && !selectedYear && !selectedMarket && ` (from database)`}
           </p>
         </div>
         
-        {/* Market Selector */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-          {/* View Mode Toggle */}
+          {selectedMarket !== "Next Matches" && (
+            <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 mr-2">
+              {[2021, 2022, 2023, 2024, 2025].map(year => (
+                <button
+                  key={year}
+                  onClick={() => {
+                    setSelectedYear(selectedYear === year ? null : year);
+                    setCurrentPage(1); // Reset to first page when changing year
+                  }}
+                  className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+                    selectedYear === year
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-muted hover:text-text hover:bg-surface/80"
+                  }`}
+                >
+                  {year}
+                </button>
+              ))}
+            </div>
+          )}
+          
           <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
             <button
               onClick={() => setViewMode("cards")}
@@ -302,11 +382,16 @@ export default function OddsTable() {
             </button>
           </div>
           
-          {/* Market Filter */}
           {markets.map((market) => (
             <button
               key={market}
-              onClick={() => setSelectedMarket(market)}
+              onClick={() => {
+                setSelectedMarket(market);
+                setCurrentPage(1);
+                if (market === "Next Matches") {
+                  setSelectedYear(null);
+                }
+              }}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 selectedMarket === market
                   ? "bg-accent text-white shadow-lg"
@@ -318,14 +403,11 @@ export default function OddsTable() {
           ))}
         </div>
       </div>
-      {/* Content based on view mode */}
       {viewMode === "cards" ? (
-        /* Cards View */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
             matches.map((match: Match) => (
               <div key={match.id} className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-200">
-                {/* Competition Header */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
@@ -342,16 +424,22 @@ export default function OddsTable() {
                   </div>
                 </div>
                 
-                                 {/* Teams */}
                  <div className="mb-4">
                    <div className="text-sm font-semibold text-text leading-tight">
-                     <div className="flex items-center gap-2">
-                       <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                         <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
-                         </svg>
+                     <div className="flex items-center justify-between">
+                       <div className="flex items-center gap-2">
+                         <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
+                           <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                             <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                           </svg>
+                         </div>
+                         {match.teams.split(' vs ')[0]}
                        </div>
-                       {match.teams.split(' vs ')[0]}
+                       {match.isHistorical && match.result && match.result !== "" && (
+                         <div className="text-lg font-bold text-green-500">
+                           {match.result}
+                         </div>
+                       )}
                      </div>
                      <div className="flex items-center gap-2 mt-1">
                        <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
@@ -364,156 +452,226 @@ export default function OddsTable() {
                    </div>
                  </div>
                 
-                {/* Odds Section */}
-                <div className="border-t border-border/50 pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted">1x2</span>
-                    <button className="text-xs text-muted hover:text-text">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  {/* Odds Row */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center">
-                      <div className="text-xs text-muted mb-1">1</div>
-                      <button 
-                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                          isOddsSelected(match.id, 'home') 
-                            ? 'bg-yellow-500 text-black border-yellow-500' 
-                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                        }`}
-                        onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
-                      >
-                        {match.bookmakers[0]?.home || '-'}
-                      </button>
+                {match.isHistorical ? (
+                  <div className="border-t border-border/50 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-muted">Historical Odds</span>
+                      <span className="text-xs text-blue-500 font-medium">Past Match</span>
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs text-muted mb-1">X</div>
-                      <button 
-                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                          isOddsSelected(match.id, 'draw') 
-                            ? 'bg-yellow-500 text-black border-yellow-500' 
-                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                        }`}
-                        onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
-                      >
-                        {match.bookmakers[0]?.draw || '-'}
-                      </button>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-muted mb-1">2</div>
-                      <button 
-                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                          isOddsSelected(match.id, 'away') 
-                            ? 'bg-yellow-500 text-black border-yellow-500' 
-                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                        }`}
-                        onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
-                      >
-                        {match.bookmakers[0]?.away || '-'}
-                      </button>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      {(() => {
+                        const homeOdd = parseFloat(match.bookmakers[0]?.home || '0');
+                        const drawOdd = parseFloat(match.bookmakers[0]?.draw || '0');
+                        const awayOdd = parseFloat(match.bookmakers[0]?.away || '0');
+                        const odds = [
+                          { value: homeOdd, label: '1', text: match.bookmakers[0]?.home || '-' },
+                          { value: drawOdd, label: 'X', text: match.bookmakers[0]?.draw || '-' },
+                          { value: awayOdd, label: '2', text: match.bookmakers[0]?.away || '-' }
+                        ];
+                        const sortedOdds = [...odds].sort((a, b) => b.value - a.value);
+                        
+                        const getOddColor = (oddValue: number) => {
+                          if (oddValue === sortedOdds[0].value) return 'text-green-500'; // Highest
+                          if (oddValue === sortedOdds[1].value) return 'text-red-500';   // Middle
+                          return 'text-blue-500'; // Lowest
+                        };
+                        
+                        return odds.map((odd, index) => (
+                          <div key={index} className="text-center">
+                            <div className="text-xs text-muted mb-1">{odd.label}</div>
+                            <div className={`w-full py-2 px-1 text-sm font-semibold ${getOddColor(odd.value)}`}>
+                              {odd.text}
+                            </div>
+                          </div>
+                        ));
+                      })()}
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="border-t border-border/50 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-muted">1x2</span>
+                      <button className="text-xs text-muted hover:text-text">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">1</div>
+                        <button 
+                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                            isOddsSelected(match.id, 'home') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                        >
+                          {match.bookmakers[0]?.home || '-'}
+                        </button>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">X</div>
+                        <button 
+                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                            isOddsSelected(match.id, 'draw') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                        >
+                          {match.bookmakers[0]?.draw || '-'}
+                        </button>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted mb-1">2</div>
+                        <button 
+                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                            isOddsSelected(match.id, 'away') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                        >
+                          {match.bookmakers[0]?.away || '-'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}
         </div>
       ) : (
-                 /* Rows View */
-         <div className="space-y-2">
-           {groupedMatches.map(({ date, matches }) => (
-             <div key={date} className="bg-surface border border-border rounded-lg overflow-hidden">
-               {/* Date Header */}
-               <div className="bg-surface/50 border-b border-border px-3 py-2">
-                 <h3 className="text-xs font-semibold text-text">{date}</h3>
-               </div>
-               
-               {/* Matches */}
-               <div className="divide-y divide-border">
-                                   {matches.map((match: Match) => (
-                    <div key={match.id} className="p-2 hover:bg-surface/50 transition-colors">
-                      <div className="grid grid-cols-3 items-center gap-1">
-                        {/* Teams - Start from beginning */}
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                              <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
-                              </svg>
-                            </div>
-                            <span className="text-base font-semibold text-text truncate">{match.teams.split(' vs ')[0]}</span>
-                          </div>
-                          <span className="text-sm text-muted px-1">vs</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                              <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
-                              </svg>
-                            </div>
-                            <span className="text-base font-semibold text-text truncate">{match.teams.split(' vs ')[1]}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Date & Time - Same Line */}
-                        <div className="text-center">
-                          <div className="text-xs text-muted">{match.date} {match.time}</div>
-                        </div>
-                        
-                        {/* Odds - Larger Buttons */}
-                        <div className="flex items-center gap-2 justify-end">
-                          <div className="text-center">
-                            <div className="text-xs text-muted mb-1">1</div>
-                            <button 
-                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
-                                isOddsSelected(match.id, 'home') 
-                                  ? 'bg-yellow-500 text-black border-yellow-500' 
-                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                              }`}
-                              onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
-                            >
-                              {match.bookmakers[0]?.home || '-'}
-                            </button>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted mb-1">X</div>
-                            <button 
-                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
-                                isOddsSelected(match.id, 'draw') 
-                                  ? 'bg-yellow-500 text-black border-yellow-500' 
-                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                              }`}
-                              onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
-                            >
-                              {match.bookmakers[0]?.draw || '-'}
-                            </button>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-muted mb-1">2</div>
-                            <button 
-                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
-                                isOddsSelected(match.id, 'away') 
-                                  ? 'bg-yellow-500 text-black border-yellow-500' 
-                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                              }`}
-                              onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
-                            >
-                              {match.bookmakers[0]?.away || '-'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+        <div className="bg-surface border border-border rounded-lg overflow-hidden">
+
+          <div className="grid grid-cols-12 gap-1 px-2 py-2 text-sm font-medium text-muted bg-surface/50 border-b border-border/50">
+            <div className="col-span-2 text-center">Date</div>
+            <div className="col-span-1 text-center">Time</div>
+            <div className="col-span-4">Match</div>
+            <div className="col-span-2 text-center">Result</div>
+            <div className="col-span-3 flex justify-center gap-1">
+              <div className="min-w-[40px] text-center">1</div>
+              <div className="min-w-[40px] text-center">X</div>
+              <div className="min-w-[40px] text-center">2</div>
+            </div>
+          </div>
+          
+          <div>
+            {groupedMatches.map(({ date, matches }) =>
+              matches.map((match: Match, matchIndex: number) => {
+                const isLastMatchOfDay = matchIndex === matches.length - 1;
+                return (
+                <div 
+                  key={match.id} 
+                  className={`grid grid-cols-12 gap-1 px-2 py-2 hover:bg-surface/30 transition-colors text-sm border-b ${
+                    isLastMatchOfDay ? 'border-b border-gray-400/50' : 'border-b border-border/30'
+                  }`}
+                >
+
+                  <div className="col-span-2 flex items-center justify-center">
+                    <div className="text-sm text-muted">{match.date}</div>
+                  </div>
+                  
+                  <div className="col-span-1 flex items-center justify-center">
+                    <span className="text-sm text-muted">{match.time}</span>
+                  </div>
+                  
+                  <div className="col-span-4 flex items-center">
+                    <div className="flex items-center gap-1 w-full min-w-0">
+                      <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[0]}</span>
+                      <span className="text-sm text-muted font-bold px-1">VS</span>
+                      <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[1]}</span>
                     </div>
-                  ))}
-               </div>
-             </div>
-           ))}
-         </div>
+                  </div>
+                  
+                  <div className="col-span-2 flex items-center justify-center">
+                    {match.isHistorical ? (
+                      <div className="text-sm font-semibold text-green-400">
+                        {match.result && match.result !== "" ? match.result : "-"}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted">
+                        {match.status === "Live" ? "LIVE" : "Upcoming"}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="col-span-3 flex items-center justify-center">
+                    {match.isHistorical ? (
+                      <div className="flex items-center gap-1">
+                        {(() => {
+                          const homeOdd = parseFloat(match.bookmakers[0]?.home || '0');
+                          const drawOdd = parseFloat(match.bookmakers[0]?.draw || '0');
+                          const awayOdd = parseFloat(match.bookmakers[0]?.away || '0');
+                          const odds = [
+                            { value: homeOdd, label: '1', text: match.bookmakers[0]?.home || '-' },
+                            { value: drawOdd, label: 'X', text: match.bookmakers[0]?.draw || '-' },
+                            { value: awayOdd, label: '2', text: match.bookmakers[0]?.away || '-' }
+                          ];
+                          const sortedOdds = [...odds].sort((a, b) => b.value - a.value);
+                          
+                          const getOddColor = (oddValue: number) => {
+                            if (oddValue === sortedOdds[0].value) return 'text-green-500'; // Highest
+                            if (oddValue === sortedOdds[1].value) return 'text-red-500';   // Middle
+                            return 'text-blue-500'; // Lowest
+                          };
+                          
+                          return odds.map((odd, index) => (
+                            <div key={index} className="text-center min-w-[40px]">
+                              <div className={`text-sm font-semibold ${getOddColor(odd.value)}`}>
+                                {odd.text}
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button 
+                          className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
+                            isOddsSelected(match.id, 'home') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                        >
+                          {match.bookmakers[0]?.home || '-'}
+                        </button>
+                        <button 
+                          className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
+                            isOddsSelected(match.id, 'draw') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                        >
+                          {match.bookmakers[0]?.draw || '-'}
+                        </button>
+                        <button 
+                          className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
+                            isOddsSelected(match.id, 'away') 
+                              ? 'bg-yellow-500 text-black border-yellow-500' 
+                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                          }`}
+                          onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                        >
+                          {match.bookmakers[0]?.away || '-'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       )}
-      {/* Animated Yellow Circle */}
       {animatingOdds && (
         <div 
           className="fixed w-4 h-4 bg-yellow-500 rounded-full z-50 pointer-events-none"
@@ -524,7 +682,6 @@ export default function OddsTable() {
           }}
         />
       )}
-            {/* Betting Slip Dialog */}
       {showBetSlip && selectedOdds.length > 0 && (
         <div 
           className="fixed bottom-4 right-4 w-80 bg-surface border border-border rounded-xl shadow-2xl z-50"
@@ -534,7 +691,6 @@ export default function OddsTable() {
             opacity: '1'
           }}
         >
-          {/* Header */}
           <div className="bg-yellow-500 text-black px-4 py-3 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="font-semibold">Betslip</span>
@@ -551,13 +707,11 @@ export default function OddsTable() {
               </div>
             </div>
           </div>
-          {/* Tabs */}
           <div className="flex border-b border-border">
             <button className="flex-1 py-2 text-sm font-medium text-muted">Single</button>
             <button className="flex-1 py-2 text-sm font-medium text-yellow-500 border-b-2 border-yellow-500">Combo</button>
             <button className="flex-1 py-2 text-sm font-medium text-muted">System</button>
           </div>
-          {/* Selected Bet Cards */}
           <div className="p-4 max-h-[600px] overflow-y-auto betting-slip-scroll">
             {selectedOdds.map((odds, index) => (
               <div key={`${odds.matchId}-${odds.type}`} className="bg-surface border border-border rounded-lg p-3 mb-4">
@@ -606,7 +760,6 @@ export default function OddsTable() {
                 </div>
               </div>
             ))}
-                         {/* Quick Bet Amounts */}
              <div className="flex gap-2 mb-4">
                <button 
                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
@@ -639,7 +792,6 @@ export default function OddsTable() {
                  0.0005
                </button>
              </div>
-                         {/* Bet Summary */}
              <div className="space-y-2 mb-4">
                <div className="flex justify-between text-sm">
                  <span className="text-muted">Total Odds</span>
@@ -654,14 +806,12 @@ export default function OddsTable() {
                  <span className="text-text">{(parseFloat(selectedBetAmount) * 10.26).toFixed(6)} B</span>
                </div>
              </div>
-            {/* Login Prompt */}
             <div className="flex items-center gap-2 mb-4 p-3 bg-bg/50 rounded-lg">
               <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span className="text-sm text-muted">Please, login to place bet</span>
             </div>
-                               {/* Action Buttons */}
                    <div className="flex gap-2 mb-3">
                      <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
                      <button 
@@ -671,7 +821,6 @@ export default function OddsTable() {
                        LOGIN
                      </button>
                    </div>
-                               {/* Account Link */}
                    <div className="text-center mb-3">
                      <span className="text-xs text-muted">Don't you have an account? </span>
                      <button 
@@ -681,7 +830,6 @@ export default function OddsTable() {
                        Join Now!
                      </button>
                    </div>
-            {/* Bottom Icons */}
             <div className="flex items-center justify-center gap-4 text-muted">
               <button className="flex items-center gap-1 text-xs">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -697,6 +845,69 @@ export default function OddsTable() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8 px-2">
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentPage === 1
+                ? 'bg-surface text-muted cursor-not-allowed'
+                : 'bg-surface text-text hover:bg-surface/80 border border-border'
+            }`}
+          >
+            Previous
+          </button>
+          
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    currentPage === pageNum
+                      ? 'bg-accent text-white'
+                      : 'bg-surface text-text hover:bg-surface/80 border border-border'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+          
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              currentPage === totalPages
+                ? 'bg-surface text-muted cursor-not-allowed'
+                : 'bg-surface text-text hover:bg-surface/80 border border-border'
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
+      
+      {totalMatches > 0 && (
+        <div className="text-center mt-4 text-sm text-muted">
+          Showing {Math.min(startIndex + 1, totalMatches)}-{Math.min(endIndex, totalMatches)} of {totalMatches} matches
         </div>
       )}
     </section>

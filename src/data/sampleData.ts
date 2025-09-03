@@ -4,7 +4,7 @@ export const sampleMatchingData: MatchingInfo[] = [
   {
     id: "1",
     season: "2024-25",
-    date: "2024-01-20",
+    date: "2024-10-20",
     time: "15:00",
     home_team: "Manchester United",
     away_team: "Liverpool",
@@ -24,7 +24,7 @@ export const sampleMatchingData: MatchingInfo[] = [
     time: "17:30",
     home_team: "Chelsea",
     away_team: "Arsenal",
-    result: "",
+    result: "1-2",
     odd_1: 2.10,
     odd_X: 3.40,
     odd_2: 3.20,
@@ -40,7 +40,7 @@ export const sampleMatchingData: MatchingInfo[] = [
     time: "14:00",
     home_team: "Manchester City",
     away_team: "Tottenham",
-    result: "",
+    result: "3-0",
     odd_1: 1.80,
     odd_X: 3.80,
     odd_2: 4.20,
@@ -99,8 +99,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "7",
-    season: "2024-25",
-    date: "2024-01-23",
+    season: "2025-26",
+    date: "2025-01-23",
     time: "20:00",
     home_team: "Wolverhampton",
     away_team: "Crystal Palace",
@@ -110,13 +110,13 @@ export const sampleMatchingData: MatchingInfo[] = [
     odd_2: 2.65,
     bets: 7543,
     country: "England",
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:00:00Z"
+    createdAt: "2025-01-15T10:00:00Z",
+    updatedAt: "2025-01-15T10:00:00Z"
   },
   {
     id: "8",
-    season: "2024-25",
-    date: "2024-01-24",
+    season: "2025-26",
+    date: "2025-11-05",
     time: "19:30",
     home_team: "Nottingham Forest",
     away_team: "Sheffield United",
@@ -126,8 +126,8 @@ export const sampleMatchingData: MatchingInfo[] = [
     odd_2: 2.95,
     bets: 6234,
     country: "England",
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:00:00Z"
+    createdAt: "2025-10-15T10:00:00Z",
+    updatedAt: "2025-10-15T10:00:00Z"
   },
   {
     id: "9",
@@ -168,7 +168,7 @@ export const sampleMatchingData: MatchingInfo[] = [
     time: "20:00",
     home_team: "Real Madrid",
     away_team: "Barcelona",
-    result: "",
+    result: "2-1",
     odd_1: 2.75,
     odd_X: 3.10,
     odd_2: 2.60,
@@ -328,7 +328,7 @@ export const sampleMatchingData: MatchingInfo[] = [
     time: "15:30",
     home_team: "Bayern Munich",
     away_team: "Borussia Dortmund",
-    result: "",
+    result: "3-2",
     odd_1: 1.95,
     odd_X: 3.60,
     odd_2: 3.80,
@@ -472,7 +472,7 @@ export const sampleMatchingData: MatchingInfo[] = [
     time: "20:45",
     home_team: "Paris Saint-Germain",
     away_team: "Olympique Marseille",
-    result: "",
+    result: "5-0",
     odd_1: 1.70,
     odd_X: 4.20,
     odd_2: 4.50,
@@ -1089,38 +1089,271 @@ export const sampleMatchingData: MatchingInfo[] = [
     country: "Argentina",
     createdAt: "2024-01-15T10:00:00Z",
     updatedAt: "2024-01-15T10:00:00Z"
+  },
+  {
+    id: "69",
+    season: "2023-24",
+    date: "2023-05-28",
+    time: "20:00",
+    home_team: "Manchester City",
+    away_team: "Inter Milan",
+    result: "1-0",
+    odd_1: 1.85,
+    odd_X: 3.60,
+    odd_2: 4.20,
+    bets: 25432,
+    country: "England",
+    createdAt: "2023-05-20T10:00:00Z",
+    updatedAt: "2023-05-28T22:00:00Z"
+  },
+  {
+    id: "70",
+    season: "2022-23",
+    date: "2022-05-28",
+    time: "20:00",
+    home_team: "Real Madrid",
+    away_team: "Liverpool",
+    result: "1-0",
+    odd_1: 2.40,
+    odd_X: 3.20,
+    odd_2: 2.95,
+    bets: 23456,
+    country: "Spain",
+    createdAt: "2022-05-20T10:00:00Z",
+    updatedAt: "2022-05-28T22:00:00Z"
+  },
+  {
+    id: "71",
+    season: "2021-22",
+    date: "2021-05-29",
+    time: "20:00",
+    home_team: "Chelsea",
+    away_team: "Manchester City",
+    result: "1-0",
+    odd_1: 3.20,
+    odd_X: 3.40,
+    odd_2: 2.20,
+    bets: 21543,
+    country: "England",
+    createdAt: "2021-05-20T10:00:00Z",
+    updatedAt: "2021-05-29T22:00:00Z"
+  },
+  {
+    id: "72",
+    season: "2023-24",
+    date: "2023-12-15",
+    time: "18:30",
+    home_team: "Bayern Munich",
+    away_team: "PSG",
+    result: "2-1",
+    odd_1: 2.10,
+    odd_X: 3.45,
+    odd_2: 3.20,
+    bets: 18765,
+    country: "Germany",
+    createdAt: "2023-12-10T10:00:00Z",
+    updatedAt: "2023-12-15T20:30:00Z"
+  },
+  {
+    id: "73",
+    season: "2022-23",
+    date: "2022-10-20",
+    time: "19:00",
+    home_team: "Juventus",
+    away_team: "Barcelona",
+    result: "0-2",
+    odd_1: 2.60,
+    odd_X: 3.25,
+    odd_2: 2.75,
+    bets: 16543,
+    country: "Italy",
+    createdAt: "2022-10-15T10:00:00Z",
+    updatedAt: "2022-10-20T21:00:00Z"
+  },
+  {
+    id: "74",
+    season: "2021-22",
+    date: "2021-11-28",
+    time: "20:45",
+    home_team: "Liverpool",
+    away_team: "Porto",
+    result: "2-0",
+    odd_1: 1.75,
+    odd_X: 3.80,
+    odd_2: 4.50,
+    bets: 14321,
+    country: "England",
+    createdAt: "2021-11-20T10:00:00Z",
+    updatedAt: "2021-11-28T22:45:00Z"
+  },
+  {
+    id: "75",
+    season: "2023-24",
+    date: "2023-12-10",
+    time: "21:00",
+    home_team: "Arsenal",
+    away_team: "PSG",
+    result: "3-1",
+    odd_1: 2.30,
+    odd_X: 3.30,
+    odd_2: 3.10,
+    bets: 19876,
+    country: "England",
+    createdAt: "2023-12-05T10:00:00Z",
+    updatedAt: "2023-12-10T23:00:00Z"
+  },
+  {
+    id: "76",
+    season: "2023-24",
+    date: "2023-08-15",
+    time: "17:30",
+    home_team: "Barcelona",
+    away_team: "Real Madrid",
+    result: "2-1",
+    odd_1: 2.50,
+    odd_X: 3.20,
+    odd_2: 2.80,
+    bets: 22345,
+    country: "Spain",
+    createdAt: "2023-08-10T10:00:00Z",
+    updatedAt: "2023-08-15T19:30:00Z"
+  },
+  {
+    id: "77",
+    season: "2022-23",
+    date: "2022-09-14",
+    time: "20:00",
+    home_team: "AC Milan",
+    away_team: "Chelsea",
+    result: "2-0",
+    odd_1: 2.40,
+    odd_X: 3.25,
+    odd_2: 2.95,
+    bets: 17654,
+    country: "Italy",
+    createdAt: "2022-09-10T10:00:00Z",
+    updatedAt: "2022-09-14T22:00:00Z"
+  },
+  {
+    id: "78",
+    season: "2025-26",
+    date: "2025-12-07",
+    time: "18:45",
+    home_team: "Borussia Dortmund",
+    away_team: "Ajax",
+    result: "1-3",
+    odd_1: 2.20,
+    odd_X: 3.40,
+    odd_2: 3.20,
+    bets: 15432,
+    country: "Brazil",
+    createdAt: "2025-12-02T10:00:00Z",
+    updatedAt: "2025-12-07T20:45:00Z"
+  },
+  {
+    id: "79",
+    season: "2024-25",
+    date: "2025-03-12",
+    time: "20:00",
+    home_team: "Liverpool",
+    away_team: "Manchester City",
+    result: "",
+    odd_1: 2.20,
+    odd_X: 3.40,
+    odd_2: 3.20,
+    bets: 22000,
+    country: "England",
+    createdAt: "2025-03-01T10:00:00Z",
+    updatedAt: "2025-03-01T10:00:00Z"
+  },
+  {
+    id: "80",
+    season: "2024-25", 
+    date: "2025-03-16",
+    time: "15:00",
+    home_team: "Arsenal",
+    away_team: "Chelsea",
+    result: "",
+    odd_1: 1.95,
+    odd_X: 3.60,
+    odd_2: 3.80,
+    bets: 18500,
+    country: "England",
+    createdAt: "2025-03-01T10:00:00Z",
+    updatedAt: "2025-03-01T10:00:00Z"
+  },
+  {
+    id: "81",
+    season: "2024-25",
+    date: "2025-03-20",
+    time: "21:00",
+    home_team: "Real Madrid",
+    away_team: "Atletico Madrid",
+    result: "",
+    odd_1: 1.75,
+    odd_X: 3.90,
+    odd_2: 4.50,
+    bets: 25000,
+    country: "Spain",
+    createdAt: "2025-03-01T10:00:00Z",
+    updatedAt: "2025-03-01T10:00:00Z"
+  },
+  {
+    id: "82",
+    season: "2024-25",
+    date: "2025-03-25",
+    time: "18:30",
+    home_team: "Bayern Munich",
+    away_team: "Borussia Dortmund",
+    result: "",
+    odd_1: 1.65,
+    odd_X: 4.20,
+    odd_2: 5.00,
+    bets: 20000,
+    country: "Germany",
+    createdAt: "2025-03-01T10:00:00Z",
+    updatedAt: "2025-03-01T10:00:00Z"
   }
 ];
 
 export const transformMatchingInfoToMatch = (matchingInfo: MatchingInfo[]) => {
-  return matchingInfo.map(match => ({
-    id: match.id,
-    time: match.time,
-    status: (match.result ? "Finished" : "Upcoming") as "Live" | "Upcoming" | "Finished",
-    teams: `${match.home_team} vs ${match.away_team}`,
-    sport: "Football",
-    league: `${match.country} League`,
-    bookmakers: [
-      { 
-        name: "Bet365", 
-        home: match.odd_1.toFixed(2), 
-        away: match.odd_2.toFixed(2), 
-        draw: match.odd_X.toFixed(2) 
-      },
-      { 
-        name: "DraftKings", 
-        home: (match.odd_1 + 0.05).toFixed(2), 
-        away: (match.odd_2 + 0.05).toFixed(2), 
-        draw: (match.odd_X + 0.05).toFixed(2) 
-      },
-      { 
-        name: "FanDuel", 
-        home: (match.odd_1 - 0.05).toFixed(2), 
-        away: (match.odd_2 - 0.05).toFixed(2), 
-        draw: (match.odd_X - 0.05).toFixed(2) 
-      }
-    ],
-    date: match.date,
-    bookmakerCount: 3
-  }));
+  return matchingInfo.map(match => {
+    const matchDate = new Date(match.date + 'T00:00:00'); // Ensure proper date parsing
+    // Get real current date from system
+    const now = new Date();
+    const isHistorical = matchDate.getTime() < now.getTime();
+    
+    return {
+      id: match.id,
+      time: match.time,
+      status: isHistorical ? "Finished" : "Upcoming" as "Live" | "Upcoming" | "Finished",
+      teams: `${match.home_team} vs ${match.away_team}`,
+      sport: "Football",
+      league: `${match.country} League`,
+      result: match.result,
+      isHistorical: isHistorical,
+      bookmakers: [
+        { 
+          name: "Bet365", 
+          home: match.odd_1.toFixed(2), 
+          away: match.odd_2.toFixed(2), 
+          draw: match.odd_X.toFixed(2) 
+        },
+        { 
+          name: "DraftKings", 
+          home: (match.odd_1 + 0.05).toFixed(2), 
+          away: (match.odd_2 + 0.05).toFixed(2), 
+          draw: (match.odd_X + 0.05).toFixed(2) 
+        },
+        { 
+          name: "FanDuel", 
+          home: (match.odd_1 - 0.05).toFixed(2), 
+          away: (match.odd_2 - 0.05).toFixed(2), 
+          draw: (match.odd_X - 0.05).toFixed(2) 
+        }
+      ],
+      date: match.date,
+      bookmakerCount: 3
+    };
+  });
 };
