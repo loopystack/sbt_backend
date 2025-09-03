@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../../store/hooks";
+  import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
+import { MatchingInfo, GetMatchingInfoQueries } from "../../store/matchinginfo/types";
 
 type Match = {
   id: string;
@@ -30,10 +33,13 @@ type Bookmaker = {
 };
 
 export default function OddsTable() {
+  const dispatch = useAppDispatch();
+
   const { selectedCountry, selectedLeague } = useCountry();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [selectedMarket, setSelectedMarket] = useState("Match Winner");
+  const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
   const [selectedOdds, setSelectedOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -42,6 +48,10 @@ export default function OddsTable() {
     league: string;
   }[]>([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
+  const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currectPage, setCurrectPage] = useState(1);
+  const limit = 30;
   const [animatingOdds, setAnimatingOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -231,6 +241,30 @@ export default function OddsTable() {
     }
   };
 
+  const fetchAllMatchingInfo = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await dispatch(getMatchingInfoAction({ page: currectPage, limit: limit.toString() })).unwrap();
+      console.log(result);
+      setMatchingInfo(result.matchinginfo);
+      setCurrectPage(result.page);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [dispatch, currectPage, limit]);
+    
+  useEffect(() => {
+    fetchAllMatchingInfo();
+  }, [fetchAllMatchingInfo])
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+  }
+
     return (
     <section>
       {/* Breadcrumbs */}
@@ -258,6 +292,35 @@ export default function OddsTable() {
         
         {/* Market Selector */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* View Mode Toggle */}
+          <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+            <button
+              onClick={() => setViewMode("cards")}
+              className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+                viewMode === "cards"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:text-text"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setViewMode("rows")}
+              className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+                viewMode === "rows"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:text-text"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Market Filter */}
           {markets.map((market) => (
             <button
               key={market}
@@ -274,7 +337,9 @@ export default function OddsTable() {
         </div>
       </div>
 
-                           {/* Grid Layout - All Screen Sizes */}
+      {/* Content based on view mode */}
+      {viewMode === "cards" ? (
+        /* Cards View */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
             matches.map((match: Match) => (
@@ -296,12 +361,27 @@ export default function OddsTable() {
                   </div>
                 </div>
                 
-                {/* Teams */}
-                <div className="mb-4">
-                  <div className="text-sm font-semibold text-text leading-tight">
-                    {match.teams}
-                  </div>
-                </div>
+                                 {/* Teams */}
+                 <div className="mb-4">
+                   <div className="text-sm font-semibold text-text leading-tight">
+                     <div className="flex items-center gap-2">
+                       <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
+                         <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                         </svg>
+                       </div>
+                       {match.teams.split(' vs ')[0]}
+                     </div>
+                     <div className="flex items-center gap-2 mt-1">
+                       <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
+                         <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                         </svg>
+                       </div>
+                       {match.teams.split(' vs ')[1]}
+                     </div>
+                   </div>
+                 </div>
                 
                 {/* Odds Section */}
                 <div className="border-t border-border/50 pt-3">
@@ -314,53 +394,144 @@ export default function OddsTable() {
                     </button>
                   </div>
                   
-                                     {/* Odds Row */}
-                   <div className="grid grid-cols-3 gap-2">
-                     <div className="text-center">
-                       <div className="text-xs text-muted mb-1">1</div>
-                                               <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'home') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
-                        >
-                          {match.bookmakers[0]?.home || '-'}
-                        </button>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted mb-1">X</div>
-                        <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'draw') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
-                        >
-                          {match.bookmakers[0]?.draw || '-'}
-                        </button>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted mb-1">2</div>
-                        <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'away') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
-                        >
-                          {match.bookmakers[0]?.away || '-'}
-                        </button>
-                     </div>
-                   </div>
+                  {/* Odds Row */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center">
+                      <div className="text-xs text-muted mb-1">1</div>
+                      <button 
+                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                          isOddsSelected(match.id, 'home') 
+                            ? 'bg-yellow-500 text-black border-yellow-500' 
+                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                        }`}
+                        onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                      >
+                        {match.bookmakers[0]?.home || '-'}
+                      </button>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted mb-1">X</div>
+                      <button 
+                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                          isOddsSelected(match.id, 'draw') 
+                            ? 'bg-yellow-500 text-black border-yellow-500' 
+                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                        }`}
+                        onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                      >
+                        {match.bookmakers[0]?.draw || '-'}
+                      </button>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-muted mb-1">2</div>
+                      <button 
+                        className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                          isOddsSelected(match.id, 'away') 
+                            ? 'bg-yellow-500 text-black border-yellow-500' 
+                            : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                        }`}
+                        onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                      >
+                        {match.bookmakers[0]?.away || '-'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
           )}
-                </div>
+        </div>
+      ) : (
+                 /* Rows View */
+         <div className="space-y-2">
+           {groupedMatches.map(({ date, matches }) => (
+             <div key={date} className="bg-surface border border-border rounded-lg overflow-hidden">
+               {/* Date Header */}
+               <div className="bg-surface/50 border-b border-border px-3 py-2">
+                 <h3 className="text-xs font-semibold text-text">{date}</h3>
+               </div>
+               
+               {/* Matches */}
+               <div className="divide-y divide-border">
+                                   {matches.map((match: Match) => (
+                    <div key={match.id} className="p-2 hover:bg-surface/50 transition-colors">
+                      <div className="grid grid-cols-3 items-center gap-1">
+                        {/* Teams - Start from beginning */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
+                              <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                              </svg>
+                            </div>
+                            <span className="text-base font-semibold text-text truncate">{match.teams.split(' vs ')[0]}</span>
+                          </div>
+                          <span className="text-sm text-muted px-1">vs</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
+                              <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                              </svg>
+                            </div>
+                            <span className="text-base font-semibold text-text truncate">{match.teams.split(' vs ')[1]}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Date & Time - Same Line */}
+                        <div className="text-center">
+                          <div className="text-xs text-muted">{match.date} {match.time}</div>
+                        </div>
+                        
+                        {/* Odds - Larger Buttons */}
+                        <div className="flex items-center gap-2 justify-end">
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">1</div>
+                            <button 
+                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
+                                isOddsSelected(match.id, 'home') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              }`}
+                              onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                            >
+                              {match.bookmakers[0]?.home || '-'}
+                            </button>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">X</div>
+                            <button 
+                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
+                                isOddsSelected(match.id, 'draw') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              }`}
+                              onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                            >
+                              {match.bookmakers[0]?.draw || '-'}
+                            </button>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">2</div>
+                            <button 
+                              className={`w-16 py-2 px-2 border rounded text-sm font-semibold transition-all duration-200 ${
+                                isOddsSelected(match.id, 'away') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              }`}
+                              onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                            >
+                              {match.bookmakers[0]?.away || '-'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+             </div>
+           ))}
+         </div>
+      )}
 
       {/* Animated Yellow Circle */}
       {animatingOdds && (
