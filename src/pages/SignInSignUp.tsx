@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function SignInSignUp() {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -7,6 +8,8 @@ export default function SignInSignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,176 +18,221 @@ export default function SignInSignUp() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      // Handle success/error here
+      // Navigate back to home after successful login
+      navigate("/");
     }, 1500);
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-xl max-w-md w-full p-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {isSignIn ? "Welcome Back" : "Create Account"}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Logo/Brand Section */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl mb-3 shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-1">
+            {isSignIn ? "Welcome Back" : "Join the Game"}
           </h1>
-          <p className="text-gray-300 text-sm">
+          <p className="text-gray-300 text-xs leading-relaxed">
             {isSignIn 
-              ? "Sign in to access your account and continue betting" 
-              : "Quick, Free, and Full of Perks. Sign up in seconds!"
+              ? "Sign in to access your account and continue your winning streak" 
+              : "Quick, Free, and Full of Perks. Start betting in seconds!"
             }
           </p>
         </div>
 
-        {/* Toggle Buttons */}
-        <div className="flex bg-slate-700 rounded-lg p-1 mb-6">
-          <button
-            onClick={() => setIsSignIn(true)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              isSignIn
-                ? "bg-accent text-gray-900"
-                : "text-gray-300 hover:text-white"
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setIsSignIn(false)}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              !isSignIn
-                ? "bg-accent text-gray-900"
-                : "text-gray-300 hover:text-white"
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
-              placeholder="Enter your email address"
-            />
+        {/* Main Card */}
+        <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-xl p-6 shadow-2xl">
+          {/* Toggle Buttons */}
+          <div className="flex bg-bg/50 rounded-lg p-1 mb-6">
+            <button
+              onClick={() => setIsSignIn(true)}
+              className={`flex-1 py-2 px-4 rounded-md text-xs font-semibold transition-all duration-300 ${
+                isSignIn
+                  ? "bg-yellow-500 text-black shadow-lg transform scale-105"
+                  : "text-muted hover:text-text"
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignIn(false)}
+              className={`flex-1 py-2 px-4 rounded-md text-xs font-semibold transition-all duration-300 ${
+                !isSignIn
+                  ? "bg-yellow-500 text-black shadow-lg transform scale-105"
+                  : "text-muted hover:text-text"
+              }`}
+            >
+              Sign Up
+            </button>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          {!isSignIn && (
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                Confirm Password
+              <label htmlFor="email" className="block text-xs font-semibold text-text mb-2">
+                Email Address
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
-                placeholder="Confirm your password"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                  </svg>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
+                  placeholder="Enter your email address"
+                />
+              </div>
             </div>
-          )}
 
-          {/* Forgot Password Link - Only show on Sign In */}
-          {isSignIn && (
-            <div className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-accent hover:text-accent/80 transition-colors"
-              >
-                Forgot Password?
-              </Link>
+            <div>
+              <label htmlFor="password" className="block text-xs font-semibold text-text mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isLoading || !email || !password || (!isSignIn && !confirmPassword)}
-            className="w-full bg-accent hover:bg-accent/80 disabled:bg-slate-600 disabled:cursor-not-allowed text-gray-900 py-3 px-4 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                {isSignIn ? "Signing In..." : "Creating Account..."}
-              </>
-            ) : (
-              isSignIn ? "Sign In" : "Create Account"
+            {!isSignIn && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-text mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
+                    placeholder="Confirm your password"
+                  />
+                </div>
+              </div>
             )}
-          </button>
-        </form>
 
-        {/* Divider */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-600" />
+            {/* Forgot Password Link - Only show on Sign In */}
+            {isSignIn && (
+              <div className="text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-yellow-500 hover:text-yellow-400 transition-colors font-medium"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading || !email || !password || (!isSignIn && !confirmPassword)}
+              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-black py-3 px-4 rounded-lg transition-all duration-300 font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  {isSignIn ? "Signing In..." : "Creating Account..."}
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  {isSignIn ? "Sign In" : "Create Account"}
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-surface text-muted font-medium">Or continue with</span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-slate-800 text-gray-400">Or continue with</span>
+
+          {/* Social Login Options */}
+          <div className="space-y-3">
+            <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
+              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>
+              Continue with Google
+            </button>
+            
+            <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-2.04 2.32-3.54 3.12-1.5.8-3.22 1.2-5.04 1.2-1.8 0-3.48-.4-4.96-1.2-1.48-.8-2.68-1.88-3.5-3.12-1.24-1.84-1.88-3.96-1.88-6.3 0-2.34.64-4.46 1.88-6.3.82-1.24 2.02-2.32 3.5-3.12 1.48-.8 3.16-1.2 4.96-1.2 1.82 0 3.54.4 5.04 1.2 1.5.8 2.71 1.88 3.54 3.12.82 1.24 1.24 2.66 1.24 4.18 0 1.52-.42 2.94-1.24 4.18z"/>
+              </svg>
+              Continue with Apple
+            </button>
+            
+            <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
+              <div className="w-5 h-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-bold">f</div>
+              Continue with Facebook
+            </button>
           </div>
-        </div>
 
-        {/* Social Login Options */}
-        <div className="space-y-3 mb-6">
-          <button className="w-full bg-white hover:bg-gray-100 text-gray-900 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 font-medium">
-            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>
-            Continue with Google
-          </button>
-          
-          <button className="w-full bg-white hover:bg-gray-100 text-gray-900 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 font-medium">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-2.04 2.32-3.54 3.12-1.5.8-3.22 1.2-5.04 1.2-1.8 0-3.48-.4-4.96-1.2-1.48-.8-2.68-1.88-3.5-3.12-1.24-1.84-1.88-3.96-1.88-6.3 0-2.34.64-4.46 1.88-6.3.82-1.24 2.02-2.32 3.5-3.12 1.48-.8 3.16-1.2 4.96-1.2 1.82 0 3.54.4 5.04 1.2 1.5.8 2.71 1.88 3.54 3.12.82 1.24 1.24 2.66 1.24 4.18 0 1.52-.42 2.94-1.24 4.18z"/>
-            </svg>
-            Continue with Apple
-          </button>
-          
-          <button className="w-full bg-white hover:bg-gray-100 text-gray-900 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 font-medium">
-            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">f</div>
-            Continue with Facebook
-          </button>
+          {/* Legal Disclaimer */}
+          <p className="text-muted text-xs text-center leading-relaxed mt-6">
+            By clicking on any "Continue with" button or submitting the form, you agree to the{" "}
+            <a href="#" className="text-yellow-500 hover:text-yellow-400 font-medium">Terms of Use</a>{" "}
+            and acknowledge our{" "}
+            <a href="#" className="text-yellow-500 hover:text-yellow-400 font-medium">Privacy Policy</a>{" "}
+            on our website.
+          </p>
         </div>
-
-        {/* Legal Disclaimer */}
-        <p className="text-gray-400 text-xs text-center leading-relaxed mb-6">
-          By clicking on any "Continue with" button or submitting the form, you agree to the{" "}
-          <a href="#" className="text-accent hover:underline">Terms of Use</a>{" "}
-          and acknowledge our{" "}
-          <a href="#" className="text-accent hover:underline">Privacy Policy</a>{" "}
-          on our website.
-        </p>
 
         {/* Back to Home Link */}
-        <div className="text-center">
+        <div className="text-center mt-4">
           <Link 
             to="/" 
-            className="text-gray-400 hover:text-white text-sm transition-colors"
+            className="inline-flex items-center gap-2 text-muted hover:text-white text-xs transition-colors font-medium"
           >
-            ← Back to Home
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Home
           </Link>
         </div>
       </div>

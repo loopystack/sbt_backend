@@ -5,6 +5,7 @@ import LeftSidebar from "../../components/LeftSidebar";
 import RightSidebar from "../../components/RightSidebar";
 import Footer from "../../components/Footer";
 import ScrollToFooter from "../../components/ScrollToFooter";
+import { useTheme } from "../../contexts/ThemeContext";
 
 
 export default function AppShell() {
@@ -12,6 +13,7 @@ export default function AppShell() {
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   // Close mobile menu when screen size changes
   useEffect(() => {
@@ -33,7 +35,56 @@ export default function AppShell() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Beautiful Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* Dark mode circles */}
+        {theme === 'dark' && (
+          <>
+            <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2000"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-4000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3000"></div>
+            
+            {/* Additional circles for main content area */}
+            <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-pink-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1000"></div>
+            <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-cyan-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2500"></div>
+            <div className="absolute bottom-1/3 right-1/3 w-88 h-88 bg-green-500/6 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1500"></div>
+            <div className="absolute top-1/3 right-1/2 w-56 h-56 bg-indigo-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3500"></div>
+            
+            {/* More circles for the center main content area */}
+            <div className="absolute top-1/6 left-1/2 w-96 h-96 bg-emerald-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-500"></div>
+            <div className="absolute top-2/3 left-1/2 w-80 h-80 bg-teal-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1800"></div>
+            <div className="absolute top-1/2 left-2/3 w-72 h-72 bg-rose-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2200"></div>
+            <div className="absolute top-1/4 right-1/3 w-88 h-88 bg-violet-500/6 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1200"></div>
+            <div className="absolute top-3/5 left-2/5 w-64 h-64 bg-amber-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2800"></div>
+          </>
+        )}
+        
+        {/* Light mode circles */}
+        {theme === 'light' && (
+          <>
+            <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2000"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-4000"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3000"></div>
+            
+            {/* Additional circles for main content area */}
+            <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-pink-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1000"></div>
+            <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-cyan-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2500"></div>
+            <div className="absolute bottom-1/3 right-1/3 w-88 h-88 bg-green-400/12 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1500"></div>
+            <div className="absolute top-1/3 right-1/2 w-56 h-56 bg-indigo-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3500"></div>
+            
+            {/* More circles for the center main content area */}
+            <div className="absolute top-1/6 left-1/2 w-96 h-96 bg-emerald-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-500"></div>
+            <div className="absolute top-2/3 left-1/2 w-80 h-80 bg-teal-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1800"></div>
+            <div className="absolute top-1/2 left-2/3 w-72 h-72 bg-rose-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2200"></div>
+            <div className="absolute top-1/4 right-1/3 w-88 h-88 bg-violet-400/12 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1200"></div>
+            <div className="absolute top-3/5 left-2/5 w-64 h-64 bg-amber-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2800"></div>
+          </>
+        )}
+      </div>
+
       <Header 
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         onLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
