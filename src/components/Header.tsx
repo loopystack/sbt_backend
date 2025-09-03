@@ -14,7 +14,6 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
   return (
     <header className="sticky top-0 z-[9999] border-b border-border bg-bg/95 backdrop-blur">
       <div className="w-full">
-        {/* Mobile Header Controls */}
         <div className="lg:hidden flex items-center justify-between px-3 sm:px-4 py-2 border-b border-border/30">
           <button
             onClick={onLeftSidebarToggle}
@@ -59,7 +58,6 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
           </div>
         </div>
         
-        {/* Desktop Navigation */}
         <div className="hidden lg:block">
           <Navigation />
         </div>

@@ -7,11 +7,9 @@ export default function Footer() {
 
   return (
     <footer className="bg-surface border-t border-border mt-auto">
-      {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
-          {/* Company Info & Logo */}
           <div className="lg:col-span-1">
             <div className="flex items-center mb-4">
               <img
@@ -32,7 +30,6 @@ export default function Footer() {
               through proprietary AI algorithms, real-time data processing, and user-centric platforms.
             </p>
             
-            {/* Company Services */}
             <div className="mb-4">
               <h4 className="text-sm font-medium text-text mb-2">Our Services</h4>
               <div className="flex flex-wrap gap-2">
@@ -61,7 +58,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Team Information */}
           <div className="lg:col-span-1">
             <h3 className="text-lg font-semibold text-text mb-4">Our Team</h3>
             <div className="space-y-3">
@@ -95,7 +91,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div className="lg:col-span-1">
             <h3 className="text-lg font-semibold text-text mb-4">Quick Links</h3>
             <ul className="space-y-2">
@@ -146,7 +141,6 @@ export default function Footer() {
               </li>
             </ul>
             
-            {/* Popular Sports */}
             <div className="mt-6">
               <h4 className="text-sm font-medium text-text mb-3">Popular Sports</h4>
               <div className="grid grid-cols-2 gap-2">
@@ -159,7 +153,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Contact Information */}
           <div className="lg:col-span-1">
             <h3 className="text-lg font-semibold text-text mb-4">Let's Contact!</h3>
             <div className="space-y-3">
@@ -199,7 +192,6 @@ export default function Footer() {
               </div>
             </div>
             
-            {/* Newsletter Signup */}
             <div className="mt-6">
               <h4 className="text-sm font-medium text-text mb-2">Stay Updated</h4>
               <div className="flex">
@@ -214,7 +206,6 @@ export default function Footer() {
               </div>
             </div>
             
-            {/* Responsible Gambling */}
             <div className="mt-6">
               <h4 className="text-sm font-medium text-text mb-2">Responsible Gambling</h4>
               <p className="text-xs text-muted leading-relaxed">
@@ -225,7 +216,6 @@ export default function Footer() {
           </div>
         </div>
         
-        {/* Additional Features Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-8 border-t border-border">
           <div className="text-center">
             <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -258,7 +248,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Footer */}
         <div className="border-t border-border mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-6 text-sm text-muted">

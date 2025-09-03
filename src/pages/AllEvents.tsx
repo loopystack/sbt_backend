@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
-
 export default function AllEvents() {
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedLeague, setSelectedLeague] = useState("All leagues");
-
   const sports = [
     { name: "All sports", icon: "🏆" },
     { name: "Football", icon: "⚽" },
@@ -14,14 +12,12 @@ export default function AllEvents() {
     { name: "Baseball", icon: "⚾" },
     { name: "Hockey", icon: "🏒" }
   ];
-
   const dateFilters = [
     { id: "today", label: "Today" },
     { id: "tomorrow", label: "Tomorrow" },
     { id: "week", label: "This Week" },
     { id: "month", label: "This Month" }
   ];
-
   const leagueFilters = [
     { id: "all", label: "All Leagues" },
     { id: "premier", label: "Premier League" },
@@ -31,7 +27,6 @@ export default function AllEvents() {
     { id: "champions", label: "Champions League" }
   ];
 
-  // Sample events data
   const allEvents = [
     {
       id: "1",
@@ -184,16 +179,13 @@ export default function AllEvents() {
       status: "Upcoming"
     }
   ];
-
   const getBestOdds = (odds1: string, oddsX: string, odds2: string) => {
     const odds = [parseFloat(odds1), parseFloat(oddsX), parseFloat(odds2)].filter(odd => !isNaN(odd));
     if (odds.length === 0) return null;
     return Math.min(...odds);
   };
-
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-0 h-0 border-l-[50px] border-l-transparent border-t-[50px] border-t-white/20"></div>
@@ -217,7 +209,6 @@ export default function AllEvents() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-b-[50px] border-b-white/20"></div>
           <div className="relative z-10">
@@ -235,7 +226,6 @@ export default function AllEvents() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group md:col-span-2 lg:col-span-1">
           <div className="absolute top-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-t-[50px] border-t-white/20"></div>
           <div className="relative z-10">
@@ -254,13 +244,9 @@ export default function AllEvents() {
           </div>
         </div>
       </div>
-
-      {/* Breadcrumbs */}
       <div className="text-sm text-muted px-2">
         Home &gt; All Events
       </div>
-
-      {/* Main Heading and Description */}
       <div className="space-y-3 sm:space-y-4 px-2">
         <h1 className="text-xl sm:text-2xl font-bold text-text">
           All Events - Complete Sports Betting Coverage
@@ -271,12 +257,9 @@ export default function AllEvents() {
           sport and event. Filter by sport, date, or league to find exactly what you're looking for.
         </p>
       </div>
-
-      {/* Filter Section */}
       <div className="bg-surface border border-border rounded-lg p-3 sm:p-4 shadow-sm mx-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <span className="text-sm font-medium text-muted">Filters:</span>
-          
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
             <select
               value={selectedDate}
@@ -289,7 +272,6 @@ export default function AllEvents() {
                 </option>
               ))}
             </select>
-
             <select
               value={selectedLeague}
               onChange={(e) => setSelectedLeague(e.target.value)}
@@ -304,8 +286,6 @@ export default function AllEvents() {
           </div>
         </div>
       </div>
-
-      {/* Sport Tabs */}
       <div className="flex gap-1 overflow-x-auto scrollbar-hide px-2 pb-2">
         {sports.map((sport) => (
           <button
@@ -321,14 +301,11 @@ export default function AllEvents() {
             <span className="font-medium text-sm sm:text-base">{sport.name}</span>
           </button>
         ))}
-        
         <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg flex-shrink-0">
           <span className="font-medium text-sm sm:text-base">More</span>
           <span className="text-base sm:text-lg">⌄</span>
         </button>
       </div>
-
-      {/* Mobile Events View */}
       <div className="block lg:hidden space-y-3 px-2">
         {Object.entries(allEvents.reduce((groups, event) => {
           const key = `${event.sport} / ${event.country} / ${event.league}`;
@@ -339,19 +316,15 @@ export default function AllEvents() {
           return groups;
         }, {} as Record<string, typeof allEvents>)).map(([key, group]) => (
           <div key={key} className="space-y-3">
-            {/* League Header */}
             <div className="flex items-center gap-2 text-sm text-muted">
               <span>{key.includes('Football') ? '⚽' : key.includes('Basketball') ? '🏀' : key.includes('Tennis') ? '🎾' : key.includes('Baseball') ? '⚾' : key.includes('Hockey') ? '🏒' : '🏆'}</span>
               <span className="text-xs sm:text-sm">{key}</span>
             </div>
-
-            {/* Event Cards */}
             {group.map((event) => {
               const bestOdds = getBestOdds(event.odds1, event.oddsX, event.odds2);
               return (
                 <div key={event.id} className="bg-surface border border-border rounded-lg p-3 sm:p-4 hover:bg-bg/50 transition-colors cursor-pointer">
                   <div className="space-y-3">
-                    {/* Header with Date, Time, and Status */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted">{event.date}</span>
@@ -359,14 +332,10 @@ export default function AllEvents() {
                       </div>
                       <span className="text-xs text-muted">{event.bookmakers} bookmakers</span>
                     </div>
-
-                    {/* Match Info */}
                     <div className="space-y-1">
                       <div className="font-medium text-text text-sm sm:text-base">{event.team1} vs {event.team2}</div>
                       <div className="text-xs text-muted">{event.sport} • {event.country} • {event.league}</div>
                     </div>
-
-                    {/* Odds Row */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="text-center">
                         <div className="text-xs text-muted mb-1">1</div>
@@ -394,10 +363,7 @@ export default function AllEvents() {
           </div>
         ))}
       </div>
-
-      {/* Desktop Events View */}
       <div className="hidden lg:block">
-        {/* Column Headers */}
         <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
           <div className="col-span-1 text-sm font-medium text-muted text-center">Date</div>
           <div className="col-span-1 text-sm font-medium text-muted text-center">Time</div>
@@ -407,8 +373,6 @@ export default function AllEvents() {
           <div className="col-span-1 text-sm font-medium text-muted text-center">2</div>
           <div className="col-span-2 text-sm font-medium text-muted text-center">B's</div>
         </div>
-
-        {/* Events Content */}
         <div className="space-y-4">
           {Object.entries(allEvents.reduce((groups, event) => {
             const key = `${event.sport} / ${event.country} / ${event.league}`;
@@ -419,58 +383,42 @@ export default function AllEvents() {
             return groups;
           }, {} as Record<string, typeof allEvents>)).map(([key, group]) => (
             <div key={key} className="space-y-4">
-              {/* League Header */}
               <div className="flex items-center gap-2 text-sm text-muted">
                 <span>{key.includes('Football') ? '⚽' : key.includes('Basketball') ? '🏀' : key.includes('Tennis') ? '🎾' : key.includes('Baseball') ? '⚾' : key.includes('Hockey') ? '🏒' : '🏆'}</span>
                 <span>{key}</span>
               </div>
-
-              {/* Event Rows */}
               {group.map((event) => {
                 const bestOdds = getBestOdds(event.odds1, event.oddsX, event.odds2);
                 return (
                   <div key={event.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      {/* Date */}
                       <div className="col-span-1 text-center">
                         <div className="text-sm text-muted">{event.date}</div>
                       </div>
-
-                      {/* Time */}
                       <div className="col-span-1 text-center">
                         <div className="text-sm font-medium text-text">{event.time}</div>
                       </div>
-
-                      {/* Match Info */}
                       <div className="col-span-4">
                         <div className="space-y-1">
                           <div className="font-medium text-text">{event.team1} vs {event.team2}</div>
                           <div className="text-xs text-muted">{event.sport} • {event.country} • {event.league}</div>
                         </div>
                       </div>
-
-                      {/* Odds 1 */}
                       <div className="col-span-1 text-center">
                         <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds1) ? 'text-green-500' : 'text-text'}`}>
                           {event.odds1}
                         </div>
                       </div>
-
-                      {/* Odds X */}
                       <div className="col-span-1 text-center">
                         <div className={`text-sm font-medium ${bestOdds === parseFloat(event.oddsX) ? 'text-green-500' : 'text-text'}`}>
                           {event.oddsX === 'N/A' ? '-' : event.oddsX}
                         </div>
                       </div>
-
-                      {/* Odds 2 */}
                       <div className="col-span-1 text-center">
                         <div className={`text-sm font-medium ${bestOdds === parseFloat(event.odds2) ? 'text-green-500' : 'text-text'}`}>
                           {event.odds2}
                         </div>
                       </div>
-
-                      {/* Bookmakers */}
                       <div className="col-span-2 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-sm text-muted">{event.bookmakers}</span>
@@ -485,8 +433,6 @@ export default function AllEvents() {
           ))}
         </div>
       </div>
-
-      {/* Events Summary */}
       <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">Events Overview</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
@@ -508,8 +454,6 @@ export default function AllEvents() {
           </div>
         </div>
       </div>
-
-      {/* Additional Information */}
       <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">About All Events</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -534,3 +478,5 @@ export default function AllEvents() {
     </section>
   );
 }
+
+

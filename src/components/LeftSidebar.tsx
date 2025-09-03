@@ -5,10 +5,9 @@ export default function LeftSidebar() {
   const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
   
-  // Function to get flag URL
+
   const getFlagUrl = (flagCode: string) => {
     try {
-      // Import the flag SVG directly from src/assets/flags
       return new URL(`../assets/flags/${flagCode}.svg`, import.meta.url).href;
     } catch {
       return '';
@@ -25,7 +24,6 @@ export default function LeftSidebar() {
 
   const handleCountryClick = (country: any) => {
     setSelectedCountry(country);
-    // Toggle the country expansion (expand if collapsed, collapse if expanded)
     toggleCountryExpansion(country.name);
   };
 
@@ -35,16 +33,13 @@ export default function LeftSidebar() {
 
   return (
     <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">
-      {/* My Leagues Section */}
-
-      {/* Football Section */}
+      
       <div>
         <h3 className="text-sm font-semibold text-muted mb-3">FOOTBALL</h3>
         
         <div className="space-y-1 max-h-100 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {countries.map((country) => (
             <div key={country.name} className="space-y-1">
-              {/* Country Button */}
               <button
                 onClick={() => handleCountryClick(country)}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 ${
@@ -77,7 +72,6 @@ export default function LeftSidebar() {
                 </span>
               </button>
               
-              {/* Leagues under country */}
               {expandedCountries.includes(country.name) && (
                 <div className="ml-6 space-y-1">
                   {country.leagues.map((league) => (

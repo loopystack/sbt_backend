@@ -30,7 +30,6 @@ export default function Matches() {
     { id: "events", label: "Events" }
   ];
 
-  // Sample matches data
   const matches = [
     {
       id: "1",
@@ -96,7 +95,6 @@ export default function Matches() {
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 hover:-translate-y-1 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
@@ -159,12 +157,10 @@ export default function Matches() {
         </div>
       </div>
 
-      {/* Breadcrumbs */}
       <div className="text-sm text-muted px-2">
         Home &gt; Next Matches &gt; Next Football Matches
       </div>
 
-      {/* Main Heading */}
       <div className="space-y-3 sm:space-y-4 px-2">
         <h1 className="text-xl sm:text-2xl font-bold text-text">
           Next Football Matches: Today, 14 Aug 2025
@@ -175,7 +171,6 @@ export default function Matches() {
         </p>
       </div>
 
-      {/* Date Selection */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-2 pb-2">
         {dates.map((date) => (
           <button
@@ -191,8 +186,6 @@ export default function Matches() {
           </button>
         ))}
       </div>
-
-      {/* Sport Tabs */}
       <div className="flex gap-1 overflow-x-auto scrollbar-hide px-2 pb-2">
         <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg flex-shrink-0">
           <span className="text-base sm:text-lg">⭐</span>
@@ -220,7 +213,6 @@ export default function Matches() {
         </button>
       </div>
 
-      {/* View Tabs */}
       <div className="flex gap-1 border-b border-border px-2">
         {views.map((view) => (
           <button
@@ -237,12 +229,10 @@ export default function Matches() {
         ))}
       </div>
 
-      {/* Mobile Matches View */}
       <div className="block lg:hidden space-y-3 px-2">
         {matches.map((match) => (
           <div key={match.id} className="bg-surface border border-border rounded-lg p-3 sm:p-4 hover:bg-bg/50 transition-colors cursor-pointer">
             <div className="space-y-3">
-              {/* Match Header */}
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-text text-sm sm:text-base leading-tight line-clamp-2">
@@ -256,7 +246,6 @@ export default function Matches() {
                 </div>
               </div>
               
-              {/* Odds Grid */}
               <div className="grid grid-cols-3 gap-2 mb-3">
                 <div className="text-center">
                   <div className="text-xs text-muted mb-1">1</div>
@@ -284,7 +273,6 @@ export default function Matches() {
                 </div>
               </div>
               
-              {/* Bookmakers & Action */}
               <div className="flex items-center justify-between pt-3 border-t border-border/50">
                 <div className="text-center">
                   <div className="text-xs text-muted">Bookmakers</div>
@@ -299,9 +287,7 @@ export default function Matches() {
         ))}
       </div>
 
-      {/* Desktop Matches View */}
       <div className="hidden lg:block">
-        {/* Column Headers */}
         <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
           <div className="col-span-2 text-sm font-medium text-muted">Date</div>
           <div className="col-span-2 text-sm font-medium text-muted">Time</div>
@@ -312,7 +298,6 @@ export default function Matches() {
           <div className="col-span-1 text-sm font-medium text-muted text-center">B's</div>
         </div>
 
-        {/* Matches Content */}
         <div className="space-y-4">
           {matches.map((match) => (
             <div key={match.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">

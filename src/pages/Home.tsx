@@ -6,10 +6,8 @@ import LatestBonuses from "../components/LatestBonuses";
 import OddsTable from "../components/OddsTable";
 import { useCountry } from "../contexts/CountryContext";
 import { openBettingSiteByName } from "../config/bettingSites";
-
 export default function Home() {
   const { selectedLeague } = useCountry();
-
   // If a league is selected, show only the odds table
   if (selectedLeague) {
     return (
@@ -18,11 +16,9 @@ export default function Home() {
       </div>
     );
   }
-
   // Otherwise show the normal home content
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-4 sm:p-6 text-white shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
@@ -42,7 +38,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-xl p-4 sm:p-6 text-white shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
@@ -61,7 +56,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-rose-500 via-red-500 to-orange-500 rounded-xl p-4 sm:p-6 text-white shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105 relative overflow-hidden md:col-span-2 lg:col-span-1">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
@@ -81,21 +75,13 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Hero Section with Search */}
       <HeroSection />
-      
-      {/* Popular Sports Grid */}
       <PopularSports />
-      
-      {/* Hot Picks Section */}
       <HotPicks />
-      
-      {/* Latest Bonuses Section */}
       <LatestBonuses />
-      
-      {/* Live Matches Odds Table Section */}
       <OddsTable />
     </div>
   );
 }
+
+

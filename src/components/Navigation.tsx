@@ -82,7 +82,6 @@ export default function Navigation() {
     };
   }, [showMoreSports]);
 
-  // Update active tab based on current route
   useEffect(() => {
     const path = location.pathname;
     if (path === "/") {
@@ -111,10 +110,9 @@ export default function Navigation() {
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
 
-    // Navigate to appropriate route
     switch (tabId) {
       case "home":
-        setSelectedLeague(null); // Clear selected league when Home is clicked
+        setSelectedLeague(null); 
         navigate("/");
         break;
       case "next-matches":
@@ -203,9 +201,7 @@ export default function Navigation() {
   return (
     <nav className="bg-gradient-to-r from-surface via-surface/95 to-surface border-b border-border/50 w-full relative shadow-lg">
       <div className="w-full px-4">
-        {/* Main Navigation - Logo moved to right end of left side, middle nav goes to top */}
         <div className="flex items-center h-16 py-3">
-          {/* Left side - User's logo image */}
           <div className="flex items-center gap-3 mr-8">
             <Link to="/" className="flex items-center hover:scale-105 transition-transform duration-300">
               <img
@@ -216,7 +212,6 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Middle part - Navigation Links centered in the middle */}
           <div className="ml-10 flex-1 flex items-center justify-center">
             <div className="flex items-center gap-2 backdrop-blur-sm rounded-2xl p-2 overflow-x-auto scrollbar-hide">
               {navigationTabs.map((tab) => (
@@ -250,9 +245,7 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Right side - User Actions */}
           <div className="flex items-center gap-4 ml-8">
-            {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
               className="p-3 text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
@@ -278,10 +271,9 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* Sports Categories - Centered in the middle */}
         <div className="border-t border-border/30 from-bg/50 to-surface/50">
           <div ref={containerRef} className="flex items-center justify-center gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
-            {/* Favorites */}
+          
             <button
               title="Favorites"
               className="flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-yellow-400/20 hover:to-orange-400/20 hover:scale-105 group border border-transparent hover:border-yellow-400/30"
@@ -291,7 +283,6 @@ export default function Navigation() {
               <span className="text-xs bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2.5 py-1.5 rounded-full font-bold tracking-wide shadow-sm">0</span>
             </button>
 
-            {/* Sports */}
             {sports.slice(0, visibleCount).map((sport) => (
               <button
                 key={sport.name}
@@ -321,7 +312,6 @@ export default function Navigation() {
               </button>
             ))}
 
-            {/* More dropdown */}
             <div className="relative">
               <button
                 ref={moreButtonRef}
@@ -339,7 +329,6 @@ export default function Navigation() {
                 <span className={`text-lg transition-transform duration-300 group-hover:scale-110 ${showMoreSports ? 'rotate-180' : ''}`}>⌄</span>
               </button>
 
-              {/* More Sports Dropdown Panel */}
               {showMoreSports && (
                 <div ref={moreSportsRef} className="fixed z-[99999]" style={{
                   top: '100%',
@@ -348,7 +337,6 @@ export default function Navigation() {
                 }}>
                   <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
                     <div className="p-1">
-                      {/* Hidden sports from main list */}
                       {visibleCount < sports.length && (
                         <div className="mb-3 pb-3 border-b border-border/30">
                           <div className="text-xs text-muted font-semibold mb-2 px-2">Hidden Sports</div>
@@ -381,7 +369,6 @@ export default function Navigation() {
                         </div>
                       )}
                       
-                      {/* Additional sports */}
                       <div className="grid grid-cols-2 gap-2">
                         {moreSports.map((sport) => (
                           <button

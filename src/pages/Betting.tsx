@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { bettingSites, openBettingSite } from "../config/bettingSites";
-
 export default function Betting() {
   const [selectedCategory, setSelectedCategory] = useState("Best Social Casinos");
   const [showLess, setShowLess] = useState<Record<string, boolean>>({});
@@ -10,14 +9,12 @@ export default function Betting() {
   const [showBestBettingAppsModal, setShowBestBettingAppsModal] = useState(false);
   const [showSweepstakesCasinosModal, setShowSweepstakesCasinosModal] = useState(false);
   const [showSweepstakesPromoCodesModal, setShowSweepstakesPromoCodesModal] = useState(false);
-
   const categories = [
     "Best Social Casinos",
     "New Social Casinos", 
     "Highest Bonus",
     "Number of Slots"
   ];
-
   const guideCategories = [
     { name: "Betting Sites", icon: "🏆", description: "Find the best betting platforms" },
     { name: "Betting Bonuses", icon: "🎁", description: "Discover amazing bonus offers" },
@@ -26,7 +23,6 @@ export default function Betting() {
     { name: "Sweepstakes Casinos", icon: "⭐", description: "Sweepstakes gaming sites" },
     { name: "Sweepstakes Casinos Promo Codes", icon: "🎫", description: "Exclusive promo codes" }
   ];
-
   const localBettingSites = [
     {
       id: "1",
@@ -84,17 +80,14 @@ export default function Betting() {
       ageRequirement: "21+"
     }
   ];
-
   const toggleShowLess = (id: string) => {
     setShowLess(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
   };
-
   return (
     <section className="space-y-4 sm:space-y-8 max-w-full overflow-hidden">
-      {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="text-sm uppercase tracking-wider text-muted">
           DISCOVER ONLINE BETTING IN 2025: ALL YOU NEED TO KNOW
@@ -103,8 +96,6 @@ export default function Betting() {
           Learn Everything About Online Betting with Our Expert Guides
         </h1>
       </div>
-
-      {/* Guide Categories */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {guideCategories.map((category) => (
           <div 
@@ -134,8 +125,6 @@ export default function Betting() {
           </div>
         ))}
       </div>
-
-      {/* Find Best Betting Sites Section */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold text-text">
           Find the Best Betting Sites Available
@@ -146,8 +135,6 @@ export default function Betting() {
           All listed brands are fully licensed and secure for online bettors in 2025.
         </p>
       </div>
-
-      {/* Filter Tabs */}
       <div className="flex gap-1 border-b border-border">
         {categories.map((category) => (
           <button
@@ -163,21 +150,14 @@ export default function Betting() {
           </button>
         ))}
       </div>
-
-      {/* Betting Sites Listings */}
       <div className="space-y-6">
         {localBettingSites.map((site) => (
           <div key={site.id} className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
-            {/* Yellow Left Border */}
             <div className="flex">
               <div className="w-2 bg-yellow-400"></div>
-              
-              {/* Main Content */}
               <div className="flex-1 p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column - Site Info */}
                   <div className="space-y-4">
-                    {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-orange-500 text-white text-sm font-bold rounded flex items-center justify-center">
@@ -189,19 +169,13 @@ export default function Betting() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Review Link */}
                     <div className="space-y-1">
                       <a href="#" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                         {site.name} Review
                       </a>
                       <div className="text-xs text-muted">by {site.reviewer}</div>
                     </div>
-
-                    {/* Logo */}
                     <div className="text-xl font-bold text-text">{site.logo}</div>
-
-                    {/* Features */}
                     <div className="space-y-2">
                       {site.features.map((feature, index) => (
                         <div key={index} className="flex items-center gap-2">
@@ -210,8 +184,6 @@ export default function Betting() {
                         </div>
                       ))}
                     </div>
-
-                    {/* Bonus Code (if exists) */}
                     {site.bonusCode && (
                       <div className="flex items-center gap-2">
                         <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm font-medium hover:bg-gray-200 transition-colors">
@@ -223,8 +195,6 @@ export default function Betting() {
                         </button>
                       </div>
                     )}
-
-                    {/* Info Table */}
                     <div className=" rounded-lg p-3 space-y-2">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted">Gaming Licence:</span>
@@ -240,21 +210,14 @@ export default function Betting() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Right Column - Promotional Offer */}
                   <div className="lg:col-span-2 space-y-4">
-                    {/* Offer */}
                     <div className="text-center">
                       <div className="text-lg font-bold text-text mb-4">
                         {site.offer}
                       </div>
-                      
-                      {/* Play Now Button */}
                       <button className="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors hover:scale-105 mb-4">
                         Play Now
                       </button>
-
-                      {/* Payment Methods */}
                       <div className="flex items-center justify-center gap-2 mb-4">
                         {site.paymentMethods.map((method, index) => (
                           <div key={index} className=" text-gray-700 border-t border-border px-2 py-1 rounded text-xs font-medium">
@@ -262,8 +225,6 @@ export default function Betting() {
                           </div>
                         ))}
                       </div>
-
-                      {/* Show Less Link */}
                       <button
                         onClick={() => toggleShowLess(site.id)}
                         className="text-sm text-muted hover:text-accent transition-colors"
@@ -273,8 +234,6 @@ export default function Betting() {
                     </div>
                   </div>
                 </div>
-
-                {/* Footer */}
                 <div className="mt-6 pt-4 border-t border-border text-center">
                   <span className="text-xs text-muted">T&Cs apply, {site.ageRequirement}</span>
                 </div>
@@ -283,8 +242,6 @@ export default function Betting() {
           </div>
         ))}
       </div>
-
-      {/* Additional Information */}
       <div className="bg-surface border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Why Choose Our Recommended Betting Sites?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -306,8 +263,6 @@ export default function Betting() {
           </div>
         </div>
       </div>
-
-      {/* Expert Tips */}
       <div className="g-surface border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Expert Betting Tips for 2025</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -334,8 +289,6 @@ export default function Betting() {
           </div>
         </div>
       </div>
-
-      {/* Betting Sites Modal */}
       {showBettingSitesModal && (
         <div 
           className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -345,7 +298,6 @@ export default function Betting() {
             className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-text">Top Betting Sites</h2>
@@ -360,13 +312,10 @@ export default function Betting() {
                 </svg>
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bettingSites.map((site) => (
                   <div key={site.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300 group">
-                                         {/* Site Header */}
                      <div className="text-center mb-4">
                                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold text-white ${
                           site.id === "1" ? "bg-gradient-to-r from-yellow-400 to-orange-500" :
@@ -391,13 +340,9 @@ export default function Betting() {
                         <span className="text-sm text-muted ml-1">({site.rating})</span>
                       </div>
                     </div>
-
-                    {/* Site Description */}
                     <p className="text-sm text-muted text-center mb-4 leading-relaxed">
                       {site.description}
                     </p>
-
-                    {/* Bonus Info */}
                     <div className="text-center mb-4">
                       <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 mb-3">
                         <div className="text-xs text-muted mb-1">BONUS TYPE</div>
@@ -407,8 +352,6 @@ export default function Betting() {
                         {site.bonus}
                       </div>
                     </div>
-
-                                         {/* Claim Button */}
                      <button
                        onClick={() => openBettingSite(site.id)}
                        className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300"
@@ -419,8 +362,6 @@ export default function Betting() {
                 ))}
               </div>
             </div>
-
-            {/* Modal Footer */}
             <div className="border-t border-border p-6 text-center">
               <p className="text-sm text-muted mb-4">
                 All betting sites are licensed and regulated. Please gamble responsibly.
@@ -435,8 +376,6 @@ export default function Betting() {
           </div>
         </div>
       )}
-
-      {/* Betting Bonuses Modal */}
       {showBettingBonusesModal && (
         <div 
           className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -446,7 +385,6 @@ export default function Betting() {
             className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-text">Best Betting Site Bonuses & Offers</h2>
@@ -461,8 +399,6 @@ export default function Betting() {
                 </svg>
               </button>
             </div>
-
-            {/* Filter Tabs */}
             <div className="px-6 pb-4">
               <div className="flex gap-1 border-b border-border">
                 {["Best Sportsbook Bonus", "Welcome Bonuses", "1st Deposit Bonuses", "No Deposit Bonuses"].map((tab) => (
@@ -479,19 +415,14 @@ export default function Betting() {
                 ))}
               </div>
             </div>
-
-            {/* Modal Content */}
             <div className="p-6">
               <div className="space-y-6">
                 {bettingSites.map((site, index) => (
                   <div key={site.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                     <div className="flex items-start gap-4">
-                                             {/* Ranking */}
                        <div className="w-12 h-12 bg-accent/30 dark:bg-accent/20 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                          {index + 1}
                        </div>
-                      
-                      {/* Site Info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex items-center gap-1">
@@ -503,17 +434,11 @@ export default function Betting() {
                           </a>
                           <span className="text-xs text-muted">by Jim Knight</span>
                         </div>
-                        
                         <h3 className="text-xl font-bold text-text mb-3">{site.name}</h3>
-                        
-                        {/* Bonus Offer */}
                         <div className="bg-orange-500 text-white px-4 py-3 rounded-lg mb-3 inline-block">
                           <div className="text-lg font-bold">{site.bonus}</div>
                         </div>
-                        
                         <div className="text-xs text-muted mb-4">T&Cs apply, 18+</div>
-                        
-                        {/* Bonus Details Table */}
                         <div className="grid grid-cols-4 gap-4 mb-4">
                           <div>
                             <div className="text-xs text-muted mb-1">Bonus Type</div>
@@ -532,23 +457,18 @@ export default function Betting() {
                             <div className="text-sm font-semibold text-text">Yes</div>
                           </div>
                         </div>
-                        
-                        {/* Payment Methods */}
                         <div className="flex items-center gap-2 mb-4">
                           <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
                           <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">E</div>
                           <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold">V</div>
                           <div className="text-sm text-muted">+23</div>
                         </div>
-                        
-                        {/* Get Bonus Button */}
                         <button
                           onClick={() => openBettingSite(site.id)}
                           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3"
                         >
                           Get Bonus
                         </button>
-                        
                         <button className="text-sm text-muted hover:text-accent transition-colors">
                           Show More ▼
                         </button>
@@ -558,8 +478,6 @@ export default function Betting() {
                 ))}
               </div>
             </div>
-
-            {/* Modal Footer */}
             <div className="border-t border-border p-6 text-center">
               <p className="text-sm text-muted mb-4">
                 All bonuses are subject to terms and conditions. Please gamble responsibly.
@@ -574,8 +492,6 @@ export default function Betting() {
           </div>
         </div>
       )}
-
-      {/* Betting Guides Modal */}
       {showBettingGuidesModal && (
         <div 
           className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -585,7 +501,6 @@ export default function Betting() {
             className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
             <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-text">Betting Guides for 2025: Expert Guides for a Range of Betting Topics</h2>
@@ -600,14 +515,10 @@ export default function Betting() {
                 </svg>
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="p-6">
-              {/* Featured Articles Section */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-text mb-6">Featured Articles</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Featured Article 1 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide1.png" 
@@ -622,8 +533,6 @@ export default function Betting() {
                        </button>
                      </div>
                   </div>
-
-                  {/* Featured Article 2 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide2.png" 
@@ -638,8 +547,6 @@ export default function Betting() {
                        </button>
                      </div>
                   </div>
-
-                  {/* Featured Article 3 */}
                   <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide3.png" 
@@ -656,12 +563,9 @@ export default function Betting() {
                   </div>
                 </div>
               </div>
-
-              {/* All Guides Section */}
               <div>
                 <h3 className="text-xl font-bold text-text mb-6">All Betting Guides</h3>
                 <div className="space-y-4">
-                  {/* Guide 4 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide4.png" 
@@ -674,8 +578,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 25.06.2025</p>
                     </div>
                   </div>
-
-                  {/* Guide 5 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide5.png" 
@@ -688,8 +590,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 23.06.2025</p>
                     </div>
                   </div>
-
-                  {/* Guide 6 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide6.png" 
@@ -702,8 +602,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 25.06.2005</p>
                     </div>
                   </div>
-
-                  {/* Guide 7 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide7.png" 
@@ -716,8 +614,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 23.06.2005</p>
                     </div>
                   </div>
-
-                  {/* Guide 8 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide8.png" 
@@ -730,8 +626,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 25.06.2005</p>
                     </div>
                   </div>
-
-                  {/* Guide 9 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide9.png" 
@@ -744,8 +638,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 08.05.2025</p>
                     </div>
                   </div>
-
-                  {/* Guide 10 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide10.png" 
@@ -758,8 +650,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 07.05.2005</p>
                     </div>
                   </div>
-
-                  {/* Guide 11 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide11.png" 
@@ -772,8 +662,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 07.05.2005</p>
                     </div>
                   </div>
-
-                  {/* Guide 12 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide12.png" 
@@ -786,8 +674,6 @@ export default function Betting() {
                       <p className="text-xs text-muted">Jim Knight - 06.05.2025</p>
                     </div>
                   </div>
-
-                  {/* Guide 13 */}
                   <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                     <img 
                       src="/assets/Betting_guide/guide13.png" 
@@ -803,8 +689,6 @@ export default function Betting() {
                 </div>
               </div>
             </div>
-
-            {/* Modal Footer */}
             <div className="border-t border-border p-6 text-center">
               <p className="text-sm text-muted mb-4">
                 All guides are written by betting experts. Please gamble responsibly and use these guides to make informed decisions.
@@ -819,8 +703,6 @@ export default function Betting() {
           </div>
         </div>
              )}
-
-       {/* Best Betting Apps Modal */}
        {showBestBettingAppsModal && (
          <div 
            className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -830,7 +712,6 @@ export default function Betting() {
              className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
              onClick={(e) => e.stopPropagation()}
            >
-             {/* Modal Header */}
              <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
                <div>
                  <h2 className="text-2xl font-bold text-text">Best Betting Apps Available in 2025</h2>
@@ -845,8 +726,6 @@ export default function Betting() {
                  </svg>
                </button>
              </div>
-
-             {/* Filter Tabs */}
              <div className="px-6 pb-4">
                <div className="flex gap-1 border-b border-border">
                  {["Best Sportsbook", "New Sportsbooks", "Highest Bonus", "Best Odds", "Offers Livestreams"].map((tab) => (
@@ -863,19 +742,13 @@ export default function Betting() {
                  ))}
                </div>
              </div>
-
-             {/* Modal Content */}
              <div className="p-6">
                <div className="space-y-6">
-                 {/* App 1: Stake */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                                           {/* Ranking */}
                       <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                         1
                       </div>
-                     
-                     {/* App Info */}
                      <div className="flex-1">
                        <div className="flex items-center gap-3 mb-3">
                          <div className="flex items-center gap-1">
@@ -887,10 +760,7 @@ export default function Betting() {
                          </a>
                          <span className="text-xs text-muted">by Jim Knight</span>
                        </div>
-                       
                        <h3 className="text-xl font-bold text-text mb-3">Stake</h3>
-                       
-                       {/* Key Features */}
                        <div className="space-y-2 mb-4">
                          <div className="flex items-center gap-2">
                            <span className="text-green-500 text-sm">✓</span>
@@ -905,8 +775,6 @@ export default function Betting() {
                            <span className="text-sm text-text">Fast, secure, and borderless betting with cryptocurrencies</span>
                          </div>
                        </div>
-
-                       {/* Bonus Code */}
                        <div className="flex items-center gap-2 mb-4">
                          <button className="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm font-medium hover:bg-gray-200 transition-colors">
                            BONUS CODE
@@ -914,18 +782,12 @@ export default function Betting() {
                          <span className="text-sm font-medium text-text">STAKEOP</span>
                          <button className="text-gray-500 hover:text-gray-700">📋</button>
                        </div>
-                       
-                       {/* Bonus Offer */}
                        <div className="bg-orange-500 text-white px-4 py-3 rounded-lg mb-3 inline-block">
                          <div className="text-lg font-bold">200% up to $2000</div>
                        </div>
-                       
-                       {/* Play Now Button */}
                        <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3">
                          Play Now
                        </button>
-                       
-                       {/* Payment Methods */}
                        <div className="flex items-center gap-2 mb-4">
                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">E</div>
@@ -933,8 +795,6 @@ export default function Betting() {
                          <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
                          <div className="text-sm text-muted">+23</div>
                        </div>
-
-                       {/* Expandable Details */}
                        <div className="space-y-2 mb-4">
                          <div className="flex justify-between text-xs">
                            <span className="text-muted">Bet Selection:</span>
@@ -953,21 +813,15 @@ export default function Betting() {
                            <span className="text-text">Live Chat, Phone, Email Support</span>
                          </div>
                        </div>
-                       
                        <div className="text-xs text-muted">T&Cs apply, 18+</div>
                      </div>
                    </div>
                  </div>
-
-                 {/* App 2: BC.GAME */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                                           {/* Ranking */}
                       <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                         2
                       </div>
-                     
-                     {/* App Info */}
                      <div className="flex-1">
                        <div className="flex items-center gap-3 mb-3">
                          <div className="flex items-center gap-1">
@@ -979,10 +833,7 @@ export default function Betting() {
                          </a>
                          <span className="text-xs text-muted">by James Leeland</span>
                        </div>
-                       
                        <h3 className="text-xl font-bold text-text mb-3">BC.GAME</h3>
-                       
-                       {/* Key Features */}
                        <div className="space-y-2 mb-4">
                          <div className="flex items-center gap-2">
                            <span className="text-green-500 text-sm">✓</span>
@@ -997,18 +848,12 @@ export default function Betting() {
                            <span className="text-sm text-text">Several cryptocurrency payment options</span>
                          </div>
                        </div>
-                       
-                       {/* Bonus Offer */}
                        <div className="bg-orange-500 text-white px-4 py-3 rounded-lg mb-3 inline-block">
                          <div className="text-lg font-bold">200% up to $500</div>
                        </div>
-                       
-                       {/* Play Now Button */}
                        <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3">
                          Play Now
                        </button>
-                       
-                       {/* Payment Methods */}
                        <div className="flex items-center gap-2 mb-4">
                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">B</div>
                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">E</div>
@@ -1016,8 +861,6 @@ export default function Betting() {
                          <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">D</div>
                          <div className="text-sm text-muted">+77</div>
                        </div>
-
-                       {/* Expandable Details */}
                        <div className="space-y-2 mb-4">
                          <div className="flex justify-between text-xs">
                            <span className="text-muted">Bet Selection:</span>
@@ -1036,21 +879,15 @@ export default function Betting() {
                            <span className="text-text">Live Chat, Phone, Email Support</span>
                          </div>
                        </div>
-                       
                        <div className="text-xs text-muted">T&Cs apply, 18+</div>
                      </div>
                    </div>
                  </div>
-
-                 {/* App 3: GG.Bet */}
                  <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                    <div className="flex items-start gap-4">
-                                           {/* Ranking */}
                       <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold">
                         3
                       </div>
-                     
-                     {/* App Info */}
                      <div className="flex-1">
                        <div className="flex items-center gap-3 mb-3">
                          <div className="flex items-center gap-1">
@@ -1062,10 +899,7 @@ export default function Betting() {
                          </a>
                          <span className="text-xs text-muted">by Jim Knight</span>
                        </div>
-                       
                        <h3 className="text-xl font-bold text-text mb-3">GG.Bet</h3>
-                       
-                       {/* Key Features */}
                        <div className="space-y-2 mb-4">
                          <div className="flex items-center gap-2">
                            <span className="text-green-500 text-sm">✓</span>
@@ -1080,18 +914,12 @@ export default function Betting() {
                            <span className="text-sm text-text">Thrilling eSports betting features, including HD streaming</span>
                          </div>
                        </div>
-                       
-                       {/* Bonus Offer */}
                        <div className="bg-orange-500 text-white px-4 py-3 rounded-lg mb-3 inline-block">
                          <div className="text-lg font-bold">Up to €1000 + €250 in Freebet</div>
                        </div>
-                       
-                       {/* Play Now Button */}
                        <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3">
                          Play Now
                        </button>
-                       
-                       {/* Payment Methods */}
                        <div className="flex items-center gap-2 mb-4">
                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">V</div>
                          <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">M</div>
@@ -1099,8 +927,6 @@ export default function Betting() {
                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">N</div>
                          <div className="text-sm text-muted">+29</div>
                        </div>
-
-                       {/* Expandable Details */}
                        <div className="space-y-2 mb-4">
                          <div className="flex justify-between text-xs">
                            <span className="text-muted">Bet Selection:</span>
@@ -1119,15 +945,12 @@ export default function Betting() {
                            <span className="text-text">Live Chat, Phone, Email Support</span>
                          </div>
                        </div>
-                       
                        <div className="text-xs text-muted">T&Cs apply, 18+</div>
                      </div>
                    </div>
                  </div>
                </div>
              </div>
-
-             {/* Modal Footer */}
              <div className="border-t border-border p-6 text-center">
                <p className="text-sm text-muted mb-4">
                  All betting apps are licensed and regulated. Please gamble responsibly.
@@ -1142,8 +965,6 @@ export default function Betting() {
            </div>
          </div>
                )}
-
-        {/* Sweepstakes Casinos Modal */}
         {showSweepstakesCasinosModal && (
           <div 
             className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -1153,7 +974,6 @@ export default function Betting() {
               className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
               <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-text">Best Sweepstakes Casinos Online with Expert Ratings & Promotions</h2>
@@ -1168,8 +988,6 @@ export default function Betting() {
                   </svg>
                 </button>
               </div>
-
-              {/* Filter Tabs */}
               <div className="px-6 pb-4">
                 <div className="flex gap-1 border-b border-border">
                   {["Best Social Casinos", "New Social Casinos", "Highest Bonus", "Number of Slots"].map((tab) => (
@@ -1186,14 +1004,10 @@ export default function Betting() {
                   ))}
                 </div>
               </div>
-
-              {/* Modal Content */}
               <div className="p-6">
-                {/* Featured Casinos Section */}
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-text mb-6">Top 3 Online Sweepstakes Casino Sites: Expert-Reviewed</h3>
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Featured Casino 1 */}
                     <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino1.png" 
@@ -1225,8 +1039,6 @@ export default function Betting() {
                          </button>
                        </div>
                     </div>
-
-                    {/* Featured Casino 2 */}
                     <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino2.png" 
@@ -1258,8 +1070,6 @@ export default function Betting() {
                          </button>
                        </div>
                     </div>
-
-                    {/* Featured Casino 3 */}
                     <div className="bg-surface border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino3.png" 
@@ -1293,12 +1103,9 @@ export default function Betting() {
                     </div>
                   </div>
                 </div>
-
-                {/* All Casinos Section */}
                 <div>
                   <h3 className="text-xl font-bold text-text mb-6">All Sweepstakes Casinos</h3>
                   <div className="space-y-4">
-                    {/* Casino 4 */}
                     <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino4.png" 
@@ -1311,8 +1118,6 @@ export default function Betting() {
                         <p className="text-xs text-muted">James Leeland - 07.08.2025</p>
                       </div>
                     </div>
-
-                    {/* Casino 5 */}
                     <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino5.png" 
@@ -1325,8 +1130,6 @@ export default function Betting() {
                         <p className="text-xs text-muted">James Leeland - 06.08.2025</p>
                       </div>
                     </div>
-
-                    {/* Casino 6 */}
                     <div className="flex items-start gap-4 bg-surface border border-border rounded-lg p-4 hover:shadow-lg transition-all duration-300">
                       <img 
                         src="/assets/sweepstakes/casino6.png" 
@@ -1342,8 +1145,6 @@ export default function Betting() {
                   </div>
                 </div>
               </div>
-
-              {/* Modal Footer */}
               <div className="border-t border-border p-6 text-center">
                 <p className="text-sm text-muted mb-4">
                   All sweepstakes casinos are licensed and regulated. Please gamble responsibly and use these guides to make informed decisions.
@@ -1358,8 +1159,6 @@ export default function Betting() {
             </div>
           </div>
                  )}
-
-         {/* Sweepstakes Casinos Promo Codes Modal */}
          {showSweepstakesPromoCodesModal && (
            <div 
              className="fixed top-32 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-50 flex items-start justify-center p-4"
@@ -1369,7 +1168,6 @@ export default function Betting() {
                className="bg-surface border border-border rounded-lg max-w-6xl w-full max-h-[calc(100vh-160px)] overflow-y-auto"
                onClick={(e) => e.stopPropagation()}
              >
-               {/* Modal Header */}
                <div className="sticky top-0 bg-surface border-b border-border p-6 flex items-center justify-between">
                  <div>
                    <h2 className="text-2xl font-bold text-text">The Best Sweepstake Casino Promo Codes in 2025</h2>
@@ -1384,8 +1182,6 @@ export default function Betting() {
                    </svg>
                  </button>
                </div>
-
-               {/* Filter Tabs */}
                <div className="px-6 pb-4">
                  <div className="flex gap-1 border-b border-border">
                    {["Best Social Casino Bonus", "Welcome Bonuses", "1st Deposit Bonuses", "No Deposit Bonuses"].map((tab) => (
@@ -1402,14 +1198,10 @@ export default function Betting() {
                    ))}
                  </div>
                </div>
-
-               {/* Modal Content */}
                <div className="p-6">
-                 {/* Compare Bonuses Section */}
                  <div className="mb-8">
                    <h3 className="text-xl font-bold text-text mb-4">Compare the top bonuses offered at social and sweepstakes casinos in August</h3>
                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                     {/* Stake.us Section */}
                      <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                        <h4 className="text-lg font-bold text-text mb-4">Stake.us - Notable Welcome Bonus by Using Our Promo Code</h4>
                        <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1470,8 +1262,6 @@ export default function Betting() {
                          Use Promo Code
                        </button>
                      </div>
-
-                     {/* Sportzino Section */}
                      <div className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
                        <h4 className="text-lg font-bold text-text mb-4">Sportzino - Straightforward Welcome Bonus with Quick Sign Up Steps and No Promo Code</h4>
                        <div className="grid grid-cols-2 gap-4 mb-4">
@@ -1563,16 +1353,12 @@ export default function Betting() {
                      </div>
                    </div>
                  </div>
-
-                 {/* Additional Info */}
                  <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-center">
                    <p className="text-sm text-text">
                      Get an extra 1,350,000 Gold Coins and 35 free Sweepstake Coins by completing all actions!
                    </p>
                  </div>
                </div>
-
-               {/* Modal Footer */}
                <div className="border-t border-border p-6 text-center">
                  <p className="text-sm text-muted mb-4">
                    All promo codes are subject to terms and conditions. Please gamble responsibly and use these codes to maximize your gaming experience.
@@ -1590,3 +1376,5 @@ export default function Betting() {
        </section>
      );
    }
+
+

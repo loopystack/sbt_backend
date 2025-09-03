@@ -18,7 +18,6 @@ export default function InPlayOdds() {
     { id: "scheduled", label: "Scheduled" }
   ];
 
-  // Sample live matches data
   const liveMatches = [
     {
       id: "1",
@@ -111,7 +110,6 @@ export default function InPlayOdds() {
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-slate-900 border border-cyan-400/50 rounded-xl p-5 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent"></div>
@@ -171,12 +169,10 @@ export default function InPlayOdds() {
         </div>
       </div>
 
-      {/* Breadcrumbs */}
       <div className="text-sm text-muted">
         Home &gt; In-Play Odds
       </div>
 
-      {/* Main Heading and Description */}
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-text">
           Live Betting Odds and Scores
@@ -188,7 +184,6 @@ export default function InPlayOdds() {
         </p>
       </div>
 
-      {/* Sport Tabs */}
       <div className="flex gap-1 overflow-x-auto scrollbar-hide">
         {sports.map((sport) => (
           <button
@@ -211,7 +206,6 @@ export default function InPlayOdds() {
         </button>
       </div>
 
-      {/* Live Now/Scheduled Tabs */}
       <div className="flex gap-1 border-b border-border">
         {viewTabs.map((tab) => (
           <button
@@ -228,7 +222,6 @@ export default function InPlayOdds() {
         ))}
       </div>
 
-      {/* Column Headers */}
       <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
         <div className="col-span-1 text-sm font-medium text-muted text-center">Status</div>
         <div className="col-span-4 text-sm font-medium text-muted">Match</div>
@@ -238,9 +231,7 @@ export default function InPlayOdds() {
         <div className="col-span-1 text-sm font-medium text-muted text-center">B's</div>
       </div>
 
-      {/* Live Matches Content */}
       <div className="space-y-6">
-        {/* Group matches by sport/league */}
         {Object.entries(liveMatches.reduce((groups, match) => {
           const key = `${match.sport} / ${match.country} / ${match.league}`;
           if (!groups[key]) {
@@ -250,17 +241,13 @@ export default function InPlayOdds() {
           return groups;
         }, {} as Record<string, typeof liveMatches>)).map(([key, group]) => (
           <div key={key} className="space-y-4">
-            {/* League Header */}
             <div className="flex items-center gap-2 text-sm text-muted">
               <span>{key.includes('Tennis') ? '🎾' : key.includes('Baseball') ? '⚾' : '🏆'}</span>
               <span>{key}</span>
             </div>
-
-            {/* Match Rows */}
             {group.map((match) => (
               <div key={match.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
                 <div className="grid grid-cols-12 gap-4 items-center">
-                  {/* Status */}
                   <div className="col-span-1 text-center">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold mx-auto ${getStatusColor(match.status)}`}>
                       {match.status}
@@ -270,7 +257,6 @@ export default function InPlayOdds() {
                     </div>
                   </div>
 
-                  {/* Match Info */}
                   <div className="col-span-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -284,22 +270,18 @@ export default function InPlayOdds() {
                     </div>
                   </div>
 
-                  {/* Score */}
                   <div className="col-span-2 text-center">
                     <div className="text-lg font-bold text-text">{match.score}</div>
                   </div>
 
-                  {/* Odds 1 */}
                   <div className="col-span-2 text-center">
                     <div className="text-sm font-medium text-text">{match.odds1}</div>
                   </div>
 
-                  {/* Odds 2 */}
                   <div className="col-span-2 text-center">
                     <div className="text-sm font-medium text-text">{match.odds2}</div>
                   </div>
 
-                  {/* Bookmakers */}
                   <div className="col-span-1 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <span className="text-sm text-muted">{match.bookmakers}</span>
@@ -317,7 +299,6 @@ export default function InPlayOdds() {
         ))}
       </div>
 
-      {/* Live Updates Info */}
       <div className="bg-surface border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Live Betting Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

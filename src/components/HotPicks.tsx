@@ -74,7 +74,6 @@ export default function HotPicks() {
             key={pick.id}
             className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 bg-accent rounded-full flex-shrink-0"></span>
@@ -91,12 +90,10 @@ export default function HotPicks() {
               </span>
             </div>
             
-            {/* Teams */}
             <h3 className="font-bold text-text mb-2 sm:mb-3 text-base sm:text-lg leading-tight line-clamp-2">
               {pick.teams}
             </h3>
             
-            {/* League & Time */}
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <span className="text-xs sm:text-sm text-muted truncate">{pick.league}</span>
               <div className="text-right">
@@ -105,7 +102,6 @@ export default function HotPicks() {
               </div>
             </div>
             
-            {/* Odds & Action */}
             <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
               <div className="text-center">
                 <span className="text-xs text-muted block">Best Odds</span>
@@ -116,7 +112,6 @@ export default function HotPicks() {
               </button>
             </div>
             
-            {/* Tip */}
             <div className="pt-3 border-t border-border/50">
               <p className="text-xs sm:text-sm text-muted italic flex items-start gap-2">
                 <span className="text-accent text-base sm:text-lg flex-shrink-0">💡</span>

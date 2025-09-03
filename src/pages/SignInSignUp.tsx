@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
-
 export default function SignInSignUp() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
@@ -10,30 +9,22 @@ export default function SignInSignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const { theme } = useTheme();
   const navigate = useNavigate();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      // Navigate back to home after successful login
       navigate("/");
     }, 1500);
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-72 h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
         <div className="absolute top-0 right-0 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-2000"></div>
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse animation-delay-4000"></div>
       </div>
-
       <div className="relative z-10 w-full max-w-sm">
-        {/* Logo/Brand Section */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl mb-3 shadow-lg">
             <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -50,10 +41,7 @@ export default function SignInSignUp() {
             }
           </p>
         </div>
-
-        {/* Main Card */}
         <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-xl p-6 shadow-2xl">
-          {/* Toggle Buttons */}
           <div className="flex bg-bg/50 rounded-lg p-1 mb-6">
             <button
               onClick={() => setIsSignIn(true)}
@@ -76,8 +64,6 @@ export default function SignInSignUp() {
               Sign Up
             </button>
           </div>
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-xs font-semibold text-text mb-2">
@@ -100,7 +86,6 @@ export default function SignInSignUp() {
                 />
               </div>
             </div>
-
             <div>
               <label htmlFor="password" className="block text-xs font-semibold text-text mb-2">
                 Password
@@ -122,7 +107,6 @@ export default function SignInSignUp() {
                 />
               </div>
             </div>
-
             {!isSignIn && (
               <div>
                 <label htmlFor="confirmPassword" className="block text-xs font-semibold text-text mb-2">
@@ -146,8 +130,6 @@ export default function SignInSignUp() {
                 </div>
               </div>
             )}
-
-            {/* Forgot Password Link - Only show on Sign In */}
             {isSignIn && (
               <div className="text-right">
                 <Link
@@ -158,7 +140,6 @@ export default function SignInSignUp() {
                 </Link>
               </div>
             )}
-
             <button
               type="submit"
               disabled={isLoading || !email || !password || (!isSignIn && !confirmPassword)}
@@ -182,8 +163,6 @@ export default function SignInSignUp() {
               )}
             </button>
           </form>
-
-          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border" />
@@ -192,28 +171,22 @@ export default function SignInSignUp() {
               <span className="px-3 bg-surface text-muted font-medium">Or continue with</span>
             </div>
           </div>
-
-          {/* Social Login Options */}
           <div className="space-y-3">
             <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
               <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>
               Continue with Google
             </button>
-            
             <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.71 19.5c-.83 1.24-2.04 2.32-3.54 3.12-1.5.8-3.22 1.2-5.04 1.2-1.8 0-3.48-.4-4.96-1.2-1.48-.8-2.68-1.88-3.5-3.12-1.24-1.84-1.88-3.96-1.88-6.3 0-2.34.64-4.46 1.88-6.3.82-1.24 2.02-2.32 3.5-3.12 1.48-.8 3.16-1.2 4.96-1.2 1.82 0 3.54.4 5.04 1.2 1.5.8 2.71 1.88 3.54 3.12.82 1.24 1.24 2.66 1.24 4.18 0 1.52-.42 2.94-1.24 4.18z"/>
               </svg>
               Continue with Apple
             </button>
-            
             <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
               <div className="w-5 h-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-bold">f</div>
               Continue with Facebook
             </button>
           </div>
-
-          {/* Legal Disclaimer */}
           <p className="text-muted text-xs text-center leading-relaxed mt-6">
             By clicking on any "Continue with" button or submitting the form, you agree to the{" "}
             <a href="#" className="text-yellow-500 hover:text-yellow-400 font-medium">Terms of Use</a>{" "}
@@ -222,8 +195,6 @@ export default function SignInSignUp() {
             on our website.
           </p>
         </div>
-
-        {/* Back to Home Link */}
         <div className="text-center mt-4">
           <Link 
             to="/" 

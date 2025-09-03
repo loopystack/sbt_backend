@@ -4,7 +4,6 @@ export default function ScrollToFooter() {
   const [isVisible, setIsVisible] = useState(false);
   const [isPastMiddle, setIsPastMiddle] = useState(false);
 
-  // Show button when user scrolls down and track if past middle
   useEffect(() => {
     const toggleVisibility = () => {
       const scrollPosition = window.pageYOffset;
@@ -12,10 +11,8 @@ export default function ScrollToFooter() {
       const documentHeight = document.documentElement.scrollHeight;
       const middlePoint = documentHeight / 2;
       
-      // Show button when user scrolls down 300px
       if (scrollPosition > 300) {
         setIsVisible(true);
-        // Check if past middle of the page
         setIsPastMiddle(scrollPosition + windowHeight > middlePoint);
       } else {
         setIsVisible(false);
@@ -28,13 +25,11 @@ export default function ScrollToFooter() {
 
   const handleScroll = () => {
     if (isPastMiddle) {
-      // Go to top if past middle
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     } else {
-      // Go to footer if in first half
       const footer = document.querySelector('footer');
       if (footer) {
         footer.scrollIntoView({ 
@@ -55,9 +50,7 @@ export default function ScrollToFooter() {
       className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-yellow-300 hover:bg-yellow-400 text-black rounded-full shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 group animate-float animate-glow"
       aria-label={isPastMiddle ? "Scroll to top" : "Scroll to footer"}
     >
-      {/* Main button content */}
       <div className="relative w-full h-full flex items-center justify-center">
-        {/* Dynamic arrow icon */}
         <svg 
           className="w-7 h-7 animate-bounce" 
           fill="none" 
@@ -65,7 +58,6 @@ export default function ScrollToFooter() {
           viewBox="0 0 24 24"
         >
           {isPastMiddle ? (
-            // Up arrow
             <path 
               strokeLinecap="round" 
               strokeLinejoin="round" 
@@ -73,7 +65,6 @@ export default function ScrollToFooter() {
               d="M5 10l7-7m0 0l7 7m-7-7v18" 
             />
           ) : (
-            // Down arrow
             <path 
               strokeLinecap="round" 
               strokeLinejoin="round" 
@@ -83,19 +74,15 @@ export default function ScrollToFooter() {
           )}
         </svg>
         
-        {/* Multiple pulse animation rings */}
         <div className="absolute inset-0 rounded-full bg-yellow-300/20 animate-ping"></div>
         <div className="absolute inset-0 rounded-full bg-yellow-300/10 animate-ping" style={{ animationDelay: '0.5s' }}></div>
         <div className="absolute inset-0 rounded-full bg-yellow-300/5 animate-ping" style={{ animationDelay: '1s' }}></div>
         
-        {/* Custom pulse ring */}
         <div className="absolute inset-0 rounded-full bg-yellow-300/15 animate-pulse-ring"></div>
         
-        {/* Glowing effect */}
         <div className="absolute inset-0 rounded-full bg-yellow-300/30 animate-pulse"></div>
       </div>
       
-      {/* Dynamic tooltip */}
       <div className="absolute bottom-full right-0 mb-3 px-4 py-2 bg-surface border border-border rounded-xl text-sm font-medium text-text opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-2xl transform scale-95 group-hover:scale-100">
         <span className="flex items-center space-x-2">
           <span>{isPastMiddle ? "⬆️" : "🚀"}</span>

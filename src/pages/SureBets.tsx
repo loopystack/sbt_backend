@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
-
 export default function SureBets() {
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("today");
-
   const sports = [
     { name: "All sports", icon: "🏆" },
     { name: "Football", icon: "⚽" },
@@ -13,13 +11,11 @@ export default function SureBets() {
     { name: "Baseball", icon: "⚾" },
     { name: "Hockey", icon: "🏒" }
   ];
-
   const timeFilters = [
     { id: "today", label: "Today" },
     { id: "tomorrow", label: "Tomorrow" },
     { id: "week", label: "This Week" }
   ];
-
   // Sample sure bets data (when available)
   const sampleSureBets = [
     {
@@ -47,13 +43,10 @@ export default function SureBets() {
       return: "£103.20"
     }
   ];
-
   // Currently no sure bets available (as shown in the image)
   const hasSureBets = false;
-
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
@@ -77,7 +70,6 @@ export default function SureBets() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
           <div className="relative z-10">
@@ -95,7 +87,6 @@ export default function SureBets() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-amber-600 via-orange-600 to-red-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group md:col-span-2 lg:col-span-1">
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-300"></div>
           <div className="relative z-10">
@@ -114,13 +105,9 @@ export default function SureBets() {
           </div>
         </div>
       </div>
-
-      {/* Breadcrumbs */}
       <div className="text-sm text-muted px-2">
         Home &gt; Sure Bets
       </div>
-
-      {/* Main Heading and Description */}
       <div className="space-y-3 sm:space-y-4 px-2">
         <h1 className="text-xl sm:text-2xl font-bold text-text">
           OddsPortal Sure Bets - Find Sure Odds Today
@@ -131,8 +118,6 @@ export default function SureBets() {
           offering different odds for the same markets, you can take advantage and earn profit 
           regardless of the result of the market for the match.
         </p>
-        
-        {/* Get More Link */}
         <div className="pt-2">
           <a 
             href="#" 
@@ -142,12 +127,9 @@ export default function SureBets() {
           </a>
         </div>
       </div>
-
-      {/* Filter Section */}
       <div className="bg-surface border border-border rounded-lg p-3 sm:p-4 shadow-sm mx-2">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           <span className="text-sm font-medium text-muted">Filter:</span>
-          
           <select
             value={selectedTimeFilter}
             onChange={(e) => setSelectedTimeFilter(e.target.value)}
@@ -161,8 +143,6 @@ export default function SureBets() {
           </select>
         </div>
       </div>
-
-      {/* Sport Tabs */}
       <div className="flex gap-1 overflow-x-auto scrollbar-hide px-2 pb-2">
         {sports.map((sport) => (
           <button
@@ -178,39 +158,29 @@ export default function SureBets() {
             <span className="font-medium text-sm sm:text-base">{sport.name}</span>
           </button>
         ))}
-        
         <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg whitespace-nowrap transition-colors duration-200 text-muted hover:text-text hover:bg-bg flex-shrink-0">
           <span className="font-medium text-sm sm:text-base">More</span>
           <span className="text-base sm:text-lg">⌄</span>
         </button>
       </div>
-
-      {/* Sure Bets Content */}
       {hasSureBets ? (
         <div className="space-y-4 sm:space-y-6">
-          {/* Mobile Sure Bets View */}
           <div className="block lg:hidden space-y-3 px-2">
             {sampleSureBets.map((bet) => (
               <div key={bet.id} className="bg-surface border border-border rounded-lg p-3 sm:p-4 hover:bg-bg/50 transition-colors cursor-pointer">
                 <div className="space-y-3">
-                  {/* Match Info */}
                   <div className="space-y-1">
                     <div className="font-medium text-text text-sm sm:text-base">{bet.teams}</div>
                     <div className="text-xs sm:text-sm text-muted">{bet.sport} • {bet.league}</div>
                     <div className="text-xs text-muted">{bet.date}</div>
                   </div>
-
-                  {/* Bets Grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Bet 1 */}
                     <div className="text-center p-2 bg-bg rounded-lg">
                       <div className="text-xs text-muted mb-1">Bet 1</div>
                       <div className="text-sm font-medium text-text">{bet.bet1.outcome}</div>
                       <div className="text-xs text-muted">{bet.bet1.odds}</div>
                       <div className="text-xs text-accent">{bet.bet1.bookmaker}</div>
                     </div>
-
-                    {/* Bet 2 */}
                     <div className="text-center p-2 bg-bg rounded-lg">
                       <div className="text-xs text-muted mb-1">Bet 2</div>
                       <div className="text-sm font-medium text-text">{bet.bet2.outcome}</div>
@@ -218,8 +188,6 @@ export default function SureBets() {
                       <div className="text-xs text-accent">{bet.bet2.bookmaker}</div>
                     </div>
                   </div>
-
-                  {/* Profit & Stakes */}
                   <div className="text-center pt-2 border-t border-border/50">
                     <div className="text-sm font-bold text-green-400 mb-1">{bet.profit} Profit</div>
                     <div className="text-xs text-muted">Stake: {bet.stake} | Return: {bet.return}</div>
@@ -228,10 +196,7 @@ export default function SureBets() {
               </div>
             ))}
           </div>
-
-          {/* Desktop Sure Bets View */}
           <div className="hidden lg:block">
-            {/* Column Headers */}
             <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-bg border border-border rounded-lg">
               <div className="col-span-3 text-sm font-medium text-muted">Match</div>
               <div className="col-span-2 text-sm font-medium text-muted">Date/Time</div>
@@ -239,24 +204,17 @@ export default function SureBets() {
               <div className="col-span-2 text-sm font-medium text-muted text-center">Bet 2</div>
               <div className="col-span-3 text-sm font-medium text-muted text-center">Profit & Stakes</div>
             </div>
-
-            {/* Sure Bets Listings */}
             <div className="space-y-4">
               {sampleSureBets.map((bet) => (
                 <div key={bet.id} className="bg-surface border border-border rounded-lg p-4 hover:bg-bg/50 transition-colors cursor-pointer">
                   <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* Match Info */}
                     <div className="col-span-3">
                       <div className="font-medium text-text">{bet.teams}</div>
                       <div className="text-sm text-muted">{bet.sport} • {bet.league}</div>
                     </div>
-
-                    {/* Date/Time */}
                     <div className="col-span-2 text-sm text-muted">
                       {bet.date}
                     </div>
-
-                    {/* Bet 1 */}
                     <div className="col-span-2 text-center">
                       <div className="space-y-1">
                         <div className="text-sm font-medium text-text">{bet.bet1.outcome}</div>
@@ -264,8 +222,6 @@ export default function SureBets() {
                         <div className="text-xs text-accent">{bet.bet1.bookmaker}</div>
                       </div>
                     </div>
-
-                    {/* Bet 2 */}
                     <div className="col-span-2 text-center">
                       <div className="space-y-1">
                         <div className="text-sm font-medium text-text">{bet.bet2.outcome}</div>
@@ -273,8 +229,6 @@ export default function SureBets() {
                         <div className="text-xs text-accent">{bet.bet2.bookmaker}</div>
                       </div>
                     </div>
-
-                    {/* Profit & Stakes */}
                     <div className="col-span-3 text-center">
                       <div className="space-y-1">
                         <div className="text-sm font-bold text-green-400">{bet.profit} Profit</div>
@@ -289,7 +243,6 @@ export default function SureBets() {
           </div>
         </div>
       ) : (
-        /* No Sure Bets Available Message */
         <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-400 rounded-full flex items-center justify-center">
@@ -302,8 +255,6 @@ export default function SureBets() {
           </p>
         </div>
       )}
-
-      {/* Additional Information */}
       <div className="bg-surface border border-border rounded-lg p-4 sm:p-6 mx-2">
         <h3 className="text-lg font-semibold text-text mb-4">How Sure Bets Work</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -328,3 +279,5 @@ export default function SureBets() {
     </section>
   );
 }
+
+

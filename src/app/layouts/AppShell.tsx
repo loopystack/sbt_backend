@@ -15,7 +15,6 @@ export default function AppShell() {
   const navigate = useNavigate();
   const { theme } = useTheme();
 
-  // Close mobile menu when screen size changes
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -36,9 +35,7 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Beautiful Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
-        {/* Dark mode circles */}
         {theme === 'dark' && (
           <>
             <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
@@ -46,13 +43,11 @@ export default function AppShell() {
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-4000"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3000"></div>
             
-            {/* Additional circles for main content area */}
             <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-pink-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1000"></div>
             <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-cyan-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2500"></div>
             <div className="absolute bottom-1/3 right-1/3 w-88 h-88 bg-green-500/6 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1500"></div>
             <div className="absolute top-1/3 right-1/2 w-56 h-56 bg-indigo-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3500"></div>
             
-            {/* More circles for the center main content area */}
             <div className="absolute top-1/6 left-1/2 w-96 h-96 bg-emerald-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-500"></div>
             <div className="absolute top-2/3 left-1/2 w-80 h-80 bg-teal-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1800"></div>
             <div className="absolute top-1/2 left-2/3 w-72 h-72 bg-rose-500/8 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2200"></div>
@@ -61,7 +56,6 @@ export default function AppShell() {
           </>
         )}
         
-        {/* Light mode circles */}
         {theme === 'light' && (
           <>
             <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
@@ -69,13 +63,11 @@ export default function AppShell() {
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-4000"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3000"></div>
             
-            {/* Additional circles for main content area */}
             <div className="absolute top-1/4 left-1/3 w-72 h-72 bg-pink-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1000"></div>
             <div className="absolute top-3/4 right-1/4 w-64 h-64 bg-cyan-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2500"></div>
             <div className="absolute bottom-1/3 right-1/3 w-88 h-88 bg-green-400/12 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1500"></div>
             <div className="absolute top-1/3 right-1/2 w-56 h-56 bg-indigo-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-3500"></div>
             
-            {/* More circles for the center main content area */}
             <div className="absolute top-1/6 left-1/2 w-96 h-96 bg-emerald-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-500"></div>
             <div className="absolute top-2/3 left-1/2 w-80 h-80 bg-teal-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-1800"></div>
             <div className="absolute top-1/2 left-2/3 w-72 h-72 bg-rose-400/15 rounded-full mix-blend-multiply filter blur-3xl animate-pulse animation-delay-2200"></div>
@@ -92,12 +84,10 @@ export default function AppShell() {
         isMobileMenuOpen={isMobileMenuOpen}
       />
       
-      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
       
-      {/* Mobile Menu */}
       <div className={`fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
@@ -184,7 +174,6 @@ export default function AppShell() {
       </div>
 
       <div className="flex">
-        {/* Left Sidebar - Hidden on mobile, collapsible on tablet */}
         <div className={`${
           isLeftSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
         }`}>
@@ -194,19 +183,16 @@ export default function AppShell() {
           </div>
         </div>
         
-        {/* Left Sidebar - Desktop */}
         <div className="hidden lg:block">
           <LeftSidebar />
         </div>
         
-        {/* Main Content */}
         <main className={`flex-1 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 transition-all duration-300 ${
           isLeftSidebarOpen || isRightSidebarOpen ? 'lg:ml-0' : ''
         }`}>
           <Outlet />
         </main>
         
-        {/* Right Sidebar - Hidden on mobile, collapsible on tablet */}
         <div className={`${
           isRightSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
         }`}>
@@ -216,16 +202,13 @@ export default function AppShell() {
           </div>
         </div>
         
-        {/* Right Sidebar - Desktop */}
         <div className="hidden lg:block">
           <RightSidebar />
         </div>
       </div>
       
-      {/* Footer */}
       <Footer />
       
-      {/* Floating Scroll to Footer Button */}
       <ScrollToFooter />
       
 

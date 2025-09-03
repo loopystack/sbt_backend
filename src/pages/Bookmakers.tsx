@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
-
 export default function Bookmakers() {
   const [selectedTab, setSelectedTab] = useState("BOOKIE INFO");
-
   const subNavigationTabs = [
     "BOOKIE INFO",
     "BONUS OFFERS", 
     "ODDS QUALITY",
     "BETTING APPS"
   ];
-
   const bookmakers = [
     {
       id: "1",
@@ -141,10 +138,8 @@ export default function Bookmakers() {
       payoutLabel: "Average payout"
     }
   ];
-
   return (
     <section className="space-y-4 sm:space-y-8 max-w-full overflow-hidden">
-      {/* Promotional Banners */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
@@ -169,7 +164,6 @@ export default function Bookmakers() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
           <div className="absolute bottom-2 left-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -193,7 +187,6 @@ export default function Bookmakers() {
             </div>
           </div>
         </div>
-
         <div className="bg-gradient-to-br from-teal-600 via-cyan-600 to-blue-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
           <div className="absolute top-2 left-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
@@ -213,13 +206,9 @@ export default function Bookmakers() {
           </div>
         </div>
       </div>
-
-      {/* Breadcrumbs */}
       <div className="text-sm text-muted">
         Home &gt; Bookmakers
       </div>
-
-      {/* Main Heading and Description */}
       <div className="space-y-4">
         <h1 className="text-3xl font-bold text-text">
           Best Online Betting Sites for Aug 2025 - Where to Bet?
@@ -233,8 +222,6 @@ export default function Bookmakers() {
           and mobile apps. Check our reviews and visit bookmakers via the VISIT BOOKMAKER button.
         </p>
       </div>
-
-      {/* Sub Navigation Tabs */}
       <div className="flex gap-1 border-b border-border">
         {subNavigationTabs.map((tab) => (
           <button
@@ -250,18 +237,13 @@ export default function Bookmakers() {
           </button>
         ))}
       </div>
-
-      {/* Bookmakers Section */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-text">
           Bookmakers ({bookmakers.length})
         </h2>
-
-        {/* Bookmakers Listings */}
         <div className="space-y-6">
           {bookmakers.map((bookmaker) => (
             <div key={bookmaker.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300">
-              {/* Payout Information */}
               {bookmaker.payout && (
                 <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                   <div className="text-sm text-gray-800 dark:text-gray-200">
@@ -274,11 +256,8 @@ export default function Bookmakers() {
                   </div>
                 </div>
               )}
-
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Bookmaker Info */}
                 <div className="space-y-4">
-                  {/* Logo and Rating */}
                   <div className="flex items-center gap-4">
                     <div className={`w-16 h-16 ${bookmaker.logoColor} rounded-lg flex items-center justify-center font-bold text-lg text-center`}>
                       {bookmaker.logo}
@@ -288,15 +267,11 @@ export default function Bookmakers() {
                       <span className="font-semibold text-text">{bookmaker.rating}</span>
                     </div>
                   </div>
-
-                  {/* Review Link */}
                   <div>
                     <a href="#" className="text-blue-600 hover:text-blue-700 font-medium text-sm underline">
                       {bookmaker.reviewLink}
                     </a>
                   </div>
-
-                  {/* Features */}
                   <div className="space-y-2">
                     {bookmaker.features.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -306,8 +281,6 @@ export default function Bookmakers() {
                     ))}
                   </div>
                 </div>
-
-                {/* Right Column - Action Button */}
                 <div className="lg:col-span-2 flex items-center justify-center">
                   <div className="text-center space-y-3">
                     <button className="bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors hover:scale-105">
@@ -325,8 +298,6 @@ export default function Bookmakers() {
           ))}
         </div>
       </div>
-
-      {/* Additional Information */}
       <div className="bg-surface border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Why Choose Our Recommended Bookmakers?</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -348,10 +319,6 @@ export default function Bookmakers() {
           </div>
         </div>
       </div>
-
-      
-
-      {/* Expert Tips */}
       <div className="bg-gradient-to-r bg-surface border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-text mb-4">Choosing the Right Bookmaker</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -381,3 +348,5 @@ export default function Bookmakers() {
     </section>
   );
 }
+
+

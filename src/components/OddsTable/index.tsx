@@ -3,9 +3,9 @@ import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../store/hooks";
-  import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
+import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
 import { MatchingInfo, GetMatchingInfoQueries } from "../../store/matchinginfo/types";
-
+import { transformMatchingInfoToMatch } from "../../data/sampleData";
 type Match = {
   id: string;
   time: string;
@@ -23,7 +23,6 @@ type Match = {
   date?: string;
   bookmakerCount?: number;
 };
-
 type Bookmaker = {
   name: string;
   home: string;
@@ -31,10 +30,8 @@ type Bookmaker = {
   draw?: string;
   overUnder?: string;
 };
-
 export default function OddsTable() {
   const dispatch = useAppDispatch();
-
   const { selectedCountry, selectedLeague } = useCountry();
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -62,7 +59,6 @@ export default function OddsTable() {
   } | null>(null);
   const [selectedBetAmount, setSelectedBetAmount] = useState("0.0001");
   
-  // Default matches when no country is selected
   const defaultMatches: Match[] = [
     {
       id: "1",
@@ -91,11 +87,24 @@ export default function OddsTable() {
       ]
     }
   ];
-
-  // Get matches based on selected country
   const getMatches = (): Match[] => {
+    if (matchingInfo && matchingInfo.length > 0) {
+      let filteredMatches = matchingInfo;
+      
+      if (selectedCountry) {
+        filteredMatches = matchingInfo.filter(match => 
+          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
+        );
+      }
+      
+      if (filteredMatches.length === 0) {
+        filteredMatches = matchingInfo;
+      }
+      
+      return transformMatchingInfoToMatch(filteredMatches);
+    }
+    
     if (selectedLeague && selectedLeague.matches.length > 0) {
-      // Return matches from the selected league
       return selectedLeague.matches.map((match: any) => ({
         id: match.id,
         time: match.time,
@@ -113,34 +122,32 @@ export default function OddsTable() {
       }));
     }
     
-    if (!selectedCountry) return defaultMatches;
+    if (selectedCountry) {
+      const allMatches: Match[] = selectedCountry.leagues.flatMap((league: any) => 
+        league.matches.map((match: any) => ({
+          id: match.id,
+          time: match.time,
+          status: "Upcoming" as const,
+          teams: `${match.team1} vs ${match.team2}`,
+          sport: "Football",
+          league: league.name,
+          bookmakers: [
+            { name: "Bet365", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+            { name: "DraftKings", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
+            { name: "FanDuel", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds }
+          ],
+          date: match.date,
+          bookmakerCount: match.bookmakers
+        }))
+      );
+      
+      return allMatches;
+    }
     
-    // Get all matches from all leagues of the selected country
-    const allMatches: Match[] = selectedCountry.leagues.flatMap((league: any) => 
-      league.matches.map((match: any) => ({
-        id: match.id,
-        time: match.time,
-        status: "Upcoming" as const,
-        teams: `${match.team1} vs ${match.team2}`,
-        sport: "Football",
-        league: league.name,
-        bookmakers: [
-          { name: "Bet365", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
-          { name: "DraftKings", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
-          { name: "FanDuel", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds }
-        ],
-        date: match.date,
-        bookmakerCount: match.bookmakers
-      }))
-    );
-    
-    return allMatches;
+    return defaultMatches;
   };
-
   const matches = getMatches();
   const markets = ["Match Winner", "Over/Under", "Handicap", "Both Teams Score"];
-
-  // Group matches by date
   const groupMatchesByDate = (matches: Match[]) => {
     const grouped: { [key: string]: Match[] } = {};
     
@@ -152,20 +159,15 @@ export default function OddsTable() {
       grouped[date].push(match);
     });
     
-    // Sort dates and return as array
     return Object.entries(grouped)
       .sort(([dateA], [dateB]) => {
-        // Sort by date if available, otherwise keep original order
         if (dateA === 'No Date') return 1;
         if (dateB === 'No Date') return -1;
         return new Date(dateA).getTime() - new Date(dateB).getTime();
       })
       .map(([date, matches]) => ({ date, matches }));
   };
-
   const groupedMatches = groupMatchesByDate(matches);
-
-  // Handle odds selection
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
     const selectedBet = {
       matchId: match.id,
@@ -175,7 +177,6 @@ export default function OddsTable() {
       league: match.league
     };
     
-    // Get button position for animation
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
     const startPosition = {
@@ -183,13 +184,11 @@ export default function OddsTable() {
       y: rect.top + rect.height / 2
     };
     
-    // Check if this odds is already selected
     const isAlreadySelected = selectedOdds.some(
       odds => odds.matchId === match.id && odds.type === type
     );
     
     if (isAlreadySelected) {
-      // Remove from selection
       setSelectedOdds(prev => prev.filter(
         odds => !(odds.matchId === match.id && odds.type === type)
       ));
@@ -197,13 +196,11 @@ export default function OddsTable() {
         setShowBetSlip(false);
       }
     } else {
-      // Add to selection with animation
       setAnimatingOdds({
         ...selectedBet,
         startPosition
       });
       
-      // Add to selected odds after animation
       setTimeout(() => {
         setSelectedOdds(prev => [...prev, selectedBet]);
         setAnimatingOdds(null);
@@ -211,18 +208,12 @@ export default function OddsTable() {
       }, 300);
     }
   };
-
-  // Check if odds is selected
   const isOddsSelected = (matchId: string, type: 'home' | 'draw' | 'away') => {
     return selectedOdds.some(odds => odds.matchId === matchId && odds.type === type);
   };
-
-  // Handle bet amount selection
   const handleBetAmountClick = (amount: string) => {
     setSelectedBetAmount(amount);
   };
-
-  // Theme-aware color functions
   const getDateColor = () => theme === 'light' ? 'text-blue-600' : 'text-blue-400';
   const getTeamColor = () => theme === 'light' ? 'text-green-700' : 'text-green-300';
   const getLeagueColor = () => theme === 'light' ? 'text-amber-700' : 'text-yellow-400';
@@ -231,7 +222,6 @@ export default function OddsTable() {
   const getAwayOddsColor = () => theme === 'light' ? 'text-pink-700' : 'text-pink-300';
   const getDrawOddsColor = () => theme === 'light' ? 'text-emerald-700' : 'text-emerald-300';
   const getBookmakerColor = () => theme === 'light' ? 'text-purple-700' : 'text-purple-300';
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Live": return "text-red-400 bg-red-500/20 border-red-500/30";
@@ -240,7 +230,6 @@ export default function OddsTable() {
       default: return "text-muted bg-muted/20 border-muted/30";
     }
   };
-
   const fetchAllMatchingInfo = useCallback(async () => {
     try {
       setLoading(true);
@@ -255,16 +244,15 @@ export default function OddsTable() {
     }
   }, [dispatch, currectPage, limit]);
     
+  
   useEffect(() => {
     fetchAllMatchingInfo();
   }, [fetchAllMatchingInfo])
-
   if (loading) {
     return <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
     </div>
   }
-
     return (
     <section>
       {/* Breadcrumbs */}
@@ -277,17 +265,11 @@ export default function OddsTable() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-text">
-            {selectedLeague ? `${selectedLeague.name} Betting Odds & Fixtures` : selectedCountry ? `${selectedCountry.name} - ${selectedCountry.leagues[0]?.name || 'Football'}` : 'Live Matches & Odds'}
+            {selectedLeague ? `${selectedLeague.name} Betting Odds & Fixtures` : selectedCountry ? `${selectedCountry.name} - Football` : 'Live Matches & Odds'}
           </h2>
-          {selectedLeague ? (
-            <p className="text-sm text-muted mt-1">
-              {selectedLeague.matchCount} matches
-            </p>
-          ) : selectedCountry && (
-            <p className="text-sm text-muted mt-1">
-              {selectedCountry.leagues.length} leagues • {selectedCountry.leagues.reduce((total, league) => total + league.matchCount, 0)} matches
-            </p>
-          )}
+          <p className="text-sm text-muted mt-1">
+            {matches.length} matches {matchingInfo.length > 0 && `(from database)`}
+          </p>
         </div>
         
         {/* Market Selector */}
@@ -336,7 +318,6 @@ export default function OddsTable() {
           ))}
         </div>
       </div>
-
       {/* Content based on view mode */}
       {viewMode === "cards" ? (
         /* Cards View */
@@ -532,7 +513,6 @@ export default function OddsTable() {
            ))}
          </div>
       )}
-
       {/* Animated Yellow Circle */}
       {animatingOdds && (
         <div 
@@ -544,7 +524,6 @@ export default function OddsTable() {
           }}
         />
       )}
-
             {/* Betting Slip Dialog */}
       {showBetSlip && selectedOdds.length > 0 && (
         <div 
@@ -572,14 +551,12 @@ export default function OddsTable() {
               </div>
             </div>
           </div>
-
           {/* Tabs */}
           <div className="flex border-b border-border">
             <button className="flex-1 py-2 text-sm font-medium text-muted">Single</button>
             <button className="flex-1 py-2 text-sm font-medium text-yellow-500 border-b-2 border-yellow-500">Combo</button>
             <button className="flex-1 py-2 text-sm font-medium text-muted">System</button>
           </div>
-
           {/* Selected Bet Cards */}
           <div className="p-4 max-h-[600px] overflow-y-auto betting-slip-scroll">
             {selectedOdds.map((odds, index) => (
@@ -629,7 +606,6 @@ export default function OddsTable() {
                 </div>
               </div>
             ))}
-
                          {/* Quick Bet Amounts */}
              <div className="flex gap-2 mb-4">
                <button 
@@ -663,7 +639,6 @@ export default function OddsTable() {
                  0.0005
                </button>
              </div>
-
                          {/* Bet Summary */}
              <div className="space-y-2 mb-4">
                <div className="flex justify-between text-sm">
@@ -679,7 +654,6 @@ export default function OddsTable() {
                  <span className="text-text">{(parseFloat(selectedBetAmount) * 10.26).toFixed(6)} B</span>
                </div>
              </div>
-
             {/* Login Prompt */}
             <div className="flex items-center gap-2 mb-4 p-3 bg-bg/50 rounded-lg">
               <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -687,7 +661,6 @@ export default function OddsTable() {
               </svg>
               <span className="text-sm text-muted">Please, login to place bet</span>
             </div>
-
                                {/* Action Buttons */}
                    <div className="flex gap-2 mb-3">
                      <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
@@ -698,7 +671,6 @@ export default function OddsTable() {
                        LOGIN
                      </button>
                    </div>
-
                                {/* Account Link */}
                    <div className="text-center mb-3">
                      <span className="text-xs text-muted">Don't you have an account? </span>
@@ -709,7 +681,6 @@ export default function OddsTable() {
                        Join Now!
                      </button>
                    </div>
-
             {/* Bottom Icons */}
             <div className="flex items-center justify-center gap-4 text-muted">
               <button className="flex items-center gap-1 text-xs">

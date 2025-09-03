@@ -44,13 +44,10 @@ export default function RightSidebar() {
 
   return (
     <aside className="w-full lg:w-64 xl:w-72 bg-surface border-l border-border p-3 sm:p-4 space-y-4 sm:space-y-6">
-      {/* FAVOURITES League Cards */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-2 sm:mb-3">FAVOURITES</h3>
         <div className="space-y-2 sm:mb-3 relative overflow-hidden h-25">
-          {/* Animated Cards Container */}
           <div className="animate-favourites-scroll relative">
-            {/* Card 1 - Premier League */}
             <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
               <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
                 <img 
@@ -70,7 +67,6 @@ export default function RightSidebar() {
               </div>
             </div>
 
-            {/* Card 2 - La Liga */}
             <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
               <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
                 <img 
@@ -90,7 +86,6 @@ export default function RightSidebar() {
               </div>
             </div>
 
-            {/* Card 3 - Bundesliga */}
             <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
               <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
                 <img 
@@ -113,7 +108,7 @@ export default function RightSidebar() {
         </div>
       </div>
 
-      {/* Favorites */}
+     
       {/* <div>
         <h3 className="text-sm font-semibold text-muted mb-3">FAVORITES</h3>
         <div className="space-y-2">
@@ -139,13 +134,12 @@ export default function RightSidebar() {
         </div>
       </div> */}
 
-      {/* Alerts */}
       <div>
         <h3 className="text-sm font-semibold text-muted mb-2 sm:mb-3">ALERTS</h3>
         <div className="space-y-2 sm:space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           {alerts.map((alert) => (
             <div key={alert.id} className="bg-gradient-to-br from-surface to-bg rounded-xl p-2.5 sm:p-3 xl:p-4 border border-border hover:shadow-lg hover:shadow-black/20 transition-all duration-300 group hover:border-accent/30">
-              {/* Alert Header with Icon and Time */}
+              
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className="flex items-center gap-2 xl:gap-3">
                   <div className={`w-5 h-5 sm:w-6 sm:h-6 xl:w-8 xl:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -174,7 +168,6 @@ export default function RightSidebar() {
                 </button>
               </div>
               
-              {/* Alert Type Indicator */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className={`px-1.5 sm:px-2 py-1 rounded-full text-xs font-medium ${
@@ -187,7 +180,6 @@ export default function RightSidebar() {
                   </span>
                 </div>
                 
-                {/* Action Button */}
                 <button className={`px-1.5 sm:px-2 xl:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex-shrink-0 ${
                   alert.type === 'odds' ? 'bg-yellow-600 hover:bg-yellow-700 text-white shadow-lg shadow-yellow-600/25' :
                   alert.type === 'match' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25' : 

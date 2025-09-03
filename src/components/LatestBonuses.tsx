@@ -75,7 +75,6 @@ export default function LatestBonuses() {
             key={bonus.id}
             className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <span className="px-2 sm:px-3 py-1 bg-accent/20 text-accent text-xs font-semibold rounded-full border border-accent/30">
                 {bonus.type}
@@ -86,7 +85,7 @@ export default function LatestBonuses() {
               </div>
             </div>
             
-            {/* Bookmaker & Title */}
+
             <div className="mb-3">
               <span className="text-xs text-muted uppercase tracking-wide block mb-1">
                 {bonus.bookmaker}
@@ -96,12 +95,11 @@ export default function LatestBonuses() {
               </h3>
             </div>
             
-            {/* Description */}
+
             <p className="text-xs sm:text-sm text-muted mb-3 sm:mb-4 leading-relaxed line-clamp-2">
               {bonus.description}
             </p>
-            
-            {/* Value & Expiry */}
+
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="text-center">
                 <span className="text-xs text-muted block">Bonus Value</span>
@@ -113,7 +111,6 @@ export default function LatestBonuses() {
               </div>
             </div>
             
-            {/* Promo Code */}
             <div className="bg-bg rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
               <span className="text-xs text-muted block mb-2">Promo Code</span>
               <div className="flex items-center gap-2">
@@ -126,7 +123,6 @@ export default function LatestBonuses() {
               </div>
             </div>
             
-            {/* Claim Button */}
             <button 
               onClick={() => openBettingSiteByName(bonus.bookmaker)}
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105"

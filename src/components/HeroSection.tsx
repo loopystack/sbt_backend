@@ -45,9 +45,7 @@ export default function HeroSection() {
 
   return (
     <section className="mb-6 sm:mb-8">
-      {/* Hero Content */}
       <div className="bg-gradient-to-br from-surface to-bg border border-border rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 relative">
-        {/* Left Side - Image positioned absolutely to align with card edges */}
         <div className="hidden lg:block absolute left-0 bottom-0">
           <img 
             src="/assets/LeftMan.png" 
@@ -55,86 +53,70 @@ export default function HeroSection() {
             className="object-contain rounded-xl"
           />
           
-          {/* Animated Dollar Signs Spraying from Phone */}
+
           <div className="absolute inset-0 pointer-events-none">
-            {/* Dollar Sign 1 - Top Right of Phone */}
             <div className="absolute top-1/3 right-1/6 animate-money-spray-1">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 2 - Top Left of Phone */}
             <div className="absolute top-1/3 right-1/3 animate-money-spray-2">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 3 - Middle Right of Phone */}
             <div className="absolute top-2/5 right-1/8 animate-money-spray-3">
               <span className="text-yellow-400 text-3xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 4 - Middle Left of Phone */}
             <div className="absolute top-2/5 right-1/4 animate-money-spray-4">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 5 - Bottom Right of Phone */}
             <div className="absolute top-3/5 right-1/6 animate-money-spray-5">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 6 - Bottom Left of Phone */}
             <div className="absolute top-3/5 right-1/3 animate-money-spray-6">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 7 - Upper Right of Phone */}
             <div className="absolute top-1/4 right-1/10 animate-money-spray-7">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 8 - Upper Left of Phone */}
             <div className="absolute top-1/4 right-1/5 animate-money-spray-8">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 9 - Center Right of Phone */}
             <div className="absolute top-1/2 right-1/12 animate-money-spray-9">
               <span className="text-yellow-400 text-3xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 10 - Center Left of Phone */}
             <div className="absolute top-1/2 right-1/4 animate-money-spray-10">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 11 - Additional Right */}
             <div className="absolute top-1/3 right-0 animate-money-spray-11">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 12 - Additional Left */}
             <div className="absolute top-2/5 right-1/2 animate-money-spray-12">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 13 - Additional Upper */}
             <div className="absolute top-1/6 right-1/8 animate-money-spray-13">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 14 - Additional Lower */}
             <div className="absolute top-4/5 right-1/4 animate-money-spray-14">
               <span className="text-yellow-400 text-2xl font-bold drop-shadow-lg">$</span>
             </div>
             
-            {/* Dollar Sign 15 - Additional Center */}
             <div className="absolute top-3/5 right-1/8 animate-money-spray-15">
               <span className="text-yellow-400 text-xl font-bold drop-shadow-lg">$</span>
             </div>
           </div>
         </div>
         
-        {/* Right Side - Keep original layout unchanged */}
         <div className="flex-1 lg:ml-60">
           <div className="text-center mb-4 sm:mb-6 lg:mb-8 p-2 sm:p-3">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-text mb-3 sm:mb-4">
@@ -145,7 +127,6 @@ export default function HeroSection() {
             </p>
           </div>
           
-          {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-4 sm:mb-6 lg:mb-8 px-2">
             <div className="relative">
               <input
@@ -159,7 +140,6 @@ export default function HeroSection() {
             </div>
           </div>
           
-          {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-4xl mx-auto px-2">
             <div className="text-center">
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">50+</div>
@@ -177,7 +157,6 @@ export default function HeroSection() {
         </div>
       </div>
       
-      {/* Featured Matches */}
       <div className="mb-4 sm:mb-6">
         <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-text mb-3 sm:mb-4 px-2">Featured Matches</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -186,7 +165,6 @@ export default function HeroSection() {
               key={match.id}
               className="bg-surface border border-border rounded-xl p-3 sm:p-4 lg:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
             >
-              {/* Header */}
               <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
                 <span className="px-2 sm:px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30">
                   {match.status}
@@ -197,15 +175,12 @@ export default function HeroSection() {
                 </div>
               </div>
               
-              {/* Teams */}
               <h3 className="font-bold text-text text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 leading-tight line-clamp-2">
                 {match.teams}
               </h3>
               
-              {/* League */}
               <div className="text-xs sm:text-sm text-muted mb-2 sm:mb-3 lg:mb-4">{match.league}</div>
               
-              {/* Odds */}
               <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3 lg:mb-4">
                 {match.odds.home && match.odds.away && (
                   <div className="flex items-center justify-between text-xs sm:text-sm">
@@ -239,7 +214,6 @@ export default function HeroSection() {
                 )}
               </div>
               
-              {/* Action */}
               <button className="w-full px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105">
                 Compare Odds
               </button>

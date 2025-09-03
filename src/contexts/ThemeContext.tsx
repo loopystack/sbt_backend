@@ -7,7 +7,6 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 
-// Create context with a default value to prevent undefined errors
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
   toggleTheme: () => {}
@@ -24,28 +23,23 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check localStorage for saved theme preference
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'light' || savedTheme === 'dark') {
         return savedTheme;
       }
     }
-    // Default to dark theme
     return 'dark';
   });
 
   useEffect(() => {
-    // Save theme preference to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('theme', theme);
     }
     
-    // Apply theme to document
     const root = document.documentElement;
     root.setAttribute('data-theme', theme);
     
-    // Update CSS custom properties
     
     if (theme === 'light') {
       root.style.setProperty('--bg', '0 0% 98%');
