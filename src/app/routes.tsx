@@ -12,6 +12,7 @@ import Bonuses from "../pages/Bonuses";
 import Dashboard from "../pages/Dashboard";
 import SignInSignUp from "../pages/SignInSignUp";
 import ForgotPassword from "../pages/ForgotPassword";
+import Profile from "../pages/Profile";
 
 export const routes: RouteObject[] = [
   {
@@ -27,7 +28,8 @@ export const routes: RouteObject[] = [
       { path: "betting", element: <Betting /> },
       { path: "bookmakers", element: <Bookmakers /> },
       { path: "bonuses", element: <Bonuses /> },
-      { path: "dashboard", element: <Dashboard /> }
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "profile", element: <Profile /> }
     ]
   },
   {

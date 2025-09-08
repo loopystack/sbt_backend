@@ -1,7 +1,8 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import newlogo from "../images/newlogo.png";
 import Navigation from "./Navigation";
+import { useCountry } from "../contexts/CountryContext";
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -11,6 +12,14 @@ interface HeaderProps {
 }
 
 export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRightSidebarToggle, isMobileMenuOpen }: HeaderProps) {
+  const navigate = useNavigate();
+  const { setSelectedLeague } = useCountry();
+
+  const handleLogoClick = () => {
+    setSelectedLeague(null);
+    navigate("/");
+  };
+
   return (
     <header className="sticky top-0 z-[9999] border-b border-border bg-bg/95 backdrop-blur">
       <div className="w-full">
@@ -25,13 +34,16 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
             </svg>
           </button>
           
-          <Link to="/" className="flex items-center hover:scale-105 transition-transform duration-300">
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center hover:scale-105 transition-transform duration-300"
+          >
             <img
               src={newlogo}
               alt="SportsBetting Logo"
               className="h-6 sm:h-8 w-auto drop-shadow-lg"
             />
-          </Link>
+          </button>
           
           <div className="flex items-center gap-1 sm:gap-2">
             <button

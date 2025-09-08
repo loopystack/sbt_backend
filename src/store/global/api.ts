@@ -10,7 +10,7 @@ import type {
 } from './types';
 import { logoutAction } from '../user/actions';
 
-export const BASE_URL = '';
+export const BASE_URL = 'http://localhost:8000';
 // export const BASE_URL: string = 'http://localhost:5000';
 
 export const defaultConfig: Partial<ApiConfig> = {

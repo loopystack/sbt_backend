@@ -1,21 +1,89 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { authService, tokenManager } from "../services/authService";
 export default function SignInSignUp() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { theme } = useTheme();
   const navigate = useNavigate();
+
+  const clearForm = () => {
+    setEmail("");
+    setUsername("");
+    setFullName("");
+    setPassword("");
+    setConfirmPassword("");
+    setError("");
+    setSuccess("");
+  };
+
+  const handleModeChange = (signIn: boolean) => {
+    setIsSignIn(signIn);
+    clearForm();
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
+    setError("");
+    setSuccess("");
+
+    try {
+      if (isSignIn) {
+        // Sign in
+        const response = await authService.login({ email, password });
+        
+        // Store tokens manually
+        tokenManager.setTokens(response.access_token, response.refresh_token);
+        
+        setSuccess("Successfully signed in!");
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('authStateChanged', { 
+          detail: { isAuthenticated: true, user: response } 
+        }));
+        
+        setTimeout(() => {
+          // Navigate to home page and refresh to ensure all data is loaded
+          navigate("/");
+          // Add a small delay before refresh to ensure navigation completes
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }, 1000);
+      } else {
+        // Sign up
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!username.trim()) {
+          setError("Username is required");
+          setIsLoading(false);
+          return;
+        }
+
+        await authService.register({ email, username, password, full_name: fullName || undefined });
+        setSuccess("Account created successfully! Please check your email for verification.");
+        setTimeout(() => {
+          // Navigate to home page instead of reloading
+          navigate("/");
+        }, 2000);
+      }
+    } catch (error: any) {
+      setError(error.message || "An error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 1500);
+    }
   };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
@@ -44,7 +112,7 @@ export default function SignInSignUp() {
         <div className="bg-surface/80 backdrop-blur-xl border border-border rounded-xl p-6 shadow-2xl">
           <div className="flex bg-bg/50 rounded-lg p-1 mb-6">
             <button
-              onClick={() => setIsSignIn(true)}
+              onClick={() => handleModeChange(true)}
               className={`flex-1 py-2 px-4 rounded-md text-xs font-semibold transition-all duration-300 ${
                 isSignIn
                   ? "bg-yellow-500 text-black shadow-lg transform scale-105"
@@ -54,7 +122,7 @@ export default function SignInSignUp() {
               Sign In
             </button>
             <button
-              onClick={() => setIsSignIn(false)}
+              onClick={() => handleModeChange(false)}
               className={`flex-1 py-2 px-4 rounded-md text-xs font-semibold transition-all duration-300 ${
                 !isSignIn
                   ? "bg-yellow-500 text-black shadow-lg transform scale-105"
@@ -64,6 +132,18 @@ export default function SignInSignUp() {
               Sign Up
             </button>
           </div>
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-xs font-medium">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+              <p className="text-green-400 text-xs font-medium">{success}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-xs font-semibold text-text mb-2">
@@ -86,6 +166,54 @@ export default function SignInSignUp() {
                 />
               </div>
             </div>
+            
+            {!isSignIn && (
+              <>
+                <div>
+                  <label htmlFor="username" className="block text-xs font-semibold text-text mb-2">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
+                      placeholder="Choose a username"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label htmlFor="fullName" className="block text-xs font-semibold text-text mb-2">
+                    Full Name (Optional)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      id="fullName"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+            
             <div>
               <label htmlFor="password" className="block text-xs font-semibold text-text mb-2">
                 Password
@@ -142,7 +270,7 @@ export default function SignInSignUp() {
             )}
             <button
               type="submit"
-              disabled={isLoading || !email || !password || (!isSignIn && !confirmPassword)}
+              disabled={isLoading || !email || !password || (!isSignIn && (!confirmPassword || !username))}
               className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-black py-3 px-4 rounded-lg transition-all duration-300 font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
             >
               {isLoading ? (

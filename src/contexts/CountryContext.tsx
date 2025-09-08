@@ -195,36 +195,7 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
             }
           ]
         },
-        {
-          name: "Serie B Superbet",
-          matchCount: 13,
-          matches: []
-        },
-        {
-          name: "Copa Betano do Brasil",
-          matchCount: 4,
-          matches: []
-        },
-        {
-          name: "Copa Paulista",
-          matchCount: 1,
-          matches: []
-        },
-        {
-          name: "Copa do Nordeste",
-          matchCount: 1,
-          matches: []
-        },
-        {
-          name: "Carioca U20",
-          matchCount: 1,
-          matches: []
-        },
-        {
-          name: "Mineiro U20",
-          matchCount: 1,
-          matches: []
-        }
+        
       ]
     },
     {
@@ -236,31 +207,7 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
           matchCount: 25,
           matches: []
         },
-        {
-          name: "Championship",
-          matchCount: 20,
-          matches: []
-        },
-        {
-          name: "League One",
-          matchCount: 18,
-          matches: []
-        },
-        {
-          name: "League Two",
-          matchCount: 15,
-          matches: []
-        },
-        {
-          name: "FA Cup",
-          matchCount: 8,
-          matches: []
-        },
-        {
-          name: "Carabao Cup",
-          matchCount: 6,
-          matches: []
-        }
+       
       ]
     },
     {
@@ -272,21 +219,7 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
           matchCount: 22,
           matches: []
         },
-        {
-          name: "LaLiga 2",
-          matchCount: 18,
-          matches: []
-        },
-        {
-          name: "Copa del Rey",
-          matchCount: 12,
-          matches: []
-        },
-        {
-          name: "Supercopa de España",
-          matchCount: 4,
-          matches: []
-        }
+        
       ]
     },
     {

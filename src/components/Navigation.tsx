@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import newlogo from "../images/newlogo.png";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCountry } from "../contexts/CountryContext";
+import { authService, tokenManager } from "../services/authService";
 
 // Hook to determine which sports should be visible and if text should be shown
 const useVisibleSports = () => {
@@ -53,6 +54,91 @@ export default function Navigation() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { setSelectedLeague } = useCountry();
+  
+  const [user, setUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (tokenManager.isAuthenticated()) {
+        try {
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error("Failed to get user data:", error);
+          tokenManager.clearTokens();
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (when tokens are updated)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
+    // Listen for custom auth state changes
+    const handleAuthStateChange = (event: CustomEvent) => {
+      if (event.detail.isAuthenticated) {
+        // User just signed in, get fresh user data
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('authStateChanged', handleAuthStateChange as EventListener);
+    
+    // Also check periodically for authentication changes
+    const interval = setInterval(checkAuth, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authStateChanged', handleAuthStateChange as EventListener);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+    setShowUserDropdown(false);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('authStateChanged', { 
+      detail: { isAuthenticated: false, user: null } 
+    }));
+    
+    navigate("/");
+    // Add a small delay before refresh to ensure navigation completes
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  };
   const [activeTab, setActiveTab] = useState("home");
   const [activeSport, setActiveSport] = useState("Football");
   const [showMoreSports, setShowMoreSports] = useState(false);
@@ -203,13 +289,19 @@ export default function Navigation() {
       <div className="w-full px-4">
         <div className="flex items-center h-16 py-3">
           <div className="flex items-center gap-3 mr-8">
-            <Link to="/" className="flex items-center hover:scale-105 transition-transform duration-300">
+            <button
+              onClick={() => {
+                setSelectedLeague(null);
+                navigate("/");
+              }}
+              className="flex items-center hover:scale-105 transition-transform duration-300"
+            >
               <img
                 src={newlogo}
                 alt="SportsBetting Logo"
                 className="p-1 h-25 w-20 drop-shadow-lg"
               />
-            </Link>
+            </button>
           </div>
 
           <div className="ml-10 flex-1 flex items-center justify-center">
@@ -262,12 +354,107 @@ export default function Navigation() {
               )}
             </button>
             
-            <button
-              className="px-6 py-3 text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 font-semibold hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
-              onClick={() => navigate("/signin")}
-            >
-              Sign In
-            </button>
+            {isAuthenticated ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.username}
+                      className="w-8 h-8 rounded-full border-2 border-yellow-500/30"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-black text-sm font-bold">
+                      {user?.username?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-black dark:text-white hidden sm:block">{user?.username || 'User'}</span>
+                  <svg 
+                    className={`w-4 h-4 text-muted transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* User Dropdown Menu */}
+                {showUserDropdown && (
+                  <div className="absolute right-0 mt-2 w-64 bg-surface border border-border rounded-lg shadow-xl z-50">
+                    <div className="p-4 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        {user?.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt={user.username}
+                            className="w-12 h-12 rounded-full border-2 border-yellow-500/30"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-black text-lg font-bold">
+                            {user?.username?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-text">{user?.username || 'User'}</p>
+                          <p className="text-sm text-muted">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          navigate("/profile");
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-text">Profile</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          navigate("/dashboard");
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span className="text-text">Dashboard</span>
+                      </button>
+                      
+                      <div className="border-t border-border my-2"></div>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span className="text-red-400">Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                className="px-6 py-3 text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 font-semibold hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
+                onClick={() => navigate("/signin")}
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
 

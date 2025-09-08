@@ -1,5 +1,24 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
+import { getTeamIcon } from "../utils/teamIcons";
+
+const formatScore = (score: string): string => {
+  if (!score || score === "" || score === "-") return "-";
+  
+  if (score.includes(':')) {
+    const parts = score.split(':');
+    if (parts.length === 2) {
+      const homeScore = parts[0].replace(/^0+/, ''); 
+      const awayScore = parts[1].replace(/^0+/, ''); 
+      
+      if (!homeScore && !awayScore) return "0-0";
+      
+      return `${homeScore || '0'}-${awayScore || '0'}`;
+    }
+  }
+  
+  return score;
+};
 
 export default function InPlayOdds() {
   const [selectedSport, setSelectedSport] = useState("All sports");
@@ -261,17 +280,37 @@ export default function InPlayOdds() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-sm">🇮🇩</span>
+                        {getTeamIcon(match.player1) && (
+                          <img 
+                            src={getTeamIcon(match.player1)!}
+                            alt={`${match.player1} icon`}
+                            className="w-4 h-4"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
                         <span className="font-medium text-text">{match.player1}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm">🇯🇵</span>
+                        {getTeamIcon(match.player2) && (
+                          <img 
+                            src={getTeamIcon(match.player2)!}
+                            alt={`${match.player2} icon`}
+                            className="w-4 h-4"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
                         <span className="font-medium text-text">{match.player2}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="col-span-2 text-center">
-                    <div className="text-lg font-bold text-text">{match.score}</div>
+                    <div className="text-lg font-bold text-text">{formatScore(match.score)}</div>
                   </div>
 
                   <div className="col-span-2 text-center">

@@ -16,7 +16,6 @@ export default function SureBets() {
     { id: "tomorrow", label: "Tomorrow" },
     { id: "week", label: "This Week" }
   ];
-  // Sample sure bets data (when available)
   const sampleSureBets = [
     {
       id: "1",
@@ -43,7 +42,6 @@ export default function SureBets() {
       return: "£103.20"
     }
   ];
-  // Currently no sure bets available (as shown in the image)
   const hasSureBets = false;
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">

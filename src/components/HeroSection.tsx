@@ -1,6 +1,47 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+// Custom hook for animated counting
+const useCountUp = (end: number, duration: number = 2000, delay: number = 0) => {
+  const [count, setCount] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasStarted(true);
+      const startTime = Date.now();
+      const startValue = 0;
+
+      const updateCount = () => {
+        const currentTime = Date.now();
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const currentValue = Math.floor(startValue + (end - startValue) * easeOutQuart);
+        
+        setCount(currentValue);
+        
+        if (progress < 1) {
+          requestAnimationFrame(updateCount);
+        }
+      };
+      
+      requestAnimationFrame(updateCount);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [end, duration, delay]);
+
+  return { count, hasStarted };
+};
 
 export default function HeroSection() {
+  // Animated counters - all start and finish at the same time
+  const { count: bookmakersCount } = useCountUp(80, 2000, 0);
+  const { count: sportsCount } = useCountUp(50, 2000, 0);
+  const { count: matchesCount } = useCountUp(1000, 2000, 0);
+
   const featuredMatches = [
     {
       id: 1,
@@ -142,15 +183,21 @@ export default function HeroSection() {
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-4xl mx-auto px-2">
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">50+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+                {bookmakersCount}+
+              </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Bookmakers</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">20+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+                {sportsCount}+
+              </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Sports</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">1000+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+                {matchesCount}+
+              </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Daily Matches</div>
             </div>
           </div>

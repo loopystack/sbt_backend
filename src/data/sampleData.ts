@@ -179,8 +179,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "12",
-    season: "2024-25",
-    date: "2024-01-21",
+    season: "2021-22",
+    date: "2021-01-21",
     time: "18:30",
     home_team: "Atletico Madrid",
     away_team: "Sevilla",
@@ -195,8 +195,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "13",
-    season: "2024-25",
-    date: "2024-01-22",
+    season: "2021-25",
+    date: "2021-01-22",
     time: "16:15",
     home_team: "Valencia",
     away_team: "Athletic Bilbao",
@@ -211,8 +211,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "14",
-    season: "2024-25",
-    date: "2024-01-22",
+    season: "2022-25",
+    date: "2022-01-22",
     time: "21:00",
     home_team: "Real Sociedad",
     away_team: "Villarreal",
@@ -227,8 +227,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "15",
-    season: "2024-25",
-    date: "2024-01-23",
+    season: "2022-25",
+    date: "2022-01-23",
     time: "19:00",
     home_team: "Real Betis",
     away_team: "Getafe",
@@ -243,8 +243,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "16",
-    season: "2024-25",
-    date: "2024-01-24",
+    season: "2022-25",
+    date: "2022-01-24",
     time: "17:30",
     home_team: "Celta Vigo",
     away_team: "Osasuna",
@@ -259,8 +259,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "17",
-    season: "2024-25",
-    date: "2024-01-25",
+    season: "2023-25",
+    date: "2023-01-25",
     time: "20:30",
     home_team: "Las Palmas",
     away_team: "Alaves",
@@ -275,8 +275,8 @@ export const sampleMatchingData: MatchingInfo[] = [
   },
   {
     id: "18",
-    season: "2024-25",
-    date: "2024-01-26",
+    season: "2023-25",
+    date: "2023-01-26",
     time: "16:00",
     home_team: "Rayo Vallecano",
     away_team: "Girona",
@@ -1318,10 +1318,14 @@ export const sampleMatchingData: MatchingInfo[] = [
 
 export const transformMatchingInfoToMatch = (matchingInfo: MatchingInfo[]) => {
   return matchingInfo.map(match => {
-    const matchDate = new Date(match.date + 'T00:00:00'); // Ensure proper date parsing
-    // Get real current date from system
+    const matchDate = new Date(match.date + 'T00:00:00'); 
     const now = new Date();
     const isHistorical = matchDate.getTime() < now.getTime();
+    
+    const formatOdd = (odd: number | null | undefined) => {
+      if (odd === null || odd === undefined) return '0.00';
+      return odd.toFixed(2);
+    };
     
     return {
       id: match.id,
@@ -1335,21 +1339,21 @@ export const transformMatchingInfoToMatch = (matchingInfo: MatchingInfo[]) => {
       bookmakers: [
         { 
           name: "Bet365", 
-          home: match.odd_1.toFixed(2), 
-          away: match.odd_2.toFixed(2), 
-          draw: match.odd_X.toFixed(2) 
+          home: formatOdd(match.odd_1), 
+          away: formatOdd(match.odd_2), 
+          draw: formatOdd(match.odd_X) 
         },
         { 
           name: "DraftKings", 
-          home: (match.odd_1 + 0.05).toFixed(2), 
-          away: (match.odd_2 + 0.05).toFixed(2), 
-          draw: (match.odd_X + 0.05).toFixed(2) 
+          home: formatOdd(match.odd_1 ? match.odd_1 + 0.05 : null), 
+          away: formatOdd(match.odd_2 ? match.odd_2 + 0.05 : null), 
+          draw: formatOdd(match.odd_X ? match.odd_X + 0.05 : null) 
         },
         { 
           name: "FanDuel", 
-          home: (match.odd_1 - 0.05).toFixed(2), 
-          away: (match.odd_2 - 0.05).toFixed(2), 
-          draw: (match.odd_X - 0.05).toFixed(2) 
+          home: formatOdd(match.odd_1 ? match.odd_1 - 0.05 : null), 
+          away: formatOdd(match.odd_2 ? match.odd_2 - 0.05 : null), 
+          draw: formatOdd(match.odd_X ? match.odd_X - 0.05 : null) 
         }
       ],
       date: match.date,

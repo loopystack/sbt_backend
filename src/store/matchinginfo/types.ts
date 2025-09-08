@@ -17,9 +17,10 @@ export type MatchingInfo = {
     updatedAt: string;
 }
 
-export type GetMatchingInfoQueries = {
+export type GetMatchingInfoResponse = {
     page: number;
     total: number;
-    totalPage: number;
-    matchinginfo: MatchingInfo[];
+    pages: number;
+    size: number;
+    odds: MatchingInfo[];
 }

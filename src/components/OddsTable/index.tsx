@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../store/hooks";
 import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
-import { MatchingInfo, GetMatchingInfoQueries } from "../../store/matchinginfo/types";
+import { MatchingInfo, GetMatchingInfoResponse } from "../../store/matchinginfo/types";
 import { transformMatchingInfoToMatch } from "../../data/sampleData";
+import { getTeamIcon } from "../../utils/teamIcons";
 type Match = {
   id: string;
   time: string;
@@ -34,12 +36,16 @@ type Bookmaker = {
 };
 export default function OddsTable() {
   const dispatch = useAppDispatch();
-  const { selectedCountry, selectedLeague } = useCountry();
+  const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  // Debug authentication state
+  console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
   const [selectedMarket, setSelectedMarket] = useState("Results");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const matchesPerPage = 20;
   const [selectedOdds, setSelectedOdds] = useState<{
@@ -50,10 +56,12 @@ export default function OddsTable() {
     league: string;
   }[]>([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
+  const [isBetSlipCollapsed, setIsBetSlipCollapsed] = useState(false);
+  const [isBetSlipHiding, setIsBetSlipHiding] = useState(false);
   const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currectPage, setCurrectPage] = useState(1);
-  const limit = 30;
+  const limit = 100;
   const [animatingOdds, setAnimatingOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -63,6 +71,48 @@ export default function OddsTable() {
     startPosition: { x: number; y: number };
   } | null>(null);
   const [selectedBetAmount, setSelectedBetAmount] = useState("0.0001");
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Betting states
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [bettingError, setBettingError] = useState<string>("");
+  const [userFunds, setUserFunds] = useState<number>(0.5); // Mock user funds
+  
+  // Betting functions
+  const handlePlaceBet = async () => {
+    if (!isAuthenticated) {
+      navigate("/signin");
+      return;
+    }
+    
+    const betAmount = parseFloat(selectedBetAmount);
+    if (betAmount > userFunds) {
+      setBettingError("Not enough funds to make a bet. Top up your account to bet more!");
+      return;
+    }
+    
+    setIsPlacingBet(true);
+    setBettingError("");
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock successful bet placement
+      setUserFunds(prev => prev - betAmount);
+      setSelectedOdds([]);
+      setIsBetSlipHiding(true);
+      setTimeout(() => {
+        setShowBetSlip(false);
+        setIsBetSlipHiding(false);
+      }, 500);
+      
+    } catch (error) {
+      setBettingError("Failed to place bet. Please try again.");
+    } finally {
+      setIsPlacingBet(false);
+    }
+  };
   
   const defaultMatches: Match[] = [
     {
@@ -92,42 +142,69 @@ export default function OddsTable() {
       ]
     }
   ];
+  const getCountryNameFromLeague = (leagueName: string) => {
+    for (const country of countries) {
+      const foundLeague = country.leagues.find(league => league.name === leagueName);
+      if (foundLeague) {
+        return country.name;
+      }
+    }
+    return '';
+  };
+
+  const formatScore = (score: string): string => {
+    if (!score || score === "" || score === "-") return "-";
+    
+    if (score.includes(':')) {
+      const parts = score.split(':');
+      if (parts.length === 2) {
+        const homeScore = parts[0].replace(/^0+/, '');
+        const awayScore = parts[1].replace(/^0+/, '');
+        
+        if (!homeScore && !awayScore) return "0-0";
+        
+        return `${homeScore || '0'}-${awayScore || '0'}`;
+      }
+    }
+    
+    return score;
+  };
+
   const getMatches = (): Match[] => {
     if (matchingInfo && matchingInfo.length > 0) {
       let filteredMatches = matchingInfo;
       
-      const today = new Date();
-      
-      if (selectedYear) {
+      // Apply search filter if search query exists
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
         filteredMatches = matchingInfo.filter(match => {
-          const matchDate = new Date(match.date + 'T00:00:00');
-          const now = new Date();
-          const matchYear = matchDate.getFullYear();
-          const isPastMatch = matchDate.getTime() < now.getTime();
-          
-          return matchYear === selectedYear && isPastMatch;
+          const homeTeam = match.home_team.toLowerCase();
+          const awayTeam = match.away_team.toLowerCase();
+          return homeTeam.includes(query) || awayTeam.includes(query);
         });
-      } else if (selectedMarket === "Results") {
-        filteredMatches = matchingInfo.filter(match => {
+      }
+      
+      if (selectedMarket === "Results") {
+        filteredMatches = filteredMatches.filter(match => {
           const matchDate = new Date(match.date + 'T00:00:00'); 
           const now = new Date();
           const isPastMatch = matchDate.getTime() < now.getTime();
           return isPastMatch;
         });
       } else if (selectedMarket === "Next Matches") {
-        filteredMatches = matchingInfo.filter(match => {
+        filteredMatches = filteredMatches.filter(match => {
           const matchDate = new Date(match.date + 'T00:00:00'); 
           const now = new Date();
           const isFutureMatch = matchDate.getTime() >= now.getTime();
           return isFutureMatch;
         });
       } else if (selectedCountry) {
-        filteredMatches = matchingInfo.filter(match => 
+        filteredMatches = filteredMatches.filter(match => 
           match.country.toLowerCase() === selectedCountry.name.toLowerCase()
         );
       }
       
-      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear) {
+      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear && !searchQuery.trim()) {
         filteredMatches = matchingInfo;
       }
       
@@ -240,7 +317,11 @@ export default function OddsTable() {
         odds => !(odds.matchId === match.id && odds.type === type)
       ));
       if (selectedOdds.length === 1) {
-        setShowBetSlip(false);
+        setIsBetSlipHiding(true);
+        setTimeout(() => {
+          setShowBetSlip(false);
+          setIsBetSlipHiding(false);
+        }, 500);
       }
     } else {
       setAnimatingOdds({
@@ -252,6 +333,7 @@ export default function OddsTable() {
         setSelectedOdds(prev => [...prev, selectedBet]);
         setAnimatingOdds(null);
         setShowBetSlip(true);
+        setIsBetSlipCollapsed(false); // Reset collapsed state when new odds are added
       }, 300);
     }
   };
@@ -260,6 +342,36 @@ export default function OddsTable() {
   };
   const handleBetAmountClick = (amount: string) => {
     setSelectedBetAmount(amount);
+  };
+
+  // Handle clicks outside odd buttons to collapse betslip
+  const handleOutsideClick = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    
+    // Check if the click is on an odd button by looking for specific classes
+    const button = target.closest('button');
+    const isOddButton = button && (
+      button.className.includes('bg-yellow-500') ||
+      button.className.includes('hover:bg-surface/50') ||
+      button.className.includes('hover:bg-bg/50')
+    );
+    
+    // Check if the click is inside the betslip modal content area (not header)
+    const isInsideBetSlipContent = target.closest('.betslip-content');
+    
+    // Check if the click is specifically on the betslip header
+    const isBetSlipHeader = target.closest('.betslip-header');
+    
+    // Only collapse if clicking outside both the betslip content and header
+    if (showBetSlip && !isOddButton && !isInsideBetSlipContent && !isBetSlipHeader) {
+      setIsBetSlipCollapsed(true);
+    }
+  };
+
+  // Handle betslip header click to expand
+  const handleBetSlipHeaderClick = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent event bubbling
+    setIsBetSlipCollapsed(false);
   };
   const getDateColor = () => theme === 'light' ? 'text-blue-600' : 'text-blue-400';
   const getTeamColor = () => theme === 'light' ? 'text-green-700' : 'text-green-300';
@@ -280,21 +392,126 @@ export default function OddsTable() {
   const fetchAllMatchingInfo = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await dispatch(getMatchingInfoAction({ page: currectPage, limit: limit.toString() })).unwrap();
-      console.log(result);
-      setMatchingInfo(result.matchinginfo);
-      setCurrectPage(result.page);
+      console.log("Fetching with selectedYear:", selectedYear);
+      
+      if (selectedYear) {
+        let allData: MatchingInfo[] = [];
+        let currentPage = 1;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const params: any = { 
+            page: currentPage.toString(),
+            size: limit.toString(),
+            season: selectedYear.toString()
+          };
+          
+          if (selectedLeague) {
+            params.league = selectedLeague.name;
+            console.log(`Fetching page ${currentPage} for year ${selectedYear} and league ${selectedLeague.name}`);
+          } else {
+            console.log(`Fetching page ${currentPage} for year ${selectedYear}`);
+          }
+          
+          const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+          
+          allData = [...allData, ...result.odds];
+          
+          hasMore = result.odds.length === limit;
+          currentPage++;
+          
+          if (currentPage > 20) {
+            console.warn("Reached maximum page limit, stopping pagination");
+            break;
+          }
+        }
+        
+        const filterDescription = selectedLeague 
+          ? `${selectedYear} and ${selectedLeague.name}` 
+          : selectedYear;
+        console.log(`Total records fetched for ${filterDescription}:`, allData.length);
+        
+        const filteredData = allData.filter(match => {
+          const matchDate = new Date(match.date + 'T00:00:00');
+          const matchYear = matchDate.getFullYear();
+          return matchYear === selectedYear;
+        });
+        
+        console.log(`After client-side filtering for year ${selectedYear}:`, filteredData.length);
+        setMatchingInfo(filteredData);
+        setCurrectPage(1);
+      } else if (selectedLeague) {
+        let allData: MatchingInfo[] = [];
+        let currentPage = 1;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const params: any = { 
+            page: currentPage.toString(),
+            size: limit.toString(),
+            league: selectedLeague.name
+          };
+          
+          console.log(`Fetching page ${currentPage} for league ${selectedLeague.name}`);
+          const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+          
+          allData = [...allData, ...result.odds];
+          
+          hasMore = result.odds.length === limit;
+          currentPage++;
+          
+          if (currentPage > 20) {
+            console.warn("Reached maximum page limit, stopping pagination");
+            break;
+          }
+        }
+        
+        console.log(`Total records fetched for ${selectedLeague.name}:`, allData.length);
+        setMatchingInfo(allData);
+        setCurrectPage(1);
+      } else {
+        const params: any = { 
+          page: currectPage.toString(), 
+          size: limit.toString()
+        };
+        
+        if (selectedCountry && selectedCountry.name === "Brazil") {
+          params.country = "Brazil";
+          console.log("Sending country parameter:", params.country);
+        }
+        
+        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+        console.log("API result:", result);
+        setMatchingInfo(result.odds);
+        setCurrectPage(result.page);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching matching info:", error);
     } finally {
       setLoading(false);
     }
-  }, [dispatch, currectPage, limit]);
+  }, [dispatch, currectPage, selectedYear, limit, selectedCountry, selectedLeague]);
     
   
   useEffect(() => {
     fetchAllMatchingInfo();
-  }, [fetchAllMatchingInfo])
+  }, [fetchAllMatchingInfo]);
+
+  // Clear search query when league changes
+  useEffect(() => {
+    setSearchQuery("");
+    setCurrentPage(1);
+  }, [selectedLeague]);
+
+  // Add global click listener for betslip collapse
+  useEffect(() => {
+    if (showBetSlip) {
+      document.addEventListener('click', handleOutsideClick);
+      return () => {
+        document.removeEventListener('click', handleOutsideClick);
+      };
+    }
+  }, [showBetSlip, selectedOdds]);
   if (loading) {
     return <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -304,45 +521,88 @@ export default function OddsTable() {
     <section>
       {selectedLeague && (
         <div className="text-sm text-muted mb-4 px-2">
-          Home {'>'} Football {'>'} {selectedCountry?.name} {'>'} {selectedLeague.name}
+          Home {'>'} Football {'>'} {getCountryNameFromLeague(selectedLeague.name)} {'>'} {selectedLeague.name}
         </div>
       )}
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-text">
-            {selectedYear 
-              ? `${selectedYear} Historical Results Only` 
-              : selectedMarket === "Results"
-                ? "Historical Match Results"
-                : selectedMarket === "Next Matches"
-                  ? "Upcoming Matches & Odds"
-                  : selectedLeague 
-                    ? `${selectedLeague.name} Betting Odds & Fixtures` 
-                    : selectedCountry 
-                      ? `${selectedCountry.name} - Football` 
-                      : 'Live Matches & Odds'
+                               <h2 className="text-xl sm:text-2xl font-bold text-text">
+            {searchQuery.trim() 
+              ? `Search Results for "${searchQuery}"`
+              : selectedYear 
+                ? selectedLeague
+                  ? `${selectedLeague.name} ${selectedYear} Results`
+                  : `${selectedYear} Results Only` 
+                : selectedLeague
+                  ? `${selectedLeague.name} Matches & Odds`
+                  : selectedMarket === "Results"
+                    ? "Match Results"
+                    : selectedMarket === "Next Matches"
+                      ? "Upcoming Matches & Odds"
+                      : selectedCountry 
+                        ? `${selectedCountry.name} - Football` 
+                        : 'Live Matches & Odds'
             }
           </h2>
-          <p className="text-sm text-muted mt-1">
-            {matches.length} matches 
-            {selectedYear && ` (finished matches from ${selectedYear} only)`} 
-            {selectedMarket === "Results" && !selectedYear && ` (historical odds for comparison)`}
-            {selectedMarket === "Next Matches" && ` (upcoming with betting options)`}
-            {matchingInfo.length > 0 && !selectedYear && !selectedMarket && ` (from database)`}
-          </p>
+                     <p className="text-sm text-muted mt-1">
+             {searchQuery.trim() 
+               ? `${matches.length} matches found for "${searchQuery}"`
+               : selectedYear && selectedLeague
+                 ? `${matches.length} ${selectedLeague.name} matches from ${selectedYear}`
+                 : selectedYear && !selectedLeague
+                   ? `${matches.length} matches from ${selectedYear}`
+                   : selectedLeague && !selectedYear
+                     ? `${matches.length} ${selectedLeague.name} matches`
+                     : selectedMarket === "Results"
+                       ? `${matches.length} historical matches`
+                       : selectedMarket === "Next Matches"
+                         ? `${matches.length} upcoming matches`
+                         : `${matches.length} matches`
+             }
+           </p>
         </div>
         
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* Search Box */}
+          <div className="relative min-w-[200px] sm:min-w-[250px]">
+            <input
+              type="text"
+              placeholder="Search teams..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setCurrentPage(1);
+                }}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          
           {selectedMarket !== "Next Matches" && (
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 mr-2">
               {[2021, 2022, 2023, 2024, 2025].map(year => (
                 <button
                   key={year}
-                  onClick={() => {
-                    setSelectedYear(selectedYear === year ? null : year);
-                    setCurrentPage(1); // Reset to first page when changing year
-                  }}
+                                     onClick={() => {
+                     const newYear = selectedYear === year ? undefined : year;
+                     console.log("Year button clicked:", year, "new selectedYear:", newYear);
+                     setSelectedYear(newYear);
+                     setCurrentPage(1); 
+                     setCurrectPage(1); 
+                   }}
                   className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
                     selectedYear === year
                       ? "bg-blue-600 text-white shadow-sm"
@@ -385,13 +645,15 @@ export default function OddsTable() {
           {markets.map((market) => (
             <button
               key={market}
-              onClick={() => {
-                setSelectedMarket(market);
-                setCurrentPage(1);
-                if (market === "Next Matches") {
-                  setSelectedYear(null);
-                }
-              }}
+                             onClick={() => {
+                 console.log("Market button clicked:", market);
+                 setSelectedMarket(market);
+                 setCurrentPage(1);
+                 setCurrectPage(1); // Reset API page
+                 if (market === "Next Matches") {
+                   setSelectedYear(undefined);
+                 }
+               }}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 selectedMarket === market
                   ? "bg-accent text-white shadow-lg"
@@ -425,29 +687,54 @@ export default function OddsTable() {
                 </div>
                 
                  <div className="mb-4">
-                   <div className="text-sm font-semibold text-text leading-tight">
-                     <div className="flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                         <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                           <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                             <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
-                           </svg>
-                         </div>
+                   <div className="flex items-center justify-between">
+                     {/* First Team */}
+                     <div className="flex flex-col items-center text-center flex-1">
+                       <div className="mb-2">
+                         {getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league)) && (
+                           <img 
+                             src={getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league))!}
+                             alt={`${match.teams.split(' vs ')[0]} icon`}
+                             className="w-8 h-8"
+                             onError={(e) => {
+                               e.currentTarget.style.display = 'none';
+                             }}
+                           />
+                         )}
+                       </div>
+                       <div className="text-sm font-medium text-text text-center">
                          {match.teams.split(' vs ')[0]}
                        </div>
-                       {match.isHistorical && match.result && match.result !== "" && (
-                         <div className="text-lg font-bold text-green-500">
-                           {match.result}
+                     </div>
+
+                     {/* Score */}
+                     <div className="flex flex-col items-center mx-4">
+                       {match.isHistorical && match.result && match.result !== "" ? (
+                         <div className="text-2xl font-bold text-green-500">
+                           {formatScore(match.result)}
                          </div>
+                       ) : (
+                         <div className="text-lg font-bold text-muted">VS</div>
                        )}
                      </div>
-                     <div className="flex items-center gap-2 mt-1">
-                       <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center border border-gray-300">
-                         <svg className="w-2 h-2 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
-                         </svg>
+
+                     {/* Second Team */}
+                     <div className="flex flex-col items-center text-center flex-1">
+                       <div className="mb-2">
+                         {getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league)) && (
+                           <img 
+                             src={getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league))!}
+                             alt={`${match.teams.split(' vs ')[1]} icon`}
+                             className="w-8 h-8"
+                             onError={(e) => {
+                               e.currentTarget.style.display = 'none';
+                             }}
+                           />
+                         )}
                        </div>
-                       {match.teams.split(' vs ')[1]}
+                       <div className="text-sm font-medium text-text text-center">
+                         {match.teams.split(' vs ')[1]}
+                       </div>
                      </div>
                    </div>
                  </div>
@@ -472,9 +759,9 @@ export default function OddsTable() {
                         const sortedOdds = [...odds].sort((a, b) => b.value - a.value);
                         
                         const getOddColor = (oddValue: number) => {
-                          if (oddValue === sortedOdds[0].value) return 'text-green-500'; // Highest
-                          if (oddValue === sortedOdds[1].value) return 'text-red-500';   // Middle
-                          return 'text-blue-500'; // Lowest
+                          if (oddValue === sortedOdds[0].value) return 'text-green-500'; 
+                          if (oddValue === sortedOdds[1].value) return 'text-red-500';   
+                          return 'text-blue-500';
                         };
                         
                         return odds.map((odd, index) => (
@@ -583,18 +870,38 @@ export default function OddsTable() {
                   
                   <div className="col-span-4 flex items-center">
                     <div className="flex items-center gap-1 w-full min-w-0">
+                      {getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league)) && (
+                        <img 
+                          src={getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league))!}
+                          alt={`${match.teams.split(' vs ')[0]} icon`}
+                          className="w-4 h-4"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
                       <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[0]}</span>
                       <span className="text-sm text-muted font-bold px-1">VS</span>
+                      {getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league)) && (
+                        <img 
+                          src={getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league))!}
+                          alt={`${match.teams.split(' vs ')[1]} icon`}
+                          className="w-4 h-4"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
                       <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[1]}</span>
                     </div>
                   </div>
                   
                   <div className="col-span-2 flex items-center justify-center">
-                    {match.isHistorical ? (
-                      <div className="text-sm font-semibold text-green-400">
-                        {match.result && match.result !== "" ? match.result : "-"}
-                      </div>
-                    ) : (
+                                         {match.isHistorical ? (
+                       <div className="text-sm font-semibold text-green-400">
+                         {match.result && match.result !== "" ? formatScore(match.result) : "-"}
+                       </div>
+                     ) : (
                       <div className="text-sm text-muted">
                         {match.status === "Live" ? "LIVE" : "Upcoming"}
                       </div>
@@ -682,16 +989,21 @@ export default function OddsTable() {
           }}
         />
       )}
-      {showBetSlip && selectedOdds.length > 0 && (
+      {(showBetSlip || isBetSlipHiding) && selectedOdds.length > 0 && (
         <div 
-          className="fixed bottom-4 right-4 w-80 bg-surface border border-border rounded-xl shadow-2xl z-50"
+          className={`fixed bottom-4 right-4 w-80 bg-surface border border-border rounded-xl shadow-2xl z-50 betslip-modal ${
+            isBetSlipCollapsed ? 'h-16' : 'h-auto'
+          }`}
           style={{
-            animation: 'slideUp 0.3s ease-out',
-            transform: 'translateY(0)',
-            opacity: '1'
+            transform: isBetSlipHiding ? 'translateY(100%)' : 'translateY(0)',
+            opacity: isBetSlipHiding ? '0' : '1',
+            transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out'
           }}
         >
-          <div className="bg-yellow-500 text-black px-4 py-3 rounded-t-xl flex items-center justify-between">
+          <div 
+            className="bg-yellow-500 text-black px-4 py-3 rounded-t-xl flex items-center justify-between cursor-pointer hover:bg-yellow-400 transition-colors betslip-header"
+            onClick={handleBetSlipHeaderClick}
+          >
             <div className="flex items-center gap-2">
               <span className="font-semibold">Betslip</span>
               <div className="w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold">
@@ -705,47 +1017,90 @@ export default function OddsTable() {
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
               </div>
+              <svg 
+                className={`w-4 h-4 transition-transform duration-300 ease-in-out ${
+                  isBetSlipCollapsed ? 'rotate-180' : 'rotate-0'
+                }`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
-          <div className="flex border-b border-border">
-            <button className="flex-1 py-2 text-sm font-medium text-muted">Single</button>
-            <button className="flex-1 py-2 text-sm font-medium text-yellow-500 border-b-2 border-yellow-500">Combo</button>
-            <button className="flex-1 py-2 text-sm font-medium text-muted">System</button>
-          </div>
-          <div className="p-4 max-h-[600px] overflow-y-auto betting-slip-scroll">
-            {selectedOdds.map((odds, index) => (
+          <div 
+            className={`betslip-content transition-all duration-300 ease-in-out ${
+              isBetSlipCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[600px] opacity-100'
+            }`}
+            style={{
+              transition: 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in-out'
+            }}
+          >
+            <div className="flex border-b border-border" onClick={(e) => e.stopPropagation()}>
+              <button className="flex-1 py-2 text-sm font-medium text-yellow-500 border-b-2 border-yellow-500">Single</button>
+              <button className="flex-1 py-2 text-sm font-medium text-muted/50 cursor-not-allowed" disabled>Combo</button>
+              <button className="flex-1 py-2 text-sm font-medium text-muted/50 cursor-not-allowed" disabled>System</button>
+            </div>
+            <div className="p-4 max-h-[600px] overflow-y-auto betting-slip-scroll" onClick={(e) => e.stopPropagation()}>
+            {selectedOdds.length === 0 ? (
+              <div className="text-center py-8 text-muted">
+                <svg className="w-12 h-12 mx-auto mb-4 text-muted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm">No bets selected</p>
+                <p className="text-xs text-muted/70 mt-1">Click on odds to add them to your betslip</p>
+              </div>
+            ) : (
+              selectedOdds.map((odds, index) => (
               <div key={`${odds.matchId}-${odds.type}`} className="bg-surface border border-border rounded-lg p-3 mb-4">
                 <div className="flex items-start gap-3">
-                  <button 
-                    className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
-                    onClick={() => {
-                      setSelectedOdds(prev => prev.filter(
-                        item => !(item.matchId === odds.matchId && item.type === odds.type)
-                      ));
-                      if (selectedOdds.length === 1) {
-                        setShowBetSlip(false);
-                      }
-                    }}
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                           <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-text">
-                        {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
-                         odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {odds.type === 'home' ? (
+                          <>
+                            {getTeamIcon(odds.teams.split(' vs ')[0]) && (
+                              <img 
+                                src={getTeamIcon(odds.teams.split(' vs ')[0])!}
+                                alt={`${odds.teams.split(' vs ')[0]} icon`}
+                                className="w-6 h-6"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span className="text-sm font-medium text-text">{odds.teams.split(' vs ')[0]}</span>
+                          </>
+                        ) : odds.type === 'away' ? (
+                          <>
+                            {getTeamIcon(odds.teams.split(' vs ')[1]) && (
+                              <img 
+                                src={getTeamIcon(odds.teams.split(' vs ')[1])!}
+                                alt={`${odds.teams.split(' vs ')[1]} icon`}
+                                className="w-6 h-6"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span className="text-sm font-medium text-text">{odds.teams.split(' vs ')[1]}</span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-medium text-text">Draw</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted mb-1">{odds.teams}</div>
-                    <div className="text-xs text-muted mb-2">1x2</div>
+                    <div className="ml-9 space-y-1">
+                      <div className="text-xs text-muted">{odds.teams}</div>
+                      <div className="text-xs text-muted">1x2</div>
+                    </div>
                                          <div className="flex items-center justify-between">
                        <span className="text-lg font-bold text-text">{odds.odds}</span>
                        <input 
@@ -757,9 +1112,29 @@ export default function OddsTable() {
                        />
                      </div>
                   </div>
+                  <button 
+                    className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-400 transition-colors"
+                    onClick={() => {
+                      setSelectedOdds(prev => prev.filter(
+                        item => !(item.matchId === odds.matchId && item.type === odds.type)
+                      ));
+                      if (selectedOdds.length === 1) {
+                        setIsBetSlipHiding(true);
+                        setTimeout(() => {
+                          setShowBetSlip(false);
+                          setIsBetSlipHiding(false);
+                        }, 500);
+                      }
+                    }}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-            ))}
+            ))
+            )}
              <div className="flex gap-2 mb-4">
                <button 
                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
@@ -792,44 +1167,82 @@ export default function OddsTable() {
                  0.0005
                </button>
              </div>
-             <div className="space-y-2 mb-4">
-               <div className="flex justify-between text-sm">
-                 <span className="text-muted">Total Odds</span>
-                 <span className="text-text">10.26</span>
-               </div>
-               <div className="flex justify-between text-sm">
-                 <span className="text-muted">Total Bet</span>
-                 <span className="text-text">{selectedBetAmount} B</span>
-               </div>
-               <div className="flex justify-between text-sm">
-                 <span className="text-muted">POTENTIAL WIN</span>
-                 <span className="text-text">{(parseFloat(selectedBetAmount) * 10.26).toFixed(6)} B</span>
-               </div>
-             </div>
-            <div className="flex items-center gap-2 mb-4 p-3 bg-bg/50 rounded-lg">
-              <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="text-sm text-muted">Please, login to place bet</span>
+                         <div className="space-y-2 mb-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted">Total Odds</span>
+                <span className="text-text">10.26</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted">Total Bet</span>
+                <span className="text-text">{selectedBetAmount} B</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted">POTENTIAL WIN</span>
+                <span className="text-text">{(parseFloat(selectedBetAmount) * 10.26).toFixed(6)} B</span>
+              </div>
             </div>
-                   <div className="flex gap-2 mb-3">
-                     <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
-                     <button 
-                       className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors"
-                       onClick={() => navigate("/signin")}
-                     >
-                       LOGIN
-                     </button>
-                   </div>
-                   <div className="text-center mb-3">
-                     <span className="text-xs text-muted">Don't you have an account? </span>
-                     <button 
-                       className="text-xs text-yellow-500 hover:underline font-medium"
-                       onClick={() => navigate("/signin")}
-                     >
-                       Join Now!
-                     </button>
-                   </div>
+            
+            {/* Authentication and Betting States */}
+            {!isAuthenticated ? (
+              <div className="flex items-center gap-2 mb-4 p-3 bg-bg/50 rounded-lg">
+                <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-sm text-muted">Please, login to place bet</span>
+              </div>
+            ) : bettingError ? (
+              <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-center">
+                <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <p className="text-sm text-red-400 mb-3">{bettingError}</p>
+                <button 
+                  className="w-full py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors"
+                  onClick={() => navigate("/profile")}
+                >
+                  DEPOSIT
+                </button>
+              </div>
+            ) : isPlacingBet ? (
+              <div className="mb-4 p-4 text-center">
+                <div className="w-8 h-8 mx-auto mb-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+                </div>
+                <p className="text-sm text-muted">Please wait. We are processing your bets.</p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-sm text-green-400">Ready to place your bet!</span>
+              </div>
+            )}
+            
+            <div className="flex gap-2 mb-3">
+              <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
+              <button 
+                className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handlePlaceBet}
+                disabled={isPlacingBet}
+              >
+                {isAuthenticated ? "PLACE BET" : "LOGIN"}
+              </button>
+            </div>
+            
+            {!isAuthenticated && (
+              <div className="text-center mb-3">
+                <span className="text-xs text-muted">Don't you have an account? </span>
+                <button 
+                  className="text-xs text-yellow-500 hover:underline font-medium"
+                  onClick={() => navigate("/signin")}
+                >
+                  Join Now!
+                </button>
+              </div>
+            )}
             <div className="flex items-center justify-center gap-4 text-muted">
               <button className="flex items-center gap-1 text-xs">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -844,73 +1257,104 @@ export default function OddsTable() {
                 <span>Odds Settings</span>
               </button>
             </div>
+            </div>
           </div>
         </div>
       )}
       
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-8 px-2">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentPage === 1
-                ? 'bg-surface text-muted cursor-not-allowed'
-                : 'bg-surface text-text hover:bg-surface/80 border border-border'
-            }`}
-          >
-            Previous
-          </button>
-          
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    currentPage === pageNum
-                      ? 'bg-accent text-white'
-                      : 'bg-surface text-text hover:bg-surface/80 border border-border'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-          </div>
-          
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              currentPage === totalPages
-                ? 'bg-surface text-muted cursor-not-allowed'
-                : 'bg-surface text-text hover:bg-surface/80 border border-border'
-            }`}
-          >
-            Next
-          </button>
-        </div>
-      )}
+             {totalPages > 1 && (
+         <div className="flex items-center justify-center gap-2 mt-8 px-2">
+           <button
+             onClick={() => setCurrentPage(1)}
+             disabled={currentPage === 1}
+             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+               currentPage === 1
+                 ? 'bg-surface text-muted cursor-not-allowed'
+                 : 'bg-surface text-text hover:bg-surface/80 border border-border'
+             }`}
+           >
+             First
+           </button>
+           
+           <button
+             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+             disabled={currentPage === 1}
+             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+               currentPage === 1
+                 ? 'bg-surface text-muted cursor-not-allowed'
+                 : 'bg-surface text-text hover:bg-surface/80 border border-border'
+             }`}
+           >
+             Previous
+           </button>
+           
+           <div className="flex items-center gap-1">
+             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+               let pageNum;
+               if (totalPages <= 5) {
+                 pageNum = i + 1;
+               } else if (currentPage <= 3) {
+                 pageNum = i + 1;
+               } else if (currentPage >= totalPages - 2) {
+                 pageNum = totalPages - 4 + i;
+               } else {
+                 pageNum = currentPage - 2 + i;
+               }
+               
+               return (
+                 <button
+                   key={pageNum}
+                   onClick={() => setCurrentPage(pageNum)}
+                   className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
+                     currentPage === pageNum
+                       ? 'bg-accent text-white'
+                       : 'bg-surface text-text hover:bg-surface/80 border border-border'
+                   }`}
+                 >
+                   {pageNum}
+                 </button>
+               );
+             })}
+           </div>
+           
+           <button
+             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+             disabled={currentPage === totalPages}
+             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+               currentPage === totalPages
+                 ? 'bg-surface text-muted cursor-not-allowed'
+                 : 'bg-surface text-text hover:bg-surface/80 border border-border'
+             }`}
+           >
+             Next
+           </button>
+           
+           <button
+             onClick={() => setCurrentPage(totalPages)}
+             disabled={currentPage === totalPages}
+             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+               currentPage === totalPages
+                 ? 'bg-surface text-muted cursor-not-allowed'
+                 : 'bg-surface text-text hover:bg-surface/80 border border-border'
+             }`}
+           >
+             Last
+           </button>
+         </div>
+       )}
       
-      {totalMatches > 0 && (
-        <div className="text-center mt-4 text-sm text-muted">
-          Showing {Math.min(startIndex + 1, totalMatches)}-{Math.min(endIndex, totalMatches)} of {totalMatches} matches
-        </div>
-      )}
+             {totalMatches > 0 && (
+         <div className="text-center mt-4 text-sm text-muted">
+           {selectedYear 
+             ? selectedLeague
+               ? `Showing ${totalMatches} ${selectedLeague.name} matches from ${selectedYear} only (${Math.ceil(totalMatches / matchesPerPage)} pages)`
+               : `Showing ${totalMatches} matches from ${selectedYear} only (${Math.ceil(totalMatches / matchesPerPage)} pages)`
+             : selectedLeague
+               ? `Showing all ${totalMatches} ${selectedLeague.name} matches (${Math.ceil(totalMatches / matchesPerPage)} pages)`
+               : `Showing ${Math.min(startIndex + 1, totalMatches)}-${Math.min(endIndex, totalMatches)} of ${totalMatches} matches`
+           }
+         </div>
+       )}
     </section>
   );
 }
-  

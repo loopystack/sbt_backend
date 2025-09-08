@@ -8,12 +8,15 @@ import ScrollToFooter from "../../components/ScrollToFooter";
 import { useTheme } from "../../contexts/ThemeContext";
 
 
+import { useCountry } from "../../contexts/CountryContext";
+
 export default function AppShell() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { setSelectedLeague } = useCountry();
 
   useEffect(() => {
     const handleResize = () => {
@@ -29,6 +32,10 @@ export default function AppShell() {
   }, []);
 
   const handleNavigation = (path: string) => {
+    // Clear selected league when navigating to home
+    if (path === "/") {
+      setSelectedLeague(null);
+    }
     navigate(path);
     setIsMobileMenuOpen(false);
   };

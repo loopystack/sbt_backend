@@ -1,19 +1,19 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { getMatchingInfoService } from './services';
-import { MatchingInfo, GetMatchingInfoQueries } from './types';
+import { MatchingInfo, GetMatchingInfoResponse } from './types';
 import { handleActionResponse } from '../global/actions';
 import { toast } from 'react-toastify';
 
 export const getMatchingInfoAction = createAsyncThunk<
-    GetMatchingInfoQueries,
-    { page?: number, limit?: string } | undefined,
+    GetMatchingInfoResponse,
+    { page?: string, size?: string, season?: string, country?: string } | undefined,
     { rejectValue: string }
 >(
-    'user/signup',
+    'matchinginfo/getMatchingInfo',
     async (queries, { rejectWithValue }) => {
         try {
             const response = await getMatchingInfoService(queries);
-            const result = handleActionResponse<GetMatchingInfoQueries>(
+            const result = handleActionResponse<GetMatchingInfoResponse>(
                 response,
                 'Get matching info successful',
                 'Get matching info failed'

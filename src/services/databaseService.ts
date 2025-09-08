@@ -1,4 +1,4 @@
-import { MatchingInfo, GetMatchingInfoQueries } from '../store/matchinginfo/types';
+import { MatchingInfo, GetMatchingInfoResponse } from '../store/matchinginfo/types';
 import { sampleMatchingData } from '../data/sampleData';
 
 
@@ -16,7 +16,7 @@ export class DatabaseService {
   }
 
 
-  async getMatchingInfo(params: { page?: number, limit?: string }): Promise<GetMatchingInfoQueries> {
+  async getMatchingInfo(params: { page?: number, limit?: string }): Promise<GetMatchingInfoResponse> {
     const page = params.page || 1;
     const limit = parseInt(params.limit || '10');
     const startIndex = (page - 1) * limit;
@@ -29,8 +29,9 @@ export class DatabaseService {
     return {
       page,
       total,
-      totalPage,
-      matchinginfo: paginatedData
+      pages: totalPage,
+      size: limit,
+      odds: paginatedData
     };
   }
 

@@ -1,10 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useCountry } from "../contexts/CountryContext";
+import { useAppDispatch } from "../store/hooks";
+import { getMatchingInfoAction } from "../store/matchinginfo/actions";
+import { MatchingInfo } from "../store/matchinginfo/types";
 
 export default function LeftSidebar() {
   const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
+  const dispatch = useAppDispatch();
+  const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
+  const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
   
+  const fetchMatchingInfo = useCallback(async () => {
+    try {
+      const params = { 
+        page: "1", 
+        size: "1000" // Get a large number to ensure we get all matches
+      };
+      
+      const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+      setMatchingInfo(result.odds);
+      
+      // Calculate upcoming match counts for each league
+      const counts: Record<string, number> = {};
+      const now = new Date();
+      
+      result.odds.forEach((match: MatchingInfo) => {
+        const matchDate = new Date(match.date + 'T00:00:00');
+        const isUpcoming = matchDate.getTime() >= now.getTime();
+        
+        if (isUpcoming) {
+          const leagueName = `${match.country} League`;
+          counts[leagueName] = (counts[leagueName] || 0) + 1;
+        }
+      });
+      
+      setLeagueMatchCounts(counts);
+    } catch (error) {
+      console.error("Error fetching matching info:", error);
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchMatchingInfo();
+  }, [fetchMatchingInfo]);
 
   const getFlagUrl = (flagCode: string) => {
     try {
@@ -23,7 +62,6 @@ export default function LeftSidebar() {
   };
 
   const handleCountryClick = (country: any) => {
-    setSelectedCountry(country);
     toggleCountryExpansion(country.name);
   };
 
@@ -42,11 +80,7 @@ export default function LeftSidebar() {
             <div key={country.name} className="space-y-1">
               <button
                 onClick={() => handleCountryClick(country)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 ${
-                  selectedCountry?.name === country.name
-                    ? "bg-blue-500/20 text-blue-600 border border-blue-500/30"
-                    : "text-text hover:text-text"
-                }`}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 text-text hover:text-text`}
               >
                 <div className="flex items-center gap-3">
                   <img 
@@ -78,16 +112,13 @@ export default function LeftSidebar() {
                     <button
                       key={league.name}
                       onClick={() => handleLeagueClick(league)} 
-                      className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors flex items-center justify-between hover:bg-white/5 ${
+                      className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 ${
                         selectedLeague?.name === league.name
                           ? "bg-green-500/20 text-green-600 border border-green-500/30"
                           : "text-muted hover:text-text"
                       }`}
                     >
                       <span className="truncate">{league.name}</span>
-                      <span className="text-xs bg-muted/50 px-2 py-0.5 rounded-full">
-                        {league.matchCount}
-                      </span>
                     </button>
                   ))}
                 </div>

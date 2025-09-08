@@ -9,8 +9,7 @@ export default function ForgotPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
+  
     setTimeout(() => {
       setIsLoading(false);
       setIsSubmitted(true);
@@ -22,7 +21,6 @@ export default function ForgotPassword() {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="bg-slate-800 rounded-xl max-w-md w-full p-8">
           <div className="text-center">
-            {/* Success Icon */}
             <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -65,7 +63,6 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-slate-800 rounded-xl max-w-md w-full p-8">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
             Forgot Password?
@@ -75,7 +72,6 @@ export default function ForgotPassword() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -111,7 +107,6 @@ export default function ForgotPassword() {
           </button>
         </form>
 
-        {/* Back to Sign In Link */}
         <div className="text-center mt-6">
           <Link 
             to="/signin" 

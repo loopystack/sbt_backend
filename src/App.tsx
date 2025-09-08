@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { CountryProvider } from './contexts/CountryContext';
+import { AuthProvider } from './contexts/AuthContext';
 import AppShell from './app/layouts/AppShell';
 import Home from './pages/Home';
 import Matches from './pages/Matches';
@@ -15,15 +16,19 @@ import Bookmakers from './pages/Bookmakers';
 import DroppingOdds from './pages/DroppingOdds';
 import SignInSignUp from './pages/SignInSignUp';
 import ForgotPassword from './pages/ForgotPassword';
+import Profile from './pages/Profile';
 import './App.css';
 
 function App() {
   return (
     <ThemeProvider>
       <CountryProvider>
-        <Router>
-          <div className="min-h-screen bg-bg text-text">
+        <AuthProvider>
+          <Router>
             <Routes>
+              <Route path="/signin" element={<SignInSignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/" element={<AppShell />}>
                 <Route index element={<Home />} />
                 <Route path="matches" element={<Matches />} />
@@ -35,12 +40,10 @@ function App() {
                 <Route path="sure-bets" element={<SureBets />} />
                 <Route path="bookmakers" element={<Bookmakers />} />
                 <Route path="dropping-odds" element={<DroppingOdds />} />
-                <Route path="signin" element={<SignInSignUp />} />
               </Route>
-              <Route path="/forgot-password" element={<ForgotPassword />} />
             </Routes>
-          </div>
-        </Router>
+          </Router>
+        </AuthProvider>
       </CountryProvider>
     </ThemeProvider>
   );

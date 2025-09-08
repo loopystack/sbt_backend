@@ -6,9 +6,10 @@ import LatestBonuses from "../components/LatestBonuses";
 import OddsTable from "../components/OddsTable";
 import { useCountry } from "../contexts/CountryContext";
 import { openBettingSiteByName } from "../config/bettingSites";
+
 export default function Home() {
   const { selectedLeague } = useCountry();
-  // If a league is selected, show only the odds table
+
   if (selectedLeague) {
     return (
       <div className="space-y-6 sm:space-y-8">
@@ -16,7 +17,7 @@ export default function Home() {
       </div>
     );
   }
-  // Otherwise show the normal home content
+  
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -79,7 +80,6 @@ export default function Home() {
       <PopularSports />
       <HotPicks />
       <LatestBonuses />
-      <OddsTable />
     </div>
   );
 }
