@@ -681,10 +681,10 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Deposit Modal - FortuneJack Style */}
+      {/* Deposit Modal - Compact Dark Theme */}
       {showAddFundModal && (
         <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowAddFundModal(false);
@@ -695,12 +695,12 @@ export default function Profile() {
           }}
         >
           <div 
-            className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-2xl"
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h3 className="text-xl font-semibold text-text">Deposit</h3>
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white">Deposit</h3>
               <button
                 onClick={() => {
                   setShowAddFundModal(false);
@@ -708,34 +708,34 @@ export default function Profile() {
                   setFundSuccess("");
                   setFundAmount("");
                 }}
-                className="text-muted hover:text-text transition-colors"
+                className="text-gray-400 hover:text-white transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4">
               {/* Payment Method Tabs */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setSelectedPaymentMethod("crypto")}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                     selectedPaymentMethod === "crypto"
                       ? "bg-yellow-500 text-black"
-                      : "bg-bg border border-border text-text hover:bg-white/5"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   }`}
                 >
                   <span>Crypto</span>
-                  <span className="px-2 py-1 bg-black/20 text-black text-xs rounded-full">+12</span>
+                  <span className="px-1.5 py-0.5 bg-black/20 text-black text-xs rounded-full">+12</span>
                 </button>
                 <button
                   onClick={() => setSelectedPaymentMethod("cash")}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
                     selectedPaymentMethod === "cash"
                       ? "bg-yellow-500 text-black"
-                      : "bg-bg border border-border text-text hover:bg-white/5"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   }`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -747,51 +747,59 @@ export default function Profile() {
 
               {selectedPaymentMethod === "crypto" && (
                 <>
-                  {/* Currency Selection */}
-                  <div className="mb-6">
-                    <div className="flex gap-2 mb-4">
+                  {/* Popular Cryptocurrencies */}
+                  <div className="mb-4">
+                    <div className="flex gap-2 mb-3">
                       {["BTC", "ETH", "USDT", "BNB"].map((currency) => (
                         <button
                           key={currency}
                           onClick={() => setSelectedCurrency(currency)}
-                          className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                          className={`flex items-center gap-2 px-2 py-1.5 rounded-lg font-medium transition-colors text-sm ${
                             selectedCurrency === currency
                               ? "bg-yellow-500 text-black"
-                              : "bg-bg border border-border text-text hover:bg-white/5"
+                              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                           }`}
                         >
-                          <span className="text-lg">{getCurrencyLogo(currency)}</span>
+                          <img 
+                            src={`/assets/deposit_ico/${currency}.svg`} 
+                            alt={currency}
+                            className="w-5 h-5"
+                          />
                           <span>{currency}</span>
                         </button>
                       ))}
                     </div>
 
                     {/* Currency and Network Dropdowns */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-text mb-2">Choose Currency</label>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">Choose Currency</label>
                         <div className="relative">
                           <select
                             value={selectedCurrency}
                             onChange={(e) => setSelectedCurrency(e.target.value)}
-                            className="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent appearance-none"
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                           >
                             <option value="BTC">BTC</option>
                             <option value="ETH">ETH</option>
                             <option value="USDT">USDT</option>
                             <option value="BNB">BNB</option>
                           </select>
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-lg">{getCurrencyLogo(selectedCurrency)}</span>
+                          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <img 
+                              src={`/assets/deposit_ico/${selectedCurrency}.svg`} 
+                              alt={selectedCurrency}
+                              className="w-4 h-4"
+                            />
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-text mb-2">Choose Network</label>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">Choose Network</label>
                         <select
                           value={selectedNetwork}
                           onChange={(e) => setSelectedNetwork(e.target.value)}
-                          className="w-full px-4 py-3 bg-bg border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                           <option value="BTC">BTC</option>
                           <option value="ETH">Ethereum</option>
@@ -803,29 +811,35 @@ export default function Profile() {
                   </div>
 
                   {/* Deposit Address Section */}
-                  <div className="bg-bg border border-border rounded-lg p-6 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-4">
+                    <div className="grid grid-cols-1 gap-4">
                       {/* QR Code */}
                       <div className="flex flex-col items-center">
-                        <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center mb-4">
-                          <div className="w-28 h-28 bg-gray-200 rounded flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">QR Code</span>
+                        <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center mb-3 border border-gray-200">
+                          <div className="w-28 h-28 bg-gray-100 rounded flex items-center justify-center">
+                            <div className="grid grid-cols-8 gap-0.5">
+                              {Array.from({ length: 64 }).map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className={`w-1.5 h-1.5 rounded-sm ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
-                        <p className="text-sm text-muted text-center">Scan QR code to deposit</p>
                       </div>
 
                       {/* Deposit Address */}
                       <div>
-                        <h4 className="text-lg font-semibold text-text mb-3">Deposit Address</h4>
-                        <div className="bg-surface border border-border rounded-lg p-3 mb-3">
-                          <p className="text-sm text-blue-400 break-all font-mono">{depositAddress}</p>
+                        <h4 className="text-sm font-semibold text-white mb-2">Deposit Address</h4>
+                        <div className="bg-gray-900 border border-gray-600 rounded-lg p-2 mb-2">
+                          <p className="text-xs text-blue-400 break-all font-mono">{depositAddress}</p>
                         </div>
                         <button
                           onClick={copyAddress}
-                          className="w-full py-2 px-4 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                          className="w-full py-2 px-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                           Copy address
@@ -835,13 +849,11 @@ export default function Profile() {
                   </div>
 
                   {/* Warnings and Info */}
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-3 mb-4">
                     {/* Minimum Deposit Warning */}
-                    <div className="flex items-center gap-3 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                      <p className="text-yellow-400 text-sm">
+                    <div className="flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                      <img src="/assets/deposit_ico/alarm.svg" alt="Warning" className="w-4 h-4" />
+                      <p className="text-yellow-400 text-xs">
                         Minimum Deposit {selectedCurrency} {getMinDeposit(selectedCurrency)}
                       </p>
                     </div>
@@ -849,55 +861,175 @@ export default function Profile() {
                     {/* Generate New Address Button */}
                     <button
                       onClick={generateNewAddress}
-                      className="w-full py-2 px-4 bg-surface border border-border text-text rounded-lg font-medium hover:bg-white/5 transition-colors"
+                      className="w-full py-2 px-3 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
                     >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
                       Generate new address
                     </button>
 
                     {/* Transaction Info */}
-                    <div className="flex items-center gap-3 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p className="text-blue-400 text-sm">
+                    <div className="flex items-center gap-2 p-2 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">i</span>
+                      </div>
+                      <p className="text-blue-400 text-xs">
                         {selectedCurrency} transaction requires 2 confirmations on blockchain.
                       </p>
                     </div>
                   </div>
+
+                  {/* Confirm Button */}
+                  <button
+                    onClick={() => {
+                      setFundSuccess("Deposit address generated successfully!");
+                      setTimeout(() => {
+                        setShowAddFundModal(false);
+                        setFundSuccess("");
+                      }, 2000);
+                    }}
+                    className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Confirm Deposit
+                  </button>
                 </>
               )}
 
               {selectedPaymentMethod === "cash" && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
+                <>
+                  {/* Cash Payment Methods */}
+                  <div className="mb-4">
+                    <div className="flex gap-2 mb-3">
+                      {["VISA", "Mastercard", "PayPal", "Bank Transfer"].map((method) => (
+                        <button
+                          key={method}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg font-medium transition-colors text-sm bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          <span>{method}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Payment Method Selection */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">Payment Method</label>
+                        <select className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                          <option value="visa">VISA</option>
+                          <option value="mastercard">Mastercard</option>
+                          <option value="paypal">PayPal</option>
+                          <option value="bank">Bank Transfer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">Amount (USD)</label>
+                        <input
+                          type="number"
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <h4 className="text-lg font-semibold text-text mb-2">Cash Payment</h4>
-                  <p className="text-muted">Cash payment options coming soon!</p>
-                </div>
+
+                  {/* Payment Details Section */}
+                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-semibold text-white mb-3">Payment Details</h4>
+                    
+                    {/* Card Details */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">Card Number</label>
+                        <input
+                          type="text"
+                          placeholder="1234 5678 9012 3456"
+                          className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">Expiry Date</label>
+                          <input
+                            type="text"
+                            placeholder="MM/YY"
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-400 mb-1">CVV</label>
+                          <input
+                            type="text"
+                            placeholder="123"
+                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Info */}
+                  <div className="space-y-3 mb-4">
+                    {/* Processing Fee Info */}
+                    <div className="flex items-center gap-2 p-2 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">i</span>
+                      </div>
+                      <p className="text-blue-400 text-xs">
+                        Processing fee: 2.5% + $0.30 per transaction
+                      </p>
+                    </div>
+
+                    {/* Security Info */}
+                    <div className="flex items-center gap-2 p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
+                      <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <p className="text-green-400 text-xs">
+                        Your payment is secured with 256-bit SSL encryption
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Confirm Payment Button */}
+                  <button
+                    onClick={() => {
+                      setFundSuccess("Payment processed successfully!");
+                      setTimeout(() => {
+                        setShowAddFundModal(false);
+                        setFundSuccess("");
+                      }, 2000);
+                    }}
+                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Process Payment
+                  </button>
+                </>
               )}
 
               {/* Error/Success Messages */}
               {fundError && (
-                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                <div className="mb-3 p-2 bg-red-500/20 border border-red-500/30 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <p className="text-red-400 text-sm">{fundError}</p>
+                    <p className="text-red-400 text-xs">{fundError}</p>
                   </div>
                 </div>
               )}
 
               {fundSuccess && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                <div className="mb-3 p-2 bg-green-500/20 border border-green-500/30 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-green-400 text-sm">{fundSuccess}</p>
+                    <p className="text-green-400 text-xs">{fundSuccess}</p>
                   </div>
                 </div>
               )}
