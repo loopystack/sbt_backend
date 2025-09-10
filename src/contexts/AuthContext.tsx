@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, tokenManager, User } from '../services/authService';
+import { useDispatch } from 'react-redux';
+import { logoutAction } from '../store/user/actions';
+import { AppDispatch } from '../store';
 
 interface AuthContextType {
   user: User | null;
@@ -25,20 +28,32 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAuth = async () => {
     const token = tokenManager.getAccessToken();
-    if (token) {
+    const reduxToken = localStorage.getItem('token');
+    const authToken = token || reduxToken;
+    
+    if (authToken) {
       try {
+        // Sync tokens between systems
+        if (token && !reduxToken) {
+          localStorage.setItem('token', token);
+        } else if (reduxToken && !token) {
+          localStorage.setItem('access_token', reduxToken);
+        }
+        
         const userData = await authService.getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Failed to get user data:", error);
         tokenManager.clearTokens();
+        localStorage.removeItem('token');
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -73,13 +88,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     authService.logout();
+    tokenManager.clearTokens();
+    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
     setIsAuthenticated(false);
+    
+    // Dispatch Redux logout action to clear Redux state
+    dispatch(logoutAction());
     
     // Dispatch custom event
     window.dispatchEvent(new CustomEvent('authStateChanged', { 
       detail: { isAuthenticated: false, user: null } 
     }));
+    
+    // Refresh the page to ensure all components get the updated state
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const refreshUser = async () => {
@@ -93,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'access_token' || e.key === 'refresh_token') {
+      if (e.key === 'access_token' || e.key === 'refresh_token' || e.key === 'token') {
         checkAuth();
       }
     };

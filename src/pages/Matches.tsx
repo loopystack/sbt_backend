@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
+import { useCountry } from "../contexts/CountryContext";
+import OddsTable from "../components/OddsTable";
 
 export default function Matches() {
+  const { selectedLeague } = useCountry();
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedSport, setSelectedSport] = useState("Football");
   const [selectedView, setSelectedView] = useState("kickoff");
@@ -92,6 +95,15 @@ export default function Matches() {
       bestOdds: "odds2"
     }
   ];
+
+  // If a league is selected, show the OddsTable (same as Home page)
+  if (selectedLeague) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <OddsTable />
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">

@@ -33,6 +33,39 @@ class Settings(BaseSettings):
     APP_NAME: str = "Soccer Betting API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
+    
+    # Payment Configuration
+    PAYMENT_MODE: str = "test"  # 'test' or 'live'
+    
+    # Blockchain Verification
+    BLOCKCHAIN_TEST_MODE: str = "false"  # 'true' or 'false'
+    
+    # Stripe API Keys
+    STRIPE_TEST_SECRET_KEY: str = ""
+    STRIPE_TEST_PUBLISHABLE_KEY: str = ""
+    STRIPE_LIVE_SECRET_KEY: str = ""
+    STRIPE_LIVE_PUBLISHABLE_KEY: str = ""
+    
+    # PayPal Configuration
+    PAYPAL_CLIENT_ID: str = ""
+    PAYPAL_CLIENT_SECRET: str = ""
+    PAYPAL_MODE: str = "sandbox"  # 'sandbox' or 'live'
+    
+    @property
+    def stripe_secret_key(self) -> str:
+        """Get the appropriate Stripe secret key based on payment mode"""
+        if self.PAYMENT_MODE == "live":
+            return self.STRIPE_LIVE_SECRET_KEY
+        else:
+            return self.STRIPE_TEST_SECRET_KEY
+    
+    @property
+    def stripe_publishable_key(self) -> str:
+        """Get the appropriate Stripe publishable key based on payment mode"""
+        if self.PAYMENT_MODE == "live":
+            return self.STRIPE_LIVE_PUBLISHABLE_KEY
+        else:
+            return self.STRIPE_TEST_PUBLISHABLE_KEY
 
     model_config = {
         "env_file": ".env",

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
+import { useCountry } from "../contexts/CountryContext";
+import OddsTable from "../components/OddsTable";
+
 export default function AllEvents() {
+  const { selectedLeague: contextSelectedLeague } = useCountry();
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedLeague, setSelectedLeague] = useState("All leagues");
@@ -184,6 +188,15 @@ export default function AllEvents() {
     if (odds.length === 0) return null;
     return Math.min(...odds);
   };
+  // If a league is selected from context, show the OddsTable (same as Home page)
+  if (contextSelectedLeague) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <OddsTable />
+      </div>
+    );
+  }
+
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

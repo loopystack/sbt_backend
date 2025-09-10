@@ -91,6 +91,7 @@ export default createReducer(initialState, (builder) =>
                     activeBots: payload.manualSubscription.activeBots,
                 };
                 localStorage.setItem('token', payload.token || '');
+                localStorage.setItem('access_token', payload.token || '');
             }
         })
         .addCase(signInAction.rejected, (state, action) => {
@@ -339,6 +340,11 @@ export default createReducer(initialState, (builder) =>
                 price: payload.manualSubscription.price,
                 activeBots: payload.manualSubscription.activeBots,
             };
+            // Sync token with AuthContext system
+            if (payload.token) {
+                localStorage.setItem('token', payload.token);
+                localStorage.setItem('access_token', payload.token);
+            }
         })
         .addCase(getMeAction.rejected, (state, action) => {
             state.isLoading = false;
@@ -346,6 +352,8 @@ export default createReducer(initialState, (builder) =>
         })
         .addCase(logoutAction, (state) => {
             localStorage.removeItem('token');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             return initialState;
         })
         .addCase(setUserFromSocial, (state, { payload }) => {

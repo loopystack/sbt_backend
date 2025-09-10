@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
+import { useCountry } from "../contexts/CountryContext";
+import OddsTable from "../components/OddsTable";
 
 export default function DroppingOdds() {
+  const { selectedLeague } = useCountry();
   const [selectedTimeFilter, setSelectedTimeFilter] = useState("12-hours");
   const [selectedDroppingFilter, setSelectedDroppingFilter] = useState("20-percent");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("all-types");
@@ -108,6 +111,15 @@ export default function DroppingOdds() {
   ];
 
   type Match = typeof matches[0];
+
+  // If a league is selected, show the OddsTable (same as Home page)
+  if (selectedLeague) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <OddsTable />
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">

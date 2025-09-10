@@ -38,6 +38,11 @@ from app.services.email_service import email_service
 router = APIRouter()
 
 
+@router.get("/test")
+async def get_test():
+    print('root')
+    return {"message": "Soccer Betting API"}
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
@@ -444,6 +449,9 @@ async def get_user_funds(
     }
 
 
+# Simple rate limiting for funds/add endpoint
+user_last_funds_add = {}
+
 @router.post("/funds/add")
 async def add_funds(
     amount_data: dict,
@@ -451,8 +459,31 @@ async def add_funds(
     db: AsyncSession = Depends(get_db)
 ):
     """Add funds to user account (for testing/admin purposes)"""
+    import logging
+    import time
+    
+    logger = logging.getLogger(__name__)
+    call_id = str(int(time.time() * 1000))[-6:]  # Last 6 digits of timestamp
+    
     try:
         amount = float(amount_data.get('amount', 0))
+        
+        # Rate limiting: prevent multiple calls within 2 seconds
+        current_time = time.time()
+        user_id = current_user.id
+        if user_id in user_last_funds_add:
+            time_since_last = current_time - user_last_funds_add[user_id]
+            if time_since_last < 2.0:  # 2 seconds cooldown
+                logger.warning(f"[{call_id}] Rate limit: User {user_id} tried to add funds too quickly ({time_since_last:.2f}s ago)")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Please wait before adding funds again"
+                )
+        
+        user_last_funds_add[user_id] = current_time
+        
+        logger.info(f"[{call_id}] Funds add request for user {user_id}: ${amount}")
+        logger.info(f"[{call_id}] Current balance before: ${current_user.funds_usd}")
         
         if amount <= 0:
             raise HTTPException(
@@ -464,6 +495,8 @@ async def add_funds(
         current_user.funds_usd += Decimal(str(amount))
         await db.commit()
         await db.refresh(current_user)
+        
+        logger.info(f"[{call_id}] New balance after: ${current_user.funds_usd}")
         
         return {
             "message": f"Successfully added ${amount:.2f} to your account",

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService, User } from "../services/authService";
+import { paymentService, CardPaymentRequest, BankTransferRequest, PayPalPaymentRequest } from "../services/paymentService";
 import { useAuth } from "../contexts/AuthContext";
 
 interface ProfileData extends User {
@@ -11,7 +12,7 @@ interface ProfileData extends User {
 }
 
 export default function Profile() {
-  const { user: authUser, isAuthenticated } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const [user, setUser] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -72,10 +73,23 @@ export default function Profile() {
   // Payment validation states
   const [paymentErrors, setPaymentErrors] = useState<any>({});
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  
+  // Confirm deposit states
+  const [confirmDepositAmount, setConfirmDepositAmount] = useState("");
+  const [isConfirmingDeposit, setIsConfirmingDeposit] = useState(false);
+  
+  // API call protection
+  const [isApiCallInProgress, setIsApiCallInProgress] = useState(false);
+  const apiCallInProgressRef = useRef(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Don't redirect if auth is still loading
+    if (authLoading) {
+      return;
+    }
+    
     if (isAuthenticated) {
       fetchUserProfile();
       fetchSupportedAssets();
@@ -83,7 +97,7 @@ export default function Profile() {
     } else {
       navigate("/signin");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const generateTestAddresses = () => {
     const testAddrs = {
@@ -126,6 +140,18 @@ export default function Profile() {
       return () => clearInterval(interval);
     }
   }, [depositId, depositStatus]);
+
+  // Show loading while authentication is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const fetchUserProfile = async () => {
     try {
@@ -230,15 +256,11 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    authService.logout();
+    logout(); // Use the logout function from useAuth hook
     navigate("/");
-    // Add a small delay before refresh to ensure navigation completes
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
   };
 
-  // Add Fund functions
+  // Add Fund functions1
   const handleAddFund = async () => {
     try {
       setFundLoading(true);
@@ -463,11 +485,19 @@ export default function Profile() {
       setFundError("You must be logged in to simulate transactions");
       return;
     }
+
+    // Prevent multiple simultaneous calls
+    if (fundLoading || isApiCallInProgress || apiCallInProgressRef.current) {
+      console.log("Simulation or API call already in progress, skipping...");
+      return;
+    }
     
     try {
       setFundLoading(true);
       setFundError("");
       setFundSuccess("");
+      
+      console.log(`Starting test transaction simulation for $${amount}`);
       
       // Simulate transaction detection
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -485,11 +515,23 @@ export default function Profile() {
             
             // Credit user account through API
             setTimeout(async () => {
+              // Check if API call is already in progress using ref (more reliable)
+              if (apiCallInProgressRef.current) {
+                console.log("API call already in progress, skipping duplicate call");
+                return;
+              }
+              
               try {
+                apiCallInProgressRef.current = true;
+                setIsApiCallInProgress(true);
                 // Clear any previous error messages
                 setFundError("");
                 
+                const callId = Math.random().toString(36).substr(2, 9);
+                console.log(`[${callId}] Adding $${amount} to user funds via API`);
                 const response = await authService.addFunds(parseFloat(amount));
+                console.log(`[${callId}] API response:`, response);
+                
                 setUserFunds(response.new_balance);
                 setFundSuccess(response.message);
                 
@@ -522,6 +564,9 @@ export default function Profile() {
                   // Clear success message if there's an error
                   setFundSuccess("");
                 }
+              } finally {
+                apiCallInProgressRef.current = false;
+                setIsApiCallInProgress(false);
               }
             }, 1000);
           }
@@ -534,6 +579,62 @@ export default function Profile() {
       setFundError("Failed to simulate test transaction.");
     } finally {
       setFundLoading(false);
+    }
+  };
+
+  const confirmCryptoDeposit = async () => {
+    if (!confirmDepositAmount || parseFloat(confirmDepositAmount) <= 0) {
+      setFundError("Please enter a valid deposit amount");
+      return;
+    }
+
+    if (!depositAddress) {
+      setFundError("Please generate a deposit address first");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setFundError("You must be logged in to confirm deposits");
+      return;
+    }
+
+    try {
+      setIsConfirmingDeposit(true);
+      setFundError("");
+      setFundSuccess("");
+
+      // Call the confirm deposit API
+      const response = await paymentService.confirmCryptoDeposit({
+        amount: parseFloat(confirmDepositAmount),
+        currency: "USD",
+        transaction_hash: `manual_${Date.now()}`,
+        deposit_address: depositAddress,
+        network: selectedNetwork,
+        memo: depositMemo
+      });
+
+      if (response.success) {
+        setFundSuccess(response.message);
+        setUserFunds(response.new_balance);
+        
+        // Also update the user object if it exists
+        if (user) {
+          setUser({
+            ...user,
+            funds_usd: response.new_balance
+          });
+        }
+        
+        // Clear the deposit amount input
+        setConfirmDepositAmount("");
+      } else {
+        setFundError("Deposit confirmation failed");
+      }
+    } catch (error) {
+      console.error('Confirm deposit error:', error);
+      setFundError(error instanceof Error ? error.message : "Failed to confirm deposit");
+    } finally {
+      setIsConfirmingDeposit(false);
     }
   };
 
@@ -629,43 +730,76 @@ export default function Profile() {
         return;
       }
       
-      // Process payment through backend API
+      // Process payment through real API
       const paymentAmount = parseFloat(amount);
+      let paymentResponse;
       
-        try {
-          const response = await authService.addFunds(paymentAmount);
+      try {
+        if (selectedCashMethod === "VISA") {
+          const cardData: CardPaymentRequest = {
+            card_type: 'visa',
+            card_number: cardNumber.replace(/\s/g, ''), // Remove spaces
+            expiry_month: parseInt(expiryDate.split('/')[0]),
+            expiry_year: parseInt('20' + expiryDate.split('/')[1]),
+            cvv: cvv,
+            cardholder_name: cardholderName,
+            amount: paymentAmount
+          };
+          paymentResponse = await paymentService.processVisaPayment(cardData);
+        } else if (selectedCashMethod === "Mastercard") {
+          const cardData: CardPaymentRequest = {
+            card_type: 'mastercard',
+            card_number: cardNumber.replace(/\s/g, ''), // Remove spaces
+            expiry_month: parseInt(expiryDate.split('/')[0]),
+            expiry_year: parseInt('20' + expiryDate.split('/')[1]),
+            cvv: cvv,
+            cardholder_name: cardholderName,
+            amount: paymentAmount
+          };
+          paymentResponse = await paymentService.processMastercardPayment(cardData);
+        } else if (selectedCashMethod === "Bank Transfer") {
+          const bankData: BankTransferRequest = {
+            account_number: accountNumber,
+            routing_number: routingNumber,
+            account_holder_name: cardholderName,
+            amount: paymentAmount
+          };
+          paymentResponse = await paymentService.processBankTransfer(bankData);
+        } else if (selectedCashMethod === "PayPal") {
+          const paypalData: PayPalPaymentRequest = {
+            email: email,
+            amount: paymentAmount
+          };
+          paymentResponse = await paymentService.processPayPalPayment(paypalData);
+        } else {
+          throw new Error("Unsupported payment method");
+        }
 
+        if (paymentResponse.status === 'success') {
           // Update user funds with real data from backend
-          setUserFunds(response.new_balance);
-          setFundSuccess(response.message);
+          setUserFunds(paymentResponse.new_balance);
+          setFundSuccess(paymentResponse.message);
 
           // Also update the user object if it exists
           if (user) {
             setUser({
               ...user,
-              funds_usd: response.new_balance
+              funds_usd: paymentResponse.new_balance
             });
           }
-
-        } catch (apiError) {
-          // If API is not available, simulate the success for testing
-          if (apiError instanceof Error && apiError.message.includes('404')) {
-            console.log('API not available, simulating success for testing');
-            const simulatedBalance = userFunds + paymentAmount;
-            setUserFunds(simulatedBalance);
-            setFundSuccess(`Payment successful! Added $${paymentAmount.toFixed(2)} to your account. (Simulated)`);
-            
-            // Also update the user object if it exists
-            if (user) {
-              setUser({
-                ...user,
-                funds_usd: simulatedBalance
-              });
-            }
-          } else {
-            throw new Error(`Payment failed: ${apiError instanceof Error ? apiError.message : 'Unknown error'}`);
-          }
+        } else {
+          throw new Error(paymentResponse.message || 'Payment failed');
         }
+
+      } catch (apiError) {
+        console.error('Payment API error:', apiError);
+        if (apiError instanceof Error) {
+          setFundError(apiError.message);
+        } else {
+          setFundError("Payment failed. Please try again.");
+        }
+        return;
+      }
       
       // Clear form
       setCardNumber("");
@@ -1601,12 +1735,53 @@ export default function Profile() {
                 >
                   Generate New Address
                 </button>
+                
+                {/* Confirm Deposit Section */}
+                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <h4 className="text-green-400 text-sm font-medium mb-2">Confirm Deposit</h4>
+                  <p className="text-gray-400 text-xs mb-3">
+                    After you've sent crypto to the address above, enter the amount and confirm your deposit.
+                    <br />
+                    <span className="text-yellow-400 font-medium">⚠️ This will verify the transaction on the blockchain before adding funds.</span>
+                  </p>
+                  <div className="space-y-2">
+                    <input
+                      type="number"
+                      value={confirmDepositAmount}
+                      onChange={(e) => setConfirmDepositAmount(e.target.value)}
+                      placeholder="Enter deposit amount (USD)"
+                      className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      step="0.01"
+                      min="0.01"
+                    />
+                    <button
+                      onClick={confirmCryptoDeposit}
+                      disabled={isConfirmingDeposit || !confirmDepositAmount || !depositAddress}
+                      className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                      {isConfirmingDeposit ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Confirming...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Confirm Deposit
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
                 {isTestMode && (
                   <button
                     onClick={simulateTestTransaction}
-                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm"
+                    disabled={fundLoading || isApiCallInProgress}
+                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
                   >
-                    Simulate Test Transaction
+                    {fundLoading ? "Simulating..." : isApiCallInProgress ? "Adding Funds..." : "Simulate Test Transaction"}
                   </button>
                 )}
               </div>
@@ -1853,6 +2028,32 @@ export default function Profile() {
                       <p className="text-green-400 text-xs">
                         Your payment is secured with 256-bit SSL encryption
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Test Information */}
+                  <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-blue-400 text-xs font-medium mb-2">Test Information:</p>
+                    <div className="text-xs text-blue-300 space-y-1">
+                      {selectedCashMethod === "VISA" || selectedCashMethod === "Mastercard" ? (
+                        <>
+                          <div>• Any card ending in 0000 = Card declined</div>
+                          <div>• Any card ending in 0001 = Insufficient funds</div>
+                          <div>• Any other card = Payment successful</div>
+                        </>
+                      ) : selectedCashMethod === "Bank Transfer" ? (
+                        <>
+                          <div>• Account ending in 0000 = Account not found</div>
+                          <div>• Account ending in 0001 = Insufficient funds</div>
+                          <div>• Any other account = Transfer successful</div>
+                        </>
+                      ) : selectedCashMethod === "PayPal" ? (
+                        <>
+                          <div>• Email ending in @testfail.com = Account not found</div>
+                          <div>• Email ending in @testdecline.com = Payment declined</div>
+                          <div>• Any other email = Payment successful</div>
+                        </>
+                      ) : null}
                     </div>
                   </div>
 

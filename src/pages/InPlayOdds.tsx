@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
 import { getTeamIcon } from "../utils/teamIcons";
+import { useCountry } from "../contexts/CountryContext";
+import OddsTable from "../components/OddsTable";
 
 const formatScore = (score: string): string => {
   if (!score || score === "" || score === "-") return "-";
@@ -21,6 +23,7 @@ const formatScore = (score: string): string => {
 };
 
 export default function InPlayOdds() {
+  const { selectedLeague } = useCountry();
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedView, setSelectedView] = useState("live");
 
@@ -126,6 +129,15 @@ export default function InPlayOdds() {
     }
     return status;
   };
+
+  // If a league is selected, show the OddsTable (same as Home page)
+  if (selectedLeague) {
+    return (
+      <div className="space-y-6 sm:space-y-8">
+        <OddsTable />
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
