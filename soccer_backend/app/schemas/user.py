@@ -27,6 +27,7 @@ class UserResponse(UserBase):
     is_superuser: bool
     google_id: Optional[str] = None
     avatar_url: Optional[str] = None
+    funds_usd: float = 0.00
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None

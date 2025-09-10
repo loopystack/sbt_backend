@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
 export default function SignInSignUp() {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -13,6 +14,7 @@ export default function SignInSignUp() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { theme } = useTheme();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const clearForm = () => {
@@ -37,26 +39,12 @@ export default function SignInSignUp() {
 
     try {
       if (isSignIn) {
-        // Sign in
-        const response = await authService.login({ email, password });
-        
-        // Store tokens manually
-        tokenManager.setTokens(response.access_token, response.refresh_token);
-        
+        // Sign in using AuthContext
+        await login(email, password);
         setSuccess("Successfully signed in!");
         
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('authStateChanged', { 
-          detail: { isAuthenticated: true, user: response } 
-        }));
-        
         setTimeout(() => {
-          // Navigate to home page and refresh to ensure all data is loaded
           navigate("/");
-          // Add a small delay before refresh to ensure navigation completes
-          setTimeout(() => {
-            window.location.reload();
-          }, 100);
         }, 1000);
       } else {
         // Sign up

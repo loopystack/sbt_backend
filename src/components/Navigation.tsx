@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import newlogo from "../images/newlogo.png";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCountry } from "../contexts/CountryContext";
+import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
 
 // Hook to determine which sports should be visible and if text should be shown
@@ -54,59 +55,11 @@ export default function Navigation() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { setSelectedLeague } = useCountry();
+  const { user, isAuthenticated, logout } = useAuth();
   
-  const [user, setUser] = useState<any>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (tokenManager.isAuthenticated()) {
-        try {
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error("Failed to get user data:", error);
-          tokenManager.clearTokens();
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    };
-
-    checkAuth();
-
-    // Listen for storage changes (when tokens are updated)
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    // Listen for custom auth state changes
-    const handleAuthStateChange = (event: CustomEvent) => {
-      if (event.detail.isAuthenticated) {
-        // User just signed in, get fresh user data
-        checkAuth();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authStateChanged', handleAuthStateChange as EventListener);
-    
-    // Also check periodically for authentication changes
-    const interval = setInterval(checkAuth, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authStateChanged', handleAuthStateChange as EventListener);
-      clearInterval(interval);
-    };
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -123,21 +76,9 @@ export default function Navigation() {
   }, []);
 
   const handleLogout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAuthenticated(false);
+    logout();
     setShowUserDropdown(false);
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent('authStateChanged', { 
-      detail: { isAuthenticated: false, user: null } 
-    }));
-    
     navigate("/");
-    // Add a small delay before refresh to ensure navigation completes
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
   };
   const [activeTab, setActiveTab] = useState("home");
   const [activeSport, setActiveSport] = useState("Football");

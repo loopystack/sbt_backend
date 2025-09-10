@@ -17,6 +17,7 @@ import DroppingOdds from './pages/DroppingOdds';
 import SignInSignUp from './pages/SignInSignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+import WalletManagement from './pages/WalletManagement';
 import './App.css';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
               <Route path="/signin" element={<SignInSignUp />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/wallet-management" element={<WalletManagement />} />
               <Route path="/" element={<AppShell />}>
                 <Route index element={<Home />} />
                 <Route path="matches" element={<Matches />} />

@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Numeric
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -19,10 +20,17 @@ class User(Base):
     google_id = Column(String(100), unique=True, nullable=True, index=True)
     avatar_url = Column(Text, nullable=True)
     
+    # User funds (in USD)
+    funds_usd = Column(Numeric(15, 2), default=0.00, nullable=False)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    deposit_intents = relationship("DepositIntent", back_populates="user")
+    crypto_balances = relationship("UserCryptoBalance", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', username='{self.username}')>"

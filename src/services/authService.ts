@@ -12,6 +12,7 @@ export interface User {
   is_superuser: boolean;
   google_id?: string;
   avatar_url?: string;
+  funds_usd: number;
   created_at: string;
   updated_at: string;
   last_login?: string;
@@ -45,17 +46,56 @@ export interface GoogleAuthResponse extends AuthResponse {
 
 // Token management
 export const tokenManager = {
-  getAccessToken: () => localStorage.getItem('access_token'),
-  getRefreshToken: () => localStorage.getItem('refresh_token'),
+  getAccessToken: () => {
+    const token = localStorage.getItem('access_token');
+    return token;
+  },
+  getRefreshToken: () => {
+    const token = localStorage.getItem('refresh_token');
+    return token;
+  },
   setTokens: (accessToken: string, refreshToken: string) => {
     localStorage.setItem('access_token', accessToken);
     localStorage.setItem('refresh_token', refreshToken);
+    
+    // Dispatch storage events to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'access_token',
+      newValue: accessToken,
+      oldValue: null,
+      storageArea: localStorage
+    }));
+    
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'refresh_token',
+      newValue: refreshToken,
+      oldValue: null,
+      storageArea: localStorage
+    }));
   },
   clearTokens: () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    
+    // Dispatch storage events to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'access_token',
+      newValue: null,
+      oldValue: localStorage.getItem('access_token'),
+      storageArea: localStorage
+    }));
+    
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'refresh_token',
+      newValue: null,
+      oldValue: localStorage.getItem('refresh_token'),
+      storageArea: localStorage
+    }));
   },
-  isAuthenticated: () => !!localStorage.getItem('access_token'),
+  isAuthenticated: () => {
+    const token = localStorage.getItem('access_token');
+    return !!token && token.trim() !== '';
+  },
 };
 
 // Authentication API functions
@@ -171,5 +211,51 @@ export const authService = {
   // Logout (client-side only)
   logout: () => {
     tokenManager.clearTokens();
+  },
+
+  // Funds management
+  getUserFunds: async (): Promise<{ funds_usd: number; formatted_funds: string }> => {
+    const token = tokenManager.getAccessToken();
+    if (!token) {
+      throw new Error('No access token available');
+    }
+
+    return api<{ funds_usd: number; formatted_funds: string }>(`${BASE_URL}/funds`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
+
+  addFunds: async (amount: number): Promise<{ message: string; new_balance: number; formatted_balance: string }> => {
+    const token = tokenManager.getAccessToken();
+    if (!token) {
+      throw new Error('No access token available');
+    }
+
+    return api<{ message: string; new_balance: number; formatted_balance: string }>(`${BASE_URL}/funds/add`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ amount }),
+    });
+  },
+
+  deductFunds: async (amount: number): Promise<{ message: string; new_balance: number; formatted_balance: string }> => {
+    const token = tokenManager.getAccessToken();
+    if (!token) {
+      throw new Error('No access token available');
+    }
+
+    return api<{ message: string; new_balance: number; formatted_balance: string }>(`${BASE_URL}/funds/deduct`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ amount }),
+    });
   },
 };

@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, User, tokenManager } from '../services/authService';
+import { authService, tokenManager, User } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string, fullName?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -27,134 +26,105 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simple authentication check - if user exists, you're authenticated
-  const isAuthenticated = !!user;
-
-  // Initialize authentication state on app load
-  useEffect(() => {
-    const initializeAuth = async () => {
+  const checkAuth = async () => {
+    const token = tokenManager.getAccessToken();
+    if (token) {
       try {
-        console.log('🔐 AuthContext: Initializing authentication...');
-        
-        // Check if we have tokens in localStorage
-        const hasToken = tokenManager.isAuthenticated();
-        console.log('🔐 AuthContext: Has token?', hasToken);
-        
-        if (hasToken) {
-          console.log('🔐 AuthContext: Token found, fetching user data...');
-          try {
-            const userData = await authService.getCurrentUser();
-            console.log('🔐 AuthContext: User data received:', userData.email);
-            setUser(userData);
-            console.log('🔐 AuthContext: User set successfully');
-          } catch (error) {
-            console.error('🔐 AuthContext: Failed to fetch user data:', error);
-            // Token is invalid, clear it
-            tokenManager.clearTokens();
-            setUser(null);
-          }
-        } else {
-          console.log('🔐 AuthContext: No token found');
-          setUser(null);
-        }
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error('🔐 AuthContext: Initialization error:', error);
+        console.error("Failed to get user data:", error);
         tokenManager.clearTokens();
+        setIsAuthenticated(false);
         setUser(null);
-      } finally {
-        setIsLoading(false);
-        console.log('🔐 AuthContext: Initialization complete. User:', user?.email || 'null');
       }
-    };
-
-    initializeAuth();
-  }, []); // Only run once on mount
+    } else {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+    setIsLoading(false);
+  };
 
   const login = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
-      console.log('🔐 AuthContext: Starting login for:', email);
-      setIsLoading(true);
-      
-      // Clear any existing state first
-      setUser(null);
-      
-      // Call login API
       const response = await authService.login({ email, password });
-      console.log('🔐 AuthContext: Login API successful');
-      
-      // Store tokens
       tokenManager.setTokens(response.access_token, response.refresh_token);
-      console.log('🔐 AuthContext: Tokens stored');
       
       // Get user data
       const userData = await authService.getCurrentUser();
-      console.log('🔐 AuthContext: User data received:', userData.email);
-      
-      // Set user state
       setUser(userData);
-      console.log('🔐 AuthContext: Login complete! User set:', userData.email);
+      setIsAuthenticated(true);
       
+      // Dispatch custom event
+      window.dispatchEvent(new CustomEvent('authStateChanged', { 
+        detail: { isAuthenticated: true, user: userData } 
+      }));
     } catch (error) {
-      console.error('🔐 AuthContext: Login failed:', error);
-      tokenManager.clearTokens();
-      setUser(null);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (email: string, username: string, password: string, fullName?: string) => {
-    try {
-      console.log('🔐 AuthContext: Starting registration for:', email);
-      setIsLoading(true);
-      
-      await authService.register({ email, username, password, full_name: fullName });
-      console.log('🔐 AuthContext: Registration successful, auto-login...');
-      
-      // Auto-login after registration
-      await login(email, password);
-      
-    } catch (error) {
-      console.error('🔐 AuthContext: Registration failed:', error);
-      throw error;
-    }
-  };
-
   const logout = () => {
-    console.log('🔐 AuthContext: Logging out...');
-    tokenManager.clearTokens();
+    authService.logout();
     setUser(null);
-    console.log('🔐 AuthContext: Logout complete! User cleared');
+    setIsAuthenticated(false);
+    
+    // Dispatch custom event
+    window.dispatchEvent(new CustomEvent('authStateChanged', { 
+      detail: { isAuthenticated: false, user: null } 
+    }));
   };
 
   const refreshUser = async () => {
-    try {
-      console.log('🔐 AuthContext: Refreshing user data...');
-      if (tokenManager.isAuthenticated()) {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-        console.log('🔐 AuthContext: User refreshed:', userData.email);
-      }
-    } catch (error) {
-      console.error('🔐 AuthContext: Failed to refresh user:', error);
-      logout();
+    if (isAuthenticated) {
+      await checkAuth();
     }
   };
+
+  useEffect(() => {
+    checkAuth();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'access_token' || e.key === 'refresh_token') {
+        checkAuth();
+      }
+    };
+
+    // Listen for custom auth state changes
+    const handleAuthStateChange = (event: CustomEvent) => {
+      if (event.detail.isAuthenticated) {
+        setTimeout(checkAuth, 100);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('authStateChanged', handleAuthStateChange as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authStateChanged', handleAuthStateChange as EventListener);
+    };
+  }, []);
 
   const value: AuthContextType = {
     user,
     isAuthenticated,
     isLoading,
     login,
-    register,
     logout,
     refreshUser,
   };
-
-  console.log('🔐 AuthContext: Rendering with user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
 
   return (
     <AuthContext.Provider value={value}>

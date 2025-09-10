@@ -7,6 +7,7 @@ from typing import Any
 import httpx
 from google.auth.transport import requests
 from google.oauth2 import id_token
+from decimal import Decimal
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, get_current_verified_user
@@ -381,6 +382,152 @@ async def get_current_user_info(
 ):
     """Get current user information"""
     return current_user
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    profile_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update user profile information"""
+    try:
+        # Extract data from the request
+        username = profile_data.get('username')
+        full_name = profile_data.get('full_name')
+        avatar = profile_data.get('avatar')
+        
+        # Validate username uniqueness if provided
+        if username and username != current_user.username:
+            stmt = select(User).where(User.username == username)
+            result = await db.execute(stmt)
+            existing_user = result.scalar_one_or_none()
+            
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Username already taken"
+                )
+        
+        # Update user fields
+        if username is not None:
+            current_user.username = username
+        if full_name is not None:
+            current_user.full_name = full_name
+        if avatar is not None:
+            current_user.avatar = avatar
+        
+        # Save changes to database
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return current_user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update profile: {str(e)}"
+        )
+
+
+@router.get("/funds")
+async def get_user_funds(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user's funds in USD"""
+    return {
+        "funds_usd": float(current_user.funds_usd),
+        "formatted_funds": f"${float(current_user.funds_usd):,.2f}"
+    }
+
+
+@router.post("/funds/add")
+async def add_funds(
+    amount_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Add funds to user account (for testing/admin purposes)"""
+    try:
+        amount = float(amount_data.get('amount', 0))
+        
+        if amount <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Amount must be greater than 0"
+            )
+        
+        # Add funds to user account
+        current_user.funds_usd += Decimal(str(amount))
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return {
+            "message": f"Successfully added ${amount:.2f} to your account",
+            "new_balance": float(current_user.funds_usd),
+            "formatted_balance": f"${float(current_user.funds_usd):,.2f}"
+        }
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid amount format"
+        )
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to add funds: {str(e)}"
+        )
+
+
+@router.post("/funds/deduct")
+async def deduct_funds(
+    amount_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Deduct funds from user account (for betting/purchases)"""
+    try:
+        amount = float(amount_data.get('amount', 0))
+        
+        if amount <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Amount must be greater than 0"
+            )
+        
+        if current_user.funds_usd < amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient funds"
+            )
+        
+        # Deduct funds from user account
+        current_user.funds_usd -= Decimal(str(amount))
+        await db.commit()
+        await db.refresh(current_user)
+        
+        return {
+            "message": f"Successfully deducted ${amount:.2f} from your account",
+            "new_balance": float(current_user.funds_usd),
+            "formatted_balance": f"${float(current_user.funds_usd):,.2f}"
+        }
+        
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid amount format"
+        )
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to deduct funds: {str(e)}"
+        )
 
 
 @router.post("/google", response_model=GoogleAuthResponse)
