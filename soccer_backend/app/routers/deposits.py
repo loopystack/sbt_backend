@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -6,6 +6,9 @@ import secrets
 import qrcode
 import io
 import base64
+import json
+import hmac
+import hashlib
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
@@ -22,40 +25,30 @@ router = APIRouter(prefix="/api/deposits", tags=["deposits"])
 
 # Supported crypto assets and their networks
 SUPPORTED_ASSETS = {
-    "BTC": {
-        "networks": ["Bitcoin"],
-        "required_confirmations": 1,
-        "memo_required": False
-    },
-    "ETH": {
-        "networks": ["Ethereum"],
+    "USDT": {
+        "networks": ["Ethereum", "TRON", "Polygon", "BSC"],
         "required_confirmations": 12,
         "memo_required": False
     },
     "USDC": {
-        "networks": ["Ethereum", "Polygon", "Base"],
+        "networks": ["Ethereum", "Polygon", "Base", "BSC"],
         "required_confirmations": 12,
         "memo_required": False
-    },
-    "USDT": {
-        "networks": ["Ethereum", "TRON", "Polygon"],
-        "required_confirmations": 12,
-        "memo_required": False
-    },
-    "XRP": {
-        "networks": ["XRP Ledger"],
-        "required_confirmations": 1,
-        "memo_required": True
-    },
-    "XLM": {
-        "networks": ["Stellar"],
-        "required_confirmations": 1,
-        "memo_required": True
     },
     "BNB": {
-        "networks": ["BNB Beacon Chain"],
+        "networks": ["BSC"],
         "required_confirmations": 1,
-        "memo_required": True
+        "memo_required": False
+    },
+    "TRX": {
+        "networks": ["TRON"],
+        "required_confirmations": 1,
+        "memo_required": False
+    },
+    "BTC": {
+        "networks": ["Bitcoin"],
+        "required_confirmations": 1,
+        "memo_required": False
     }
 }
 
@@ -217,31 +210,221 @@ def get_explorer_url(asset: str, network: str, address: str) -> str:
     Get blockchain explorer URL for the given address
     """
     explorer_urls = {
-        "BTC": {
-            "Bitcoin": f"https://blockstream.info/address/{address}"
-        },
-        "ETH": {
-            "Ethereum": f"https://etherscan.io/address/{address}"
+        "USDT": {
+            "Ethereum": f"https://etherscan.io/address/{address}",
+            "TRON": f"https://tronscan.org/#/address/{address}",
+            "Polygon": f"https://polygonscan.com/address/{address}",
+            "BSC": f"https://bscscan.com/address/{address}"
         },
         "USDC": {
             "Ethereum": f"https://etherscan.io/address/{address}",
             "Polygon": f"https://polygonscan.com/address/{address}",
-            "Base": f"https://basescan.org/address/{address}"
-        },
-        "USDT": {
-            "Ethereum": f"https://etherscan.io/address/{address}",
-            "TRON": f"https://tronscan.org/#/address/{address}",
-            "Polygon": f"https://polygonscan.com/address/{address}"
-        },
-        "XRP": {
-            "XRP Ledger": f"https://xrpscan.com/account/{address}"
-        },
-        "XLM": {
-            "Stellar": f"https://stellar.expert/explorer/public/account/{address}"
+            "Base": f"https://basescan.org/address/{address}",
+            "BSC": f"https://bscscan.com/address/{address}"
         },
         "BNB": {
-            "BNB Beacon Chain": f"https://explorer.bnbchain.org/address/{address}"
+            "BSC": f"https://bscscan.com/address/{address}"
+        },
+        "TRX": {
+            "TRON": f"https://tronscan.org/#/address/{address}"
+        },
+        "BTC": {
+            "Bitcoin": f"https://blockstream.info/address/{address}"
         }
     }
     
     return explorer_urls.get(asset, {}).get(network, "")
+
+# Cryptomus Integration
+CRYPTOMUS_API_KEY = "Qbrsscrs0n3TXxb66HdluJNGKa3dslIXn8tFjzjrxBGIJ4MO4epbuKq6nXFhyHgbYiZd3R1PPO9Jp4pdPUREG68DEgByxB8rDRlIfYEslxpCkvpmNNf62WKEK1vjuO7E"
+
+def verify_cryptomus_signature(payload: str, signature: str) -> bool:
+    """
+    Verify Cryptomus webhook signature
+    """
+    try:
+        expected_signature = hmac.new(
+            CRYPTOMUS_API_KEY.encode(),
+            payload.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(signature, expected_signature)
+    except Exception:
+        return False
+
+@router.post("/cryptomus/create-payment")
+async def create_cryptomus_payment(
+    request_data: dict,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Create a Cryptomus payment via backend proxy (to avoid CORS issues)
+    """
+    try:
+        import requests
+        
+        # Extract payment data
+        amount = request_data.get("amount")
+        currency = request_data.get("currency")
+        order_id = request_data.get("order_id")
+        url_return = request_data.get("url_return")
+        url_callback = request_data.get("url_callback")
+        lifetime = request_data.get("lifetime", 3600)
+        additional_data = request_data.get("additional_data", "")
+        
+        # Prepare payload for Cryptomus
+        payload = {
+            "amount": str(amount),
+            "currency": currency,
+            "order_id": order_id,
+            "url_return": url_return,
+            "url_callback": url_callback,
+            "lifetime": lifetime,
+            "additional_data": additional_data
+        }
+        
+        # Convert to JSON and encode
+        json_data = json.dumps(payload, separators=(',', ':'))
+        encoded_data = base64.b64encode(json_data.encode()).decode()
+        
+        # Generate signature
+        sign = hashlib.md5((encoded_data + CRYPTOMUS_API_KEY).encode()).hexdigest()
+        
+        # Set headers
+        headers = {
+            'merchant': '323420be-657e-49b8-b061-128344a29bd6',
+            'sign': sign,
+            'Content-Type': 'application/json'
+        }
+        
+        # Debug logging
+        print(f"DEBUG: Sending to Cryptomus API:")
+        print(f"URL: https://api.cryptomus.com/v1/payment")
+        print(f"Headers: {headers}")
+        print(f"Payload: {json_data}")
+        print(f"Encoded data: {encoded_data}")
+        print(f"Signature: {sign}")
+        
+        # Use real Cryptomus API (account is active!)
+        response = requests.post(
+            'https://api.cryptomus.com/v1/payment',
+            headers=headers,
+            data=json_data,
+            timeout=30
+        )
+        
+        print(f"DEBUG: Cryptomus response status: {response.status_code}")
+        print(f"DEBUG: Cryptomus response text: {response.text}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Cryptomus API error: {response.text}"
+            )
+            
+    except Exception as e:
+        print(f"Cryptomus payment creation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create payment: {str(e)}"
+        )
+
+@router.post("/cryptomus/callback")
+async def cryptomus_callback(request: Request, db: Session = Depends(get_db)):
+    """
+    Handle Cryptomus payment callback/webhook
+    """
+    try:
+        # Get raw body and signature
+        body = await request.body()
+        signature = request.headers.get("sign", "")
+        
+        # Verify signature
+        if not verify_cryptomus_signature(body.decode(), signature):
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        
+        # Parse payload
+        payload = json.loads(body.decode())
+        
+        # Extract payment data
+        payment_data = payload.get("result", {})
+        order_id = payment_data.get("order_id", "")
+        payment_status = payment_data.get("payment_status", "")
+        amount = float(payment_data.get("payment_amount_usd", 0))
+        currency = payment_data.get("currency", "")
+        tx_hash = payment_data.get("txid", "")
+        
+        # Extract user info from additional_data
+        additional_data = payment_data.get("additional_data", "")
+        try:
+            user_data = json.loads(additional_data) if additional_data else {}
+            user_id = user_data.get("user_id")
+        except:
+            user_id = None
+        
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in payment data")
+        
+        # Check if payment is completed
+        if payment_status == "paid":
+            # Find user by ID
+            from app.models.user import User
+            user = db.query(User).filter(User.id == user_id).first()
+            
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            
+            # Add funds to user account
+            from app.models.wallet import UserWallet
+            wallet = db.query(UserWallet).filter(UserWallet.user_id == user_id).first()
+            
+            if wallet:
+                wallet.balance += amount
+                wallet.updated_at = datetime.utcnow()
+            else:
+                # Create wallet if it doesn't exist
+                wallet = UserWallet(
+                    user_id=user_id,
+                    balance=amount,
+                    currency="USD",
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                db.add(wallet)
+            
+            # Create deposit record
+            deposit_intent = DepositIntent(
+                user_id=user_id,
+                asset=currency,
+                network="Cryptomus",  # Using Cryptomus as network
+                amount_quote_fiat=amount,
+                generated_address="",  # Not applicable for Cryptomus
+                memo="",
+                tx_hash=tx_hash,
+                status="completed",
+                confirmations=1,  # Cryptomus handles confirmations
+                required_confirmations=1,
+                settled_at=datetime.utcnow(),
+                created_at=datetime.utcnow()
+            )
+            db.add(deposit_intent)
+            
+            db.commit()
+            
+            return {"status": "success", "message": "Payment processed successfully"}
+        
+        elif payment_status == "failed":
+            # Handle failed payment
+            return {"status": "failed", "message": "Payment failed"}
+        
+        else:
+            # Handle other statuses (pending, etc.)
+            return {"status": "pending", "message": f"Payment status: {payment_status}"}
+    
+    except Exception as e:
+        print(f"Cryptomus callback error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

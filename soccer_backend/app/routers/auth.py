@@ -364,7 +364,7 @@ async def reset_password(
 @router.post("/change-password")
 async def change_password(
     password_data: ChangePassword,
-    current_user: User = Depends(get_current_verified_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """Change user password"""

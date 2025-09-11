@@ -7,8 +7,8 @@ import asyncio
 from app.core.config import settings
 from app.core.database import engine
 from app.models import Base
-from app.routers import auth, odds, payments
-# from app.routers import deposits, wallet
+from app.routers import auth, odds, payments, deposits
+# from app.routers import wallet
 # from app.services.scheduler import start_crypto_scheduler, stop_crypto_scheduler
 
 
@@ -51,7 +51,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(odds.router, prefix="/api/odds", tags=["Odds"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
-# app.include_router(deposits.router, tags=["Deposits"])
+app.include_router(deposits.router, tags=["Deposits"])
 # app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet Management"])
 
 

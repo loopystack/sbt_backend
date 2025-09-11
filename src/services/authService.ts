@@ -196,16 +196,29 @@ export const authService = {
       throw new Error('No access token available');
     }
 
-    return api<{ message: string }>(`${BASE_URL}/change-password`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ 
-        current_password: currentPassword, 
-        new_password: newPassword 
-      }),
-    });
+    console.log('Making change password request...');
+    console.log('Token available:', !!token);
+    console.log('Current password provided:', !!currentPassword);
+    console.log('New password provided:', !!newPassword);
+
+    try {
+      const response = await api<{ message: string }>(`${BASE_URL}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          current_password: currentPassword, 
+          new_password: newPassword 
+        }),
+      });
+      console.log('Password change successful');
+      return response;
+    } catch (error: any) {
+      console.error('Change password API error:', error);
+      throw error;
+    }
   },
 
   // Logout (client-side only)

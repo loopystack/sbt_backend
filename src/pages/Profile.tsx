@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService, User } from "../services/authService";
 import { paymentService, CardPaymentRequest, BankTransferRequest, PayPalPaymentRequest } from "../services/paymentService";
+import cryptomusService from "../services/cryptomusService";
 import { useAuth } from "../contexts/AuthContext";
 
 interface ProfileData extends User {
@@ -24,6 +25,31 @@ export default function Profile() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   
+  // Password Change states
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  
+  // Password strength states
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    level: "Very Weak",
+    color: "red",
+    requirements: {
+      length: false,
+      lowercase: false,
+      uppercase: false,
+      number: false,
+      special: false
+    }
+  });
+  
   // Add Fund states
   const [showAddFundModal, setShowAddFundModal] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
@@ -34,8 +60,8 @@ export default function Profile() {
   
   // Payment method states
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("crypto");
-  const [selectedCurrency, setSelectedCurrency] = useState("BTC");
-  const [selectedNetwork, setSelectedNetwork] = useState("Bitcoin");
+  const [selectedCurrency, setSelectedCurrency] = useState("USDT");
+  const [selectedNetwork, setSelectedNetwork] = useState("Ethereum");
   const [depositAddress, setDepositAddress] = useState("");
   const [depositMemo, setDepositMemo] = useState("");
   const [qrCode, setQrCode] = useState("");
@@ -45,19 +71,12 @@ export default function Profile() {
   const [depositStatus, setDepositStatus] = useState("pending");
   const [depositId, setDepositId] = useState<number | null>(null);
   const [supportedAssets, setSupportedAssets] = useState<any[]>([
-    { asset: "BTC", networks: ["Bitcoin"], memo_required: false },
-    { asset: "ETH", networks: ["Ethereum"], memo_required: false },
-    { asset: "USDC", networks: ["Ethereum", "Polygon", "Base"], memo_required: false },
-    { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon"], memo_required: false },
-    { asset: "XRP", networks: ["XRP Ledger"], memo_required: true },
-    { asset: "XLM", networks: ["Stellar"], memo_required: true },
-    { asset: "BNB", networks: ["BNB Beacon Chain"], memo_required: true }
+    { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon", "BSC"], memo_required: false },
+    { asset: "USDC", networks: ["Ethereum", "Polygon", "Base", "BSC"], memo_required: false },
+    { asset: "BNB", networks: ["BSC"], memo_required: false },
+    { asset: "TRX", networks: ["TRON"], memo_required: false },
+    { asset: "BTC", networks: ["Bitcoin"], memo_required: false }
   ]);
-  
-  // Test mode states
-  const [isTestMode, setIsTestMode] = useState(true);
-  const [testApiKey, setTestApiKey] = useState("test_api_key_12345");
-  const [testAddresses, setTestAddresses] = useState<any>({});
   
   // Cash payment states
   const [selectedCashMethod, setSelectedCashMethod] = useState("VISA");
@@ -93,42 +112,10 @@ export default function Profile() {
     if (isAuthenticated) {
       fetchUserProfile();
       fetchSupportedAssets();
-      generateTestAddresses();
     } else {
       navigate("/signin");
     }
   }, [isAuthenticated, authLoading, navigate]);
-
-  const generateTestAddresses = () => {
-    const testAddrs = {
-      "BTC": {
-        "Bitcoin": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-      },
-      "ETH": {
-        "Ethereum": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-      },
-      "USDC": {
-        "Ethereum": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-        "Polygon": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-        "Base": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-      },
-      "USDT": {
-        "Ethereum": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-        "TRON": "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
-        "Polygon": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-      },
-      "XRP": {
-        "XRP Ledger": "rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH"
-      },
-      "XLM": {
-        "Stellar": "GDUKMGUGDZQK6YHYA5Z6AY2G4XDSZPSZ3SW5UN3ARVMO6QSRDWP5Y32Z"
-      },
-      "BNB": {
-        "BNB Beacon Chain": "bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2"
-      }
-    };
-    setTestAddresses(testAddrs);
-  };
 
   // Poll for deposit status updates
   useEffect(() => {
@@ -260,6 +247,136 @@ export default function Profile() {
     navigate("/");
   };
 
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string) => {
+    const requirements = {
+      length: password.length >= 8,
+      lowercase: /[a-z]/.test(password),
+      uppercase: /[A-Z]/.test(password),
+      number: /\d/.test(password),
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+
+    let score = 0;
+    Object.values(requirements).forEach(met => {
+      if (met) score += 20;
+    });
+
+    let level = "Very Weak";
+    let color = "red";
+
+    if (score >= 80) {
+      level = "Very Strong";
+      color = "green";
+    } else if (score >= 60) {
+      level = "Strong";
+      color = "blue";
+    } else if (score >= 40) {
+      level = "Medium";
+      color = "yellow";
+    } else if (score >= 20) {
+      level = "Weak";
+      color = "orange";
+    }
+
+    return { score, level, color, requirements };
+  };
+
+  // Password Change Handlers
+  const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Calculate password strength for new password
+    if (name === "newPassword") {
+      const strength = calculatePasswordStrength(value);
+      setPasswordStrength(strength);
+    }
+    
+    // Clear errors when user starts typing
+    if (passwordError) setPasswordError("");
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError("All fields are required");
+      return;
+    }
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+    
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters long");
+      return;
+    }
+    
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      setPasswordError("New password must be different from current password");
+      return;
+    }
+    
+    setPasswordLoading(true);
+    setPasswordError("");
+    
+    try {
+      console.log("Attempting to change password...");
+      console.log("Current password length:", passwordForm.currentPassword.length);
+      console.log("New password length:", passwordForm.newPassword.length);
+      
+      await authService.changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordSuccess("Password changed successfully!");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setShowChangePasswordModal(false);
+        setPasswordSuccess("");
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error("Password change error:", error);
+      setPasswordError(error.message || "Failed to change password");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const openChangePasswordModal = () => {
+    setShowChangePasswordModal(true);
+    setPasswordError("");
+    setPasswordSuccess("");
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
+    });
+    setPasswordStrength({
+      score: 0,
+      level: "Very Weak",
+      color: "red",
+      requirements: {
+        length: false,
+        lowercase: false,
+        uppercase: false,
+        number: false,
+        special: false
+      }
+    });
+  };
+
   // Add Fund functions1
   const handleAddFund = async () => {
     try {
@@ -324,12 +441,13 @@ export default function Profile() {
 
   const getCurrencyLogo = (currency: string) => {
     const logos: { [key: string]: string } = {
-      BTC: "₿",
-      ETH: "Ξ", 
       USDT: "$",
-      BNB: "B"
+      USDC: "$",
+      BNB: "B",
+      TRX: "T",
+      BTC: "₿"
     };
-    return logos[currency] || "₿";
+    return logos[currency] || "$";
   };
 
   const fetchSupportedAssets = async () => {
@@ -341,26 +459,22 @@ export default function Profile() {
       } else {
         // Fallback data if API is not available
         setSupportedAssets([
-          { asset: "BTC", networks: ["Bitcoin"], memo_required: false },
-          { asset: "ETH", networks: ["Ethereum"], memo_required: false },
-          { asset: "USDC", networks: ["Ethereum", "Polygon", "Base"], memo_required: false },
-          { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon"], memo_required: false },
-          { asset: "XRP", networks: ["XRP Ledger"], memo_required: true },
-          { asset: "XLM", networks: ["Stellar"], memo_required: true },
-          { asset: "BNB", networks: ["BNB Beacon Chain"], memo_required: true }
+          { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon", "BSC"], memo_required: false },
+          { asset: "USDC", networks: ["Ethereum", "Polygon", "Base", "BSC"], memo_required: false },
+          { asset: "BNB", networks: ["BSC"], memo_required: false },
+          { asset: "TRX", networks: ["TRON"], memo_required: false },
+          { asset: "BTC", networks: ["Bitcoin"], memo_required: false }
         ]);
       }
     } catch (error) {
       console.error('Failed to fetch supported assets:', error);
       // Fallback data if API is not available
       setSupportedAssets([
-        { asset: "BTC", networks: ["Bitcoin"], memo_required: false },
-        { asset: "ETH", networks: ["Ethereum"], memo_required: false },
-        { asset: "USDC", networks: ["Ethereum", "Polygon", "Base"], memo_required: false },
-        { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon"], memo_required: false },
-        { asset: "XRP", networks: ["XRP Ledger"], memo_required: true },
-        { asset: "XLM", networks: ["Stellar"], memo_required: true },
-        { asset: "BNB", networks: ["BNB Beacon Chain"], memo_required: true }
+        { asset: "USDT", networks: ["Ethereum", "TRON", "Polygon", "BSC"], memo_required: false },
+        { asset: "USDC", networks: ["Ethereum", "Polygon", "Base", "BSC"], memo_required: false },
+        { asset: "BNB", networks: ["BSC"], memo_required: false },
+        { asset: "TRX", networks: ["TRON"], memo_required: false },
+        { asset: "BTC", networks: ["Bitcoin"], memo_required: false }
       ]);
     }
   };
@@ -370,40 +484,45 @@ export default function Profile() {
       setFundLoading(true);
       setFundError("");
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Validate amount
+      if (!amount || parseFloat(amount) <= 0) {
+        setFundError("Please enter a valid deposit amount");
+        return;
+      }
+
+      // Map our currency and network to Cryptomus format
+      const cryptomusCurrency = cryptomusService.mapCurrencyToCryptomus(selectedCurrency, selectedNetwork);
       
-      let depositAddress = "";
-      let depositMemo = "";
+      // Create payment request
+      const paymentRequest = {
+        amount: parseFloat(amount),
+        currency: cryptomusCurrency,
+        order_id: `deposit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        url_return: `${window.location.origin}/profile`,
+        url_callback: `${window.location.origin}/api/cryptomus/callback`,
+        lifetime: 3600, // 1 hour
+        additional_data: JSON.stringify({
+          user_id: authUser?.id,
+          currency: selectedCurrency,
+          network: selectedNetwork
+        })
+      };
+
+      console.log('Creating payment request:', paymentRequest);
+
+      // Create payment with Cryptomus
+      const paymentResponse = await cryptomusService.createPayment(paymentRequest);
       
-      if (isTestMode) {
-        // Use predefined test addresses
-        depositAddress = testAddresses[selectedCurrency]?.[selectedNetwork] || generateMockAddress(selectedCurrency);
-        depositMemo = (selectedCurrency === "XRP" || selectedCurrency === "XLM" || selectedCurrency === "BNB") 
-          ? `TEST_MEMO_${Math.random().toString(36).substring(2, 8).toUpperCase()}` 
-          : "";
+      if (paymentResponse.state === 0 && paymentResponse.result) {
+        // Redirect to Cryptomus payment page
+        cryptomusService.redirectToPayment(paymentResponse.result.url);
       } else {
-        // Generate random addresses for production
-        depositAddress = generateMockAddress(selectedCurrency);
-        depositMemo = (selectedCurrency === "XRP" || selectedCurrency === "XLM" || selectedCurrency === "BNB") 
-          ? `MEMO${Math.random().toString(36).substring(2, 8).toUpperCase()}` 
-          : "";
+        setFundError("Failed to create payment. Please try again.");
       }
       
-      setDepositAddress(depositAddress);
-      setDepositMemo(depositMemo);
-      setQrCode(generateSimpleQRCode(depositAddress, depositMemo));
-      setExplorerUrl(getMockExplorerUrl(selectedCurrency, selectedNetwork, depositAddress));
-      setRequiredConfirmations(getRequiredConfirmations(selectedCurrency));
-      setDepositId(Math.floor(Math.random() * 10000));
-      setDepositStatus("pending");
-      
-      const modeText = isTestMode ? " (Test Mode)" : "";
-      setFundSuccess(`Deposit address generated successfully!${modeText}`);
-      
     } catch (error) {
-      console.error('Deposit initiation error:', error);
-      setFundError("Failed to generate deposit address. Please try again.");
+      console.error('Cryptomus payment creation error:', error);
+      setFundError(`Failed to initiate payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setFundLoading(false);
     }
@@ -411,39 +530,37 @@ export default function Profile() {
 
   const generateMockAddress = (currency: string) => {
     const addresses: { [key: string]: string } = {
-      "BTC": `bc1q${Math.random().toString(36).substring(2, 22)}`,
-      "ETH": `0x${Math.random().toString(36).substring(2, 22)}`,
-      "USDC": `0x${Math.random().toString(36).substring(2, 22)}`,
       "USDT": `0x${Math.random().toString(36).substring(2, 22)}`,
-      "XRP": `r${Math.random().toString(36).substring(2, 22)}`,
-      "XLM": `G${Math.random().toString(36).substring(2, 22)}`,
-      "BNB": `bnb${Math.random().toString(36).substring(2, 22)}`
+      "USDC": `0x${Math.random().toString(36).substring(2, 22)}`,
+      "BNB": `bnb${Math.random().toString(36).substring(2, 22)}`,
+      "TRX": `T${Math.random().toString(36).substring(2, 22)}`,
+      "BTC": `bc1q${Math.random().toString(36).substring(2, 22)}`
     };
     return addresses[currency] || `0x${Math.random().toString(36).substring(2, 22)}`;
   };
 
   const getMockExplorerUrl = (currency: string, network: string, address: string) => {
     const explorers: { [key: string]: string } = {
-      "BTC": "https://blockstream.info/address/",
-      "ETH": "https://etherscan.io/address/",
-      "USDC": network === "Ethereum" ? "https://etherscan.io/address/" : "https://polygonscan.com/address/",
-      "USDT": network === "TRON" ? "https://tronscan.org/#/address/" : "https://etherscan.io/address/",
-      "XRP": "https://xrpscan.com/account/",
-      "XLM": "https://stellar.expert/explorer/public/account/",
-      "BNB": "https://explorer.bnbchain.org/address/"
+      "USDT": network === "TRON" ? "https://tronscan.org/#/address/" : 
+              network === "BSC" ? "https://bscscan.com/address/" :
+              network === "Polygon" ? "https://polygonscan.com/address/" : "https://etherscan.io/address/",
+      "USDC": network === "BSC" ? "https://bscscan.com/address/" :
+              network === "Polygon" ? "https://polygonscan.com/address/" :
+              network === "Base" ? "https://basescan.org/address/" : "https://etherscan.io/address/",
+      "BNB": "https://bscscan.com/address/",
+      "TRX": "https://tronscan.org/#/address/",
+      "BTC": "https://blockstream.info/address/"
     };
     return `${explorers[currency] || "https://etherscan.io/address/"}${address}`;
   };
 
   const getRequiredConfirmations = (currency: string) => {
     const confirmations: { [key: string]: number } = {
-      "BTC": 1,
-      "ETH": 12,
-      "USDC": 12,
       "USDT": 12,
-      "XRP": 1,
-      "XLM": 1,
-      "BNB": 1
+      "USDC": 12,
+      "BNB": 1,
+      "TRX": 1,
+      "BTC": 1
     };
     return confirmations[currency] || 12;
   };
@@ -479,7 +596,7 @@ export default function Profile() {
   };
 
   const simulateTestTransaction = async () => {
-    if (!isTestMode || !depositId) return;
+    if (!depositId) return;
     
     if (!isAuthenticated) {
       setFundError("You must be logged in to simulate transactions");
@@ -858,13 +975,11 @@ export default function Profile() {
 
   const getMinDeposit = (currency: string) => {
     const minimums: { [key: string]: string } = {
-      BTC: "0.00001",
-      ETH: "0.001",
       USDT: "10",
       USDC: "10",
-      XRP: "1",
-      XLM: "1",
-      BNB: "0.01"
+      BNB: "0.01",
+      TRX: "1",
+      BTC: "0.00001"
     };
     return minimums[currency] || "0.00001";
   };
@@ -1082,63 +1197,6 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-surface border border-border rounded-xl p-6 mt-6">
-              <h3 className="text-xl font-semibold text-text mb-6">Recent Activity</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-bg/50 rounded-lg border border-border/50">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-text font-medium">Deposit Successful</p>
-                    <p className="text-sm text-muted">Added 0.5000 B to your account</p>
-                    <p className="text-xs text-muted">2 hours ago</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-bg/50 rounded-lg border border-border/50">
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-text font-medium">Profile Updated</p>
-                    <p className="text-sm text-muted">Changed username to @hitech</p>
-                    <p className="text-xs text-muted">1 day ago</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-bg/50 rounded-lg border border-border/50">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-text font-medium">Bet Placed</p>
-                    <p className="text-sm text-muted">Football match - Arsenal vs Chelsea</p>
-                    <p className="text-xs text-muted">3 days ago</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-bg/50 rounded-lg border border-border/50">
-                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-text font-medium">Account Verified</p>
-                    <p className="text-sm text-muted">Email verification completed</p>
-                    <p className="text-xs text-muted">1 week ago</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Security Settings */}
             <div className="bg-surface border border-border rounded-xl p-6 mt-6">
@@ -1187,12 +1245,48 @@ export default function Profile() {
                     </div>
                     <div>
                       <p className="text-text font-medium">Session Management</p>
-                      <p className="text-sm text-muted">Manage active sessions</p>
+                      <p className="text-sm .text-muted">Manage active sessions</p>
                     </div>
                   </div>
                   <button className="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg text-sm font-medium transition-colors">
                     Manage
                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Statistics */}
+            <div className="bg-surface border border-border rounded-xl p-6 mt-6">
+              <h3 className="text-xl font-semibold text-text mb-6">Account Statistics</h3>
+              <div className="space-y-4">
+                <div className="flex items-center p-4 bg-bg/50 rounded-lg border border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-text font-medium">Member Since</p>
+                      <p className="text-sm text-muted">{user.member_since}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center p-4 bg-bg/50 rounded-lg border border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-text font-medium">Last Login</p>
+                      <p className="text-sm text-muted">
+                        {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Today'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1212,12 +1306,9 @@ export default function Profile() {
                   <h3 className="text-lg font-semibold text-emerald-400">Available Funds</h3>
                 </div>
                 
-                <div className="mb-4">
-                  <div className="text-4xl font-bold text-emerald-400 mb-2">
-                    {userFunds.toFixed(4)}
-                  </div>
-                  <div className="text-lg font-semibold text-emerald-300">
-                    B (Balance)
+                <div className="mb-8">
+                  <div className="text-5xl font-bold text-emerald-400 mb-2">
+                    ${userFunds.toFixed(2)}
                   </div>
                 </div>
                 
@@ -1237,42 +1328,6 @@ export default function Profile() {
                     </svg>
                     Withdraw
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Account Stats */}
-            <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-text mb-4">Account Statistics</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted">Member Since</p>
-                      <p className="font-semibold text-text">{user.member_since}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted">Last Login</p>
-                      <p className="font-semibold text-text">
-                        {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Today'}
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1344,7 +1399,9 @@ export default function Profile() {
                   </div>
                 </button>
                 
-                <button className="w-full flex items-center gap-3 p-3 bg-bg border border-border rounded-lg hover:bg-white/5 transition-colors text-left">
+                <button 
+                  onClick={openChangePasswordModal}
+                  className="w-full flex items-center gap-3 p-3 bg-bg border border-border rounded-lg hover:bg-white/5 transition-colors text-left">
                   <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -1382,6 +1439,9 @@ export default function Profile() {
                     <p className="text-sm text-red-400/70">Sign out of account</p>
                   </div>
                 </button>
+                
+                {/* Spacer to match Account Statistics height */}
+                <div className="h-8"></div>
               </div>
             </div>
           </div>
@@ -1454,41 +1514,6 @@ export default function Profile() {
 
               {selectedPaymentMethod === "crypto" && (
                 <>
-                  {/* Test Mode Toggle */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-xs font-medium text-gray-400">Test Mode</label>
-                        <button
-                        onClick={() => setIsTestMode(!isTestMode)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          isTestMode ? 'bg-yellow-500' : 'bg-gray-600'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transfo rm rounded-full bg-white transition-transform ${
-                            isTestMode ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    {isTestMode && (
-                      <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3 mb-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-yellow-400 text-xs font-semibold">Test Mode Active</span>
-                        </div>
-                        <p className="text-yellow-300 text-xs mb-2">
-                          Using predefined test addresses for safe testing
-                        </p>
-                        <div className="text-xs text-yellow-300">
-                          <strong>Test API Key:</strong> {testApiKey}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Popular Cryptocurrencies */}
                   <div className="mb-4">
                     <div className="flex gap-2 mb-3 flex-wrap">
@@ -1621,12 +1646,7 @@ export default function Profile() {
                       <div>
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="text-sm font-semibold text-white">Deposit Address</h4>
-                            {isTestMode && (
-                              <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full border border-yellow-500/30">
-                                TEST
-                              </span>
-                            )}
-                        </div>
+                          </div>
                           <div className="bg-gray-900 border border-gray-600 rounded-lg p-2 mb-2">
                             <p className="text-xs text-blue-400 break-all font-mono">{depositAddress}</p>
                           </div>
@@ -1712,80 +1732,13 @@ export default function Profile() {
 
           {/* Action Buttons */}
           <div className="space-y-2">
-            {!depositAddress ? (
-                    <button
-                onClick={initiateCryptoDeposit}
-                disabled={fundLoading || !amount}
-                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
-                    >
-                {fundLoading ? "Generating..." : "Generate Deposit Address"}
-                    </button>
-            ) : (
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    setDepositAddress("");
-                    setDepositMemo("");
-                    setQrCode("");
-                    setDepositId(null);
-                    setDepositStatus("pending");
-                    setCurrentConfirmations(0);
-                  }}
-                  className="w-full py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors text-sm"
-                >
-                  Generate New Address
-                </button>
-                
-                {/* Confirm Deposit Section */}
-                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                  <h4 className="text-green-400 text-sm font-medium mb-2">Confirm Deposit</h4>
-                  <p className="text-gray-400 text-xs mb-3">
-                    After you've sent crypto to the address above, enter the amount and confirm your deposit.
-                    <br />
-                    <span className="text-yellow-400 font-medium">⚠️ This will verify the transaction on the blockchain before adding funds.</span>
-                  </p>
-                  <div className="space-y-2">
-                    <input
-                      type="number"
-                      value={confirmDepositAmount}
-                      onChange={(e) => setConfirmDepositAmount(e.target.value)}
-                      placeholder="Enter deposit amount (USD)"
-                      className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      step="0.01"
-                      min="0.01"
-                    />
-                    <button
-                      onClick={confirmCryptoDeposit}
-                      disabled={isConfirmingDeposit || !confirmDepositAmount || !depositAddress}
-                      className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
-                    >
-                      {isConfirmingDeposit ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Confirming...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Confirm Deposit
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                {isTestMode && (
-                  <button
-                    onClick={simulateTestTransaction}
-                    disabled={fundLoading || isApiCallInProgress}
-                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
-                  >
-                    {fundLoading ? "Simulating..." : isApiCallInProgress ? "Adding Funds..." : "Simulate Test Transaction"}
-                  </button>
-                )}
-              </div>
-            )}
+            <button
+              onClick={initiateCryptoDeposit}
+              disabled={fundLoading || !amount}
+              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
+            >
+              {fundLoading ? "Redirecting..." : "Deposit with Cryptomus"}
+            </button>
           </div>
                 </>
               )}
@@ -2091,6 +2044,248 @@ export default function Profile() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowChangePasswordModal(false);
+              setPasswordError("");
+              setPasswordSuccess("");
+              setPasswordForm({
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: ""
+              });
+            }
+          }}
+        >
+          <div 
+            className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white">Change Password</h3>
+              <button
+                onClick={() => {
+                  setShowChangePasswordModal(false);
+                  setPasswordError("");
+                  setPasswordSuccess("");
+                  setPasswordForm({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                  });
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleChangePassword} className="p-4">
+              <div className="space-y-4">
+                {/* Current Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordForm.currentPassword}
+                    onChange={handlePasswordInputChange}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter current password"
+                    required
+                  />
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordInputChange}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter new password (min 8 characters)"
+                    required
+                    minLength={8}
+                  />
+                  
+                  {/* Password Strength Indicator */}
+                  {passwordForm.newPassword && (
+                    <div className="mt-3">
+                      {/* Progress Bar */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex-1 bg-gray-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              passwordStrength.color === 'red' ? 'bg-red-500' :
+                              passwordStrength.color === 'orange' ? 'bg-orange-500' :
+                              passwordStrength.color === 'yellow' ? 'bg-yellow-500' :
+                              passwordStrength.color === 'blue' ? 'bg-blue-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${passwordStrength.score}%` }}
+                          ></div>
+                        </div>
+                        <span className={`text-sm font-medium ${
+                          passwordStrength.color === 'red' ? 'text-red-400' :
+                          passwordStrength.color === 'orange' ? 'text-orange-400' :
+                          passwordStrength.color === 'yellow' ? 'text-yellow-400' :
+                          passwordStrength.color === 'blue' ? 'text-blue-400' :
+                          'text-green-400'
+                        }`}>
+                          {passwordStrength.level}
+                        </span>
+                      </div>
+                      
+                      {/* Requirements Checklist */}
+                      <div className="space-y-1">
+                        <div className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.requirements.length ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          <svg className={`w-3 h-3 ${passwordStrength.requirements.length ? 'text-green-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {passwordStrength.requirements.length ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                          At least 8 characters
+                        </div>
+                        <div className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.requirements.lowercase ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          <svg className={`w-3 h-3 ${passwordStrength.requirements.lowercase ? 'text-green-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {passwordStrength.requirements.lowercase ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                          Lowercase letter (a-z)
+                        </div>
+                        <div className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.requirements.uppercase ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          <svg className={`w-3 h-3 ${passwordStrength.requirements.uppercase ? 'text-green-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {passwordStrength.requirements.uppercase ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                          Uppercase letter (A-Z)
+                        </div>
+                        <div className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.requirements.number ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          <svg className={`w-3 h-3 ${passwordStrength.requirements.number ? 'text-green-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {passwordStrength.requirements.number ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                          Number (0-9)
+                        </div>
+                        <div className={`flex items-center gap-2 text-xs ${
+                          passwordStrength.requirements.special ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          <svg className={`w-3 h-3 ${passwordStrength.requirements.special ? 'text-green-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {passwordStrength.requirements.special ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            )}
+                          </svg>
+                          Special character (!@#$%^&*)
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordInputChange}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Confirm new password"
+                    required
+                  />
+                </div>
+
+                {/* Error Message */}
+                {passwordError && (
+                  <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-red-400 text-sm">{passwordError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {passwordSuccess && (
+                  <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-green-400 text-sm">{passwordSuccess}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                  >
+                    {passwordLoading && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                    {passwordLoading ? "Changing..." : "Change Password"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowChangePasswordModal(false);
+                      setPasswordError("");
+                      setPasswordSuccess("");
+                      setPasswordForm({
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: ""
+                      });
+                    }}
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -5,6 +5,20 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json" },
     ...init,
   });
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+  
+  if (!res.ok) {
+    let errorMessage = `Request failed: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch (e) {
+      // If we can't parse the error response, use the status text
+      errorMessage = res.statusText || `Request failed: ${res.status}`;
+    }
+    throw new Error(errorMessage);
+  }
+  
   return res.json() as Promise<T>;
 }
