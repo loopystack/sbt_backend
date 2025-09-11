@@ -15,13 +15,13 @@ export default function LeftSidebar() {
     try {
       const params = { 
         page: "1", 
-        size: "1000" // Get a large number to ensure we get all matches
+        size: "1000" 
       };
       
       const result = await dispatch(getMatchingInfoAction(params)).unwrap();
       setMatchingInfo(result.odds);
       
-      // Calculate upcoming match counts for each league
+      
       const counts: Record<string, number> = {};
       const now = new Date();
       
