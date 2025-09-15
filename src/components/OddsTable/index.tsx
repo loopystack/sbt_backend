@@ -8,6 +8,7 @@ import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
 import { MatchingInfo, GetMatchingInfoResponse } from "../../store/matchinginfo/types";
 import { transformMatchingInfoToMatch } from "../../data/sampleData";
 import { getTeamIcon } from "../../utils/teamIcons";
+import CongratulationsAlert from "../CongratulationsAlert";
 type Match = {
   id: string;
   time: string;
@@ -43,9 +44,10 @@ export default function OddsTable() {
   
   // Debug authentication state
   console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
-  const [selectedMarket, setSelectedMarket] = useState("Results");
+  const [selectedMarket, setSelectedMarket] = useState("Next Matches");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  const [availableYears, setAvailableYears] = useState<number[]>([2021, 2022, 2023, 2024, 2025]);
   const [currentPage, setCurrentPage] = useState(1);
   const matchesPerPage = 20;
   const [selectedOdds, setSelectedOdds] = useState<{
@@ -61,7 +63,7 @@ export default function OddsTable() {
   const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currectPage, setCurrectPage] = useState(1);
-  const limit = 100;
+  const limit = 20000; // Show all matches (19,000+)
   const [animatingOdds, setAnimatingOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -77,6 +79,12 @@ export default function OddsTable() {
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [bettingError, setBettingError] = useState<string>("");
   const [userFunds, setUserFunds] = useState<number>(0.5); // Mock user funds
+  const [showCongratulations, setShowCongratulations] = useState(false);
+  const [betDetails, setBetDetails] = useState<{
+    betAmount: string;
+    potentialWin: string;
+    teams: string;
+  }>({ betAmount: "0.0001", potentialWin: "0.001026", teams: "Team A vs Team B" });
   
   // Betting functions
   const handlePlaceBet = async () => {
@@ -98,6 +106,20 @@ export default function OddsTable() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Calculate potential win
+      const totalOdds = 10.26; // This could be calculated from selected odds
+      const potentialWin = (betAmount * totalOdds).toFixed(6);
+      
+      // Get team names from selected odds
+      const teams = selectedOdds.length > 0 ? selectedOdds[0].teams : "Selected Match";
+      
+      // Set bet details for congratulations alert
+      setBetDetails({
+        betAmount: selectedBetAmount,
+        potentialWin,
+        teams
+      });
+      
       // Mock successful bet placement
       setUserFunds(prev => prev - betAmount);
       setSelectedOdds([]);
@@ -106,6 +128,11 @@ export default function OddsTable() {
         setShowBetSlip(false);
         setIsBetSlipHiding(false);
       }, 500);
+      
+      // Show congratulations alert
+      setTimeout(() => {
+        setShowCongratulations(true);
+      }, 600);
       
     } catch (error) {
       setBettingError("Failed to place bet. Please try again.");
@@ -184,6 +211,25 @@ export default function OddsTable() {
         });
       }
       
+      // Apply year filter
+      if (selectedYear) {
+        filteredMatches = filteredMatches.filter(match => match.season === selectedYear);
+      }
+      
+      // Apply country filter
+      if (selectedCountry) {
+        filteredMatches = filteredMatches.filter(match => 
+          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
+        );
+      }
+      
+      // Apply league filter - THIS WAS MISSING!
+      if (selectedLeague) {
+        filteredMatches = filteredMatches.filter(match => 
+          match.league.toLowerCase() === selectedLeague.name.toLowerCase()
+        );
+      }
+      
       if (selectedMarket === "Results") {
         filteredMatches = filteredMatches.filter(match => {
           const matchDate = new Date(match.date + 'T00:00:00'); 
@@ -198,14 +244,6 @@ export default function OddsTable() {
           const isFutureMatch = matchDate.getTime() >= now.getTime();
           return isFutureMatch;
         });
-      } else if (selectedCountry) {
-        filteredMatches = filteredMatches.filter(match => 
-          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
-        );
-      }
-      
-      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear && !searchQuery.trim()) {
-        filteredMatches = matchingInfo;
       }
       
       return transformMatchingInfoToMatch(filteredMatches);
@@ -390,109 +428,69 @@ export default function OddsTable() {
     }
   };
   const fetchAllMatchingInfo = useCallback(async () => {
+    // Don't fetch if no league is selected
+    if (!selectedLeague) {
+      setMatchingInfo([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      console.log("Fetching with selectedYear:", selectedYear);
+      console.log("Fetching with selectedYear:", selectedYear, "selectedLeague:", selectedLeague?.name, "selectedCountry:", selectedCountry?.name);
+      
+      // Build query parameters
+      const params: any = { 
+        page: "1",
+        size: limit.toString()
+      };
       
       if (selectedYear) {
-        let allData: MatchingInfo[] = [];
-        let currentPage = 1;
-        let hasMore = true;
-        
-        while (hasMore) {
-          const params: any = { 
-            page: currentPage.toString(),
-            size: limit.toString(),
-            season: selectedYear.toString()
-          };
-          
-          if (selectedLeague) {
-            params.league = selectedLeague.name;
-            console.log(`Fetching page ${currentPage} for year ${selectedYear} and league ${selectedLeague.name}`);
-          } else {
-            console.log(`Fetching page ${currentPage} for year ${selectedYear}`);
-          }
-          
-          const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-          
-          allData = [...allData, ...result.odds];
-          
-          hasMore = result.odds.length === limit;
-          currentPage++;
-          
-          if (currentPage > 20) {
-            console.warn("Reached maximum page limit, stopping pagination");
-            break;
-          }
-        }
-        
-        const filterDescription = selectedLeague 
-          ? `${selectedYear} and ${selectedLeague.name}` 
-          : selectedYear;
-        console.log(`Total records fetched for ${filterDescription}:`, allData.length);
-        
-        const filteredData = allData.filter(match => {
-          const matchDate = new Date(match.date + 'T00:00:00');
-          const matchYear = matchDate.getFullYear();
-          return matchYear === selectedYear;
-        });
-        
-        console.log(`After client-side filtering for year ${selectedYear}:`, filteredData.length);
-        setMatchingInfo(filteredData);
-        setCurrectPage(1);
-      } else if (selectedLeague) {
-        let allData: MatchingInfo[] = [];
-        let currentPage = 1;
-        let hasMore = true;
-        
-        while (hasMore) {
-          const params: any = { 
-            page: currentPage.toString(),
-            size: limit.toString(),
-            league: selectedLeague.name
-          };
-          
-          console.log(`Fetching page ${currentPage} for league ${selectedLeague.name}`);
-          const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-          
-          allData = [...allData, ...result.odds];
-          
-          hasMore = result.odds.length === limit;
-          currentPage++;
-          
-          if (currentPage > 20) {
-            console.warn("Reached maximum page limit, stopping pagination");
-            break;
-          }
-        }
-        
-        console.log(`Total records fetched for ${selectedLeague.name}:`, allData.length);
-        setMatchingInfo(allData);
-        setCurrectPage(1);
-      } else {
-        const params: any = { 
-          page: currectPage.toString(), 
-          size: limit.toString()
-        };
-        
-        if (selectedCountry && selectedCountry.name === "Brazil") {
-          params.country = "Brazil";
-          console.log("Sending country parameter:", params.country);
-        }
-        
-        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-        console.log("API result:", result);
-        setMatchingInfo(result.odds);
-        setCurrectPage(result.page);
+        params.season = selectedYear;
       }
+      
+      if (selectedLeague) {
+        params.league = selectedLeague.name;
+      }
+      
+      if (selectedCountry) {
+        params.country = selectedCountry.name.toLowerCase();
+      }
+      
+      console.log("Fetching with params:", params);
+      const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+      console.log("API result:", result);
+      console.log("Number of odds returned:", result.odds.length);
+      setMatchingInfo(result.odds);
+      setCurrectPage(result.page);
+      
     } catch (error) {
       console.error("Error fetching matching info:", error);
     } finally {
       setLoading(false);
     }
-  }, [dispatch, currectPage, selectedYear, limit, selectedCountry, selectedLeague]);
+  }, [dispatch, selectedYear, selectedLeague, selectedCountry, limit]);
     
   
+  // Fetch available years from the database
+  const fetchAvailableYears = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/odds/?size=20000');
+      if (response.ok) {
+        const data = await response.json();
+        // Extract unique years from the data
+        const years = [...new Set(data.odds.map((match: MatchingInfo) => match.season))].sort() as number[];
+        setAvailableYears(years);
+      }
+    } catch (error) {
+      console.error('Error fetching available years:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAvailableYears();
+  }, [fetchAvailableYears]);
+
   useEffect(() => {
     fetchAllMatchingInfo();
   }, [fetchAllMatchingInfo]);
@@ -519,13 +517,24 @@ export default function OddsTable() {
   }
     return (
     <section>
-      {selectedLeague && (
+      {selectedLeague ? (
         <div className="text-sm text-muted mb-4 px-2">
           Home {'>'} Football {'>'} {getCountryNameFromLeague(selectedLeague.name)} {'>'} {selectedLeague.name}
         </div>
+      ) : (
+        <div className="text-center py-20">
+          <h1 className="text-3xl font-bold text-text mb-4">Welcome to Sports Betting</h1>
+          <p className="text-muted text-lg mb-8">Select a country and league from the left sidebar to view matches and odds</p>
+          <div className="text-sm text-muted">
+            <p>Available countries: {countries.length}</p>
+            <p>Total leagues: {countries.reduce((total, country) => total + country.leagues.length, 0)}</p>
+          </div>
+        </div>
       )}
       
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
+      {selectedLeague && (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
         <div>
                                <h2 className="text-xl sm:text-2xl font-bold text-text">
             {searchQuery.trim() 
@@ -593,7 +602,7 @@ export default function OddsTable() {
           
           {selectedMarket !== "Next Matches" && (
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 mr-2">
-              {[2021, 2022, 2023, 2024, 2025].map(year => (
+              {availableYears.map(year => (
                 <button
                   key={year}
                                      onClick={() => {
@@ -1341,7 +1350,7 @@ export default function OddsTable() {
              Last
            </button>
          </div>
-       )}
+             )}
       
              {totalMatches > 0 && (
          <div className="text-center mt-4 text-sm text-muted">
@@ -1354,7 +1363,18 @@ export default function OddsTable() {
                : `Showing ${Math.min(startIndex + 1, totalMatches)}-${Math.min(endIndex, totalMatches)} of ${totalMatches} matches`
            }
          </div>
-       )}
+             )}
+         </>
+      )}
+      
+      {/* Congratulations Alert */}
+      <CongratulationsAlert
+        isVisible={showCongratulations}
+        onClose={() => setShowCongratulations(false)}
+        betAmount={betDetails.betAmount}
+        potentialWin={betDetails.potentialWin}
+        teams={betDetails.teams}
+      />
     </section>
   );
 }

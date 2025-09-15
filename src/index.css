@@ -50,6 +50,22 @@ body {
   transition: opacity 0.2s ease-in-out;
 }
 
+/* Confetti Animation for Congratulations Alert */
+@keyframes confetti {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti linear infinite;
+}
+
 /* Ensure proper spacing on very small screens */
 @media (max-width: 640px) {
   .nav-button {

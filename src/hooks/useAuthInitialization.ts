@@ -1,27 +1,44 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { getMeAction } from '../store/user/actions';
-import { AppDispatch } from '../store';
+import { tokenManager } from '../services/authService';
 
+/**
+ * Hook to initialize authentication state when the app starts
+ * This hook runs once when the component mounts to check for existing tokens
+ * and prepare the authentication system for use
+ * 
+ * Note: This hook runs outside of AuthProvider, so it only handles token preparation
+ * The actual auth state management is handled by AuthProvider
+ */
 export const useAuthInitialization = () => {
-    const dispatch = useDispatch<AppDispatch>();
-
-    useEffect(() => {
-        // Check if there's a token in localStorage and initialize user state
-        const token = localStorage.getItem('token');
-        const accessToken = localStorage.getItem('access_token');
+  useEffect(() => {
+    // Initialize auth state on app start
+    const initializeAuth = () => {
+      try {
+        // Check for existing tokens and prepare the system
+        const accessToken = tokenManager.getAccessToken();
+        const refreshToken = tokenManager.getRefreshToken();
         
-        // If we have either token, try to get user data
-        if (token || accessToken) {
-            // Sync tokens between the two systems
-            if (token && !accessToken) {
-                localStorage.setItem('access_token', token);
-            } else if (accessToken && !token) {
-                localStorage.setItem('token', accessToken);
-            }
-            
-            // Dispatch getMeAction to restore user state
-            dispatch(getMeAction());
+        if (accessToken || refreshToken) {
+          console.log('Auth tokens found, AuthProvider will handle validation');
+        } else {
+          console.log('No auth tokens found');
         }
-    }, [dispatch]);
+        
+        // Dispatch a custom event to notify that auth initialization is complete
+        window.dispatchEvent(new CustomEvent('authInitializationComplete'));
+        
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Clear any invalid tokens
+        tokenManager.clearTokens();
+      }
+    };
+
+    initializeAuth();
+  }, []); // Run only once on mount
+
+  // Return initialization status
+  return {
+    isInitialized: true, // This hook completes initialization immediately
+  };
 };

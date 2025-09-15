@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService, User } from "../services/authService";
 import { paymentService, CardPaymentRequest, BankTransferRequest, PayPalPaymentRequest } from "../services/paymentService";
-import cryptomusService from "../services/cryptomusService";
+import { coinbaseService } from "../services/coinbaseService";
 import { useAuth } from "../contexts/AuthContext";
 
 interface ProfileData extends User {
@@ -194,7 +194,7 @@ export default function Profile() {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/auth/profile', {
+      const response = await fetch('http://localhost:5001/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -452,7 +452,7 @@ export default function Profile() {
 
   const fetchSupportedAssets = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/deposits/supported-assets');
+      const response = await fetch('http://localhost:5001/api/deposits/supported-assets');
       if (response.ok) {
         const assets = await response.json();
         setSupportedAssets(assets);
@@ -490,38 +490,34 @@ export default function Profile() {
         return;
       }
 
-      // Map our currency and network to Cryptomus format
-      const cryptomusCurrency = cryptomusService.mapCurrencyToCryptomus(selectedCurrency, selectedNetwork);
+      // Map our currency and network to Coinbase Commerce format
+      const coinbaseCurrency = coinbaseService.mapCurrencyToCoinbase(selectedCurrency, selectedNetwork);
       
       // Create payment request
       const paymentRequest = {
         amount: parseFloat(amount),
-        currency: cryptomusCurrency,
-        order_id: `deposit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        url_return: `${window.location.origin}/profile`,
-        url_callback: `${window.location.origin}/api/cryptomus/callback`,
-        lifetime: 3600, // 1 hour
-        additional_data: JSON.stringify({
-          user_id: authUser?.id,
-          currency: selectedCurrency,
-          network: selectedNetwork
-        })
+        currency: coinbaseCurrency,
+        orderId: `deposit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        description: `Deposit ${amount} ${selectedCurrency} via ${selectedNetwork}`,
+        redirectUrl: `${window.location.origin}/profile`,
+        webhookUrl: `${window.location.origin}/api/coinbase/webhook`
       };
 
-      console.log('Creating payment request:', paymentRequest);
+      console.log('Creating Coinbase Commerce payment request:', paymentRequest);
 
-      // Create payment with Cryptomus
-      const paymentResponse = await cryptomusService.createPayment(paymentRequest);
+      // Create payment with Coinbase Commerce
+      const paymentResponse = await coinbaseService.createPayment(paymentRequest);
       
-      if (paymentResponse.state === 0 && paymentResponse.result) {
-        // Redirect to Cryptomus payment page
-        cryptomusService.redirectToPayment(paymentResponse.result.url);
+      if (paymentResponse.id && (paymentResponse.hosted_url || paymentResponse.url)) {
+        // Redirect to Coinbase Commerce payment page
+        const paymentUrl = paymentResponse.hosted_url || paymentResponse.url;
+        coinbaseService.redirectToPayment(paymentUrl);
       } else {
         setFundError("Failed to create payment. Please try again.");
       }
       
     } catch (error) {
-      console.error('Cryptomus payment creation error:', error);
+      console.error('Coinbase Commerce payment creation error:', error);
       setFundError(`Failed to initiate payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setFundLoading(false);
@@ -1611,81 +1607,6 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  {/* Deposit Address Section */}
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-4">
-                    {!depositAddress ? (
-                      <div className="text-center py-8">
-                        <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                        </div>
-                        <h4 className="text-sm font-semibold text-white mb-1">Generate Deposit Address</h4>
-                        <p className="text-gray-400 text-xs">Click "Generate Address" to create your unique deposit address</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4">
-                      {/* QR Code */}
-                      <div className="flex flex-col items-center">
-                          <div className="w-32 h-32 bg-white rounded-lg flex items-center justify-center mb-3 border border-gray-200">
-                            {qrCode ? (
-                              <img 
-                                src={qrCode} 
-                                alt="QR Code" 
-                                className="w-28 h-28"
-                              />
-                            ) : (
-                              <div className="w-28 h-28 bg-gray-100 rounded flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">QR Code</span>
-                          </div>
-                            )}
-                        </div>
-                      </div>
-
-                      {/* Deposit Address */}
-                      <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-semibold text-white">Deposit Address</h4>
-                          </div>
-                          <div className="bg-gray-900 border border-gray-600 rounded-lg p-2 mb-2">
-                            <p className="text-xs text-blue-400 break-all font-mono">{depositAddress}</p>
-                          </div>
-                          
-                          {/* Memo/Tag if required */}
-                          {depositMemo && (
-                            <div className="mb-2">
-                              <label className="block text-xs font-medium text-yellow-400 mb-1">
-                                {isMemoRequired(selectedCurrency) ? "Memo/Tag (Required)" : "Memo"}
-                              </label>
-                              <div className="bg-gray-900 border border-yellow-500/50 rounded-lg p-2 mb-2">
-                                <p className="text-xs text-yellow-400 break-all font-mono">{depositMemo}</p>
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="flex gap-2">
-                        <button
-                              onClick={() => navigator.clipboard.writeText(depositAddress)}
-                              className="flex-1 py-2 px-3 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
-                        >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                              Copy Address
-                        </button>
-                            {explorerUrl && (
-                              <button
-                                onClick={() => window.open(explorerUrl, '_blank')}
-                                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors text-sm"
-                              >
-                                View
-                              </button>
-                            )}
-                      </div>
-                    </div>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Warnings and Info */}
                   <div className="space-y-3 mb-4">
@@ -1737,7 +1658,7 @@ export default function Profile() {
               disabled={fundLoading || !amount}
               className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors text-sm"
             >
-              {fundLoading ? "Redirecting..." : "Deposit with Cryptomus"}
+              {fundLoading ? "Redirecting..." : "Deposit with Coinbase"}
             </button>
           </div>
                 </>

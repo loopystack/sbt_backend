@@ -3,6 +3,7 @@ export type ErrorResponse = {
     message?: string;
     status?: number;
     data?: any;
+    detail?: string | Array<{ msg?: string; message?: string; detail?: string }>;
 };
 
 export type ApiResponse<T = any> = {

@@ -35,7 +35,7 @@ if __name__ == "__main__":
     token = asyncio.run(test_database_and_funds())
     if token:
         print(f"\n🧪 Test the funds endpoint with this token:")
-        print(f"curl -X POST http://localhost:8000/api/auth/funds/add \\")
+        print(f"curl -X POST http://localhost:5001/api/auth/funds/add \\")
         print(f"  -H 'Content-Type: application/json' \\")
         print(f"  -H 'Authorization: Bearer {token}' \\")
         print(f"  -d '{{\"amount\": 100}}'")

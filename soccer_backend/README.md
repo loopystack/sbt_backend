@@ -133,7 +133,7 @@ SMTP_FROM_NAME=Soccer Betting App
 # Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+GOOGLE_REDIRECT_URI=http://localhost:5001/api/auth/google/callback
 
 # Frontend URL
 FRONTEND_URL=http://localhost:3000
@@ -174,8 +174,8 @@ The application includes:
 ## Testing
 
 To test the API endpoints, you can:
-1. Use the automatic interactive API docs at `http://localhost:8000/docs`
-2. Use ReDoc documentation at `http://localhost:8000/redoc`
+1. Use the automatic interactive API docs at `http://localhost:5001/docs`
+2. Use ReDoc documentation at `http://localhost:5001/redoc`
 3. Use tools like Postman or curl
 
 ## Project Structure

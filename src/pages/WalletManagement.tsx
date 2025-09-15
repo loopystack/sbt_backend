@@ -52,7 +52,7 @@ const WalletManagement: React.FC = () => {
 
   const fetchSweepSummary = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/wallet/sweep-summary');
+      const response = await fetch('http://localhost:5001/api/wallet/sweep-summary');
       if (response.ok) {
         const data = await response.json();
         setSweepSummary(data);
@@ -64,7 +64,7 @@ const WalletManagement: React.FC = () => {
 
   const fetchPendingDeposits = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/wallet/pending-deposits?limit=20');
+      const response = await fetch('http://localhost:5001/api/wallet/pending-deposits?limit=20');
       if (response.ok) {
         const data = await response.json();
         setPendingDeposits(data.deposits);
@@ -80,9 +80,9 @@ const WalletManagement: React.FC = () => {
     setSuccess('');
 
     try {
-      let url = 'http://localhost:8000/api/wallet/sweep-all';
+      let url = 'http://localhost:5001/api/wallet/sweep-all';
       if (asset && network) {
-        url = `http://localhost:8000/api/wallet/sweep/${asset}/${network}`;
+        url = `http://localhost:5001/api/wallet/sweep/${asset}/${network}`;
       }
 
       const response = await fetch(url, { method: 'POST' });

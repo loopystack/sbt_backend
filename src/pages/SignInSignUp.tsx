@@ -27,6 +27,37 @@ export default function SignInSignUp() {
     setSuccess("");
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      
+      // Call backend to get Google OAuth URL
+      const response = await fetch('http://localhost:5001/api/auth/google');
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (data.mock_mode) {
+          // Mock mode - show info and redirect
+          setSuccess('Mock Google login - redirecting to test flow...');
+          setTimeout(() => {
+            window.location.href = data.authorization_url;
+          }, 1000);
+        } else {
+          // Real Google OAuth
+          window.location.href = data.authorization_url;
+        }
+      } else {
+        setError(data.detail || 'Failed to initiate Google login');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      setError('Failed to initiate Google login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleModeChange = (signIn: boolean) => {
     setIsSignIn(signIn);
     clearForm();
@@ -288,7 +319,10 @@ export default function SignInSignUp() {
             </div>
           </div>
           <div className="space-y-3">
-            <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
+            <button 
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>
               Continue with Google
             </button>
@@ -297,7 +331,7 @@ export default function SignInSignUp() {
                 <path d="M18.71 19.5c-.83 1.24-2.04 2.32-3.54 3.12-1.5.8-3.22 1.2-5.04 1.2-1.8 0-3.48-.4-4.96-1.2-1.48-.8-2.68-1.88-3.5-3.12-1.24-1.84-1.88-3.96-1.88-6.3 0-2.34.64-4.46 1.88-6.3.82-1.24 2.02-2.32 3.5-3.12 1.48-.8 3.16-1.2 4.96-1.2 1.82 0 3.54.4 5.04 1.2 1.5.8 2.71 1.88 3.54 3.12.82 1.24 1.24 2.66 1.24 4.18 0 1.52-.42 2.94-1.24 4.18z"/>
               </svg>
               Continue with Apple
-            </button>
+            </button> 
             <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
               <div className="w-5 h-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-bold">f</div>
               Continue with Facebook

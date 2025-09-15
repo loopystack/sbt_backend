@@ -238,6 +238,12 @@ def get_explorer_url(asset: str, network: str, address: str) -> str:
 # Cryptomus Integration
 CRYPTOMUS_API_KEY = "Qbrsscrs0n3TXxb66HdluJNGKa3dslIXn8tFjzjrxBGIJ4MO4epbuKq6nXFhyHgbYiZd3R1PPO9Jp4pdPUREG68DEgByxB8rDRlIfYEslxpCkvpmNNf62WKEK1vjuO7E"
 
+# Coinbase Commerce Configuration
+COINBASE_API_KEY = "2c840e42-be66-4f1f-9d75-ea9861a56bdd"
+COINBASE_BASE_URL = "https://api.commerce.coinbase.com"
+COINBASE_IS_TEST_MODE = True  # Test mode for safe development
+
+
 def verify_cryptomus_signature(payload: str, signature: str) -> bool:
     """
     Verify Cryptomus webhook signature
@@ -331,6 +337,154 @@ async def create_cryptomus_payment(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to create payment: {str(e)}"
+        )
+
+# Coinbase Commerce Integration
+@router.post("/coinbase/create-payment")
+async def create_coinbase_payment(
+    request_data: dict,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Create a Coinbase Commerce payment via backend proxy
+    """
+    try:
+        import requests
+        
+        # Extract payment data
+        name = request_data.get("name", "Deposit Payment")
+        description = request_data.get("description", "Deposit Payment")
+        local_price = request_data.get("local_price", {})
+        metadata = request_data.get("metadata", {})
+        redirect_url = request_data.get("redirect_url")
+        cancel_url = request_data.get("cancel_url")
+        
+        # Prepare payload for Coinbase Commerce
+        payload = {
+            "name": name,
+            "description": description,
+            "local_price": local_price,
+            "pricing_type": "fixed_price",
+            "metadata": metadata,
+            "redirect_url": redirect_url,
+            "cancel_url": cancel_url
+        }
+        
+        # Set headers for Coinbase Commerce
+        headers = {
+            'X-CC-Api-Key': COINBASE_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        print(f"DEBUG: Coinbase Commerce request URL: {COINBASE_BASE_URL}/charges")
+        print(f"DEBUG: Coinbase Commerce headers: {headers}")
+        print(f"DEBUG: Coinbase Commerce payload: {payload}")
+        print(f"DEBUG: Coinbase Commerce API Key: {COINBASE_API_KEY}")
+        print(f"DEBUG: Coinbase Commerce API Key length: {len(COINBASE_API_KEY)}")
+        
+        # Send request to Coinbase Commerce
+        response = requests.post(
+            f'{COINBASE_BASE_URL}/charges',
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        print(f"DEBUG: Coinbase Commerce response status: {response.status_code}")
+        print(f"DEBUG: Coinbase Commerce response text: {response.text}")
+        
+        if response.status_code == 201:
+            data = response.json()
+            return data
+        else:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Coinbase Commerce API error: {response.text}"
+            )
+            
+    except Exception as e:
+        print(f"Coinbase Commerce payment creation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create Coinbase Commerce payment: {str(e)}"
+        )
+
+@router.get("/coinbase/payment-status/{payment_id}")
+async def get_coinbase_payment_status(
+    payment_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get Coinbase Commerce payment status
+    """
+    try:
+        import requests
+        
+        # Set headers for Coinbase Commerce
+        headers = {
+            'X-CC-Api-Key': COINBASE_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        # Get payment status from Coinbase Commerce
+        response = requests.get(
+            f'{COINBASE_BASE_URL}/charges/{payment_id}',
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Coinbase Commerce API error: {response.text}"
+            )
+            
+    except Exception as e:
+        print(f"Coinbase Commerce payment status error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get Coinbase Commerce payment status: {str(e)}"
+        )
+
+@router.post("/coinbase/webhook")
+async def coinbase_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Handle Coinbase Commerce webhook notifications
+    """
+    try:
+        body = await request.body()
+        data = json.loads(body.decode())
+        
+        print(f"DEBUG: Coinbase Commerce webhook received: {data}")
+        
+        # Extract payment information
+        charge_id = data.get("id")
+        event_type = data.get("type")
+        amount = data.get("pricing", {}).get("local", {}).get("amount")
+        currency = data.get("pricing", {}).get("local", {}).get("currency")
+        
+        if event_type == "charge:confirmed":
+            # Payment completed - update user balance
+            print(f"Payment completed: {charge_id}, Amount: {amount} {currency}")
+            
+            # TODO: Update user balance in database
+            # TODO: Create transaction record
+            
+        return {"status": "success"}
+        
+    except Exception as e:
+        print(f"Coinbase Commerce webhook error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process Coinbase Commerce webhook: {str(e)}"
         )
 
 @router.post("/cryptomus/callback")

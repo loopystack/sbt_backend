@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useCountry } from "../contexts/CountryContext";
 import { useAppDispatch } from "../store/hooks";
@@ -14,8 +15,8 @@ export default function LeftSidebar() {
   const fetchMatchingInfo = useCallback(async () => {
     try {
       const params = { 
-        page: "1", 
-        size: "1000" 
+        page: 1, 
+        size: 1000 
       };
       
       const result = await dispatch(getMatchingInfoAction(params)).unwrap();

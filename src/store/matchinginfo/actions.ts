@@ -1,33 +1,24 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { getMatchingInfoService } from './services';
-import { MatchingInfo, GetMatchingInfoResponse } from './types';
-import { handleActionResponse } from '../global/actions';
-import { toast } from 'react-toastify';
+import { api } from '../../lib/api';
+import { GetMatchingInfoResponse } from './types';
+
+export interface GetMatchingInfoParams {
+    page: number;
+    size: number;
+}
 
 export const getMatchingInfoAction = createAsyncThunk<
     GetMatchingInfoResponse,
-    { page?: string, size?: string, season?: string, country?: string } | undefined,
+    GetMatchingInfoParams,
     { rejectValue: string }
->(
-    'matchinginfo/getMatchingInfo',
-    async (queries, { rejectWithValue }) => {
-        try {
-            const response = await getMatchingInfoService(queries);
-            const result = handleActionResponse<GetMatchingInfoResponse>(
-                response,
-                'Get matching info successful',
-                'Get matching info failed'
-            );
-            
-            if (typeof result === 'string') {
-                return rejectWithValue(result);
-            }
-
-            return result;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Get matching info failed';
-            toast.error(errorMessage, { autoClose: 2000 });
-            return rejectWithValue(errorMessage);
-        }
+>('matchinginfo/getMatchingInfo', async (params, { rejectWithValue }) => {
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', params.page);
+        queryParams.append('size', params.size);
+        
+        return await api<GetMatchingInfoResponse>(`/api/odds/?${queryParams}`);
+    } catch (error) {
+        return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch matching info');
     }
-);
+});

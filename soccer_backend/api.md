@@ -1,4 +1,4 @@
-http://localhost:8000/api/odds
+http://localhost:5001/api/odds
 
 queries:
 {

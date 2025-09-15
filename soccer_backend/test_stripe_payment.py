@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:5001"
 TEST_CARD_NUMBER = "4242424242424242"  # Stripe test card that always succeeds
 TEST_CARD_EXPIRY_MONTH = 12
 TEST_CARD_EXPIRY_YEAR = 2025

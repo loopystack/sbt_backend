@@ -2,19 +2,23 @@
 
 export type MatchingInfo = {
     id: string;
-    season: string;
+    season: number;
     date: string;
     time: string;
     home_team: string;
     away_team: string;
     result: string;
-    odd_1: number;
-    odd_X: number;
-    odd_2: number;
+    odd_1: number | null;
+    odd_X: number | null;
+    odd_2: number | null;
     bets: number;
     country: string;
-    createdAt: string;
-    updatedAt: string;
+    league: string;
+    pre_odd_1?: number | null;
+    pre_odd_x?: number | null;
+    pre_odd_2?: number | null;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export type GetMatchingInfoResponse = {

@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Soccer Betting App"
     
     # Google OAuth
-    GOOGLE_CLIENT_ID: str = ""
-    GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    GOOGLE_CLIENT_ID: str = "621824302234-v59r9kfcoana35gfbu1uig7vtdsdpduq.apps.googleusercontent.com"
+    GOOGLE_CLIENT_SECRET: str = "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"
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5001/api/auth/google/callback"
     
     # Frontend URL
     FRONTEND_URL: str = "http://localhost:3000"

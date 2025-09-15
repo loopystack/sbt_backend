@@ -5,16 +5,27 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Convert PostgreSQL URL to async version
+# Convert database URL to async version
 database_url = settings.DATABASE_URL
+
+# Handle different database types
 if database_url.startswith("postgresql://"):
+    # PostgreSQL with asyncpg driver
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif database_url.startswith("sqlite://"):
+    # SQLite with aiosqlite driver
+    database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+elif database_url.startswith("mysql://"):
+    # MySQL with aiomysql driver
+    database_url = database_url.replace("mysql://", "mysql+aiomysql://", 1)
 
 # Create async engine
 engine = create_async_engine(
     database_url,
     echo=settings.DEBUG,
-    future=True
+    future=True,
+    # SQLite specific configuration
+    connect_args={"check_same_thread": False} if "sqlite" in database_url else {}
 )
 
 # Create async session factory

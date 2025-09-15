@@ -121,13 +121,13 @@ Navigate to `/wallet-management` in your frontend application.
 ### **API Endpoints**
 ```bash
 # Get sweep summary
-curl http://localhost:8000/api/wallet/sweep-summary
+curl http://localhost:5001/api/wallet/sweep-summary
 
 # Trigger sweep for Bitcoin
-curl -X POST http://localhost:8000/api/wallet/sweep/BTC/Bitcoin
+curl -X POST http://localhost:5001/api/wallet/sweep/BTC/Bitcoin
 
 # Get pending deposits
-curl http://localhost:8000/api/wallet/pending-deposits
+curl http://localhost:5001/api/wallet/pending-deposits
 ```
 
 ## 🔒 Security Considerations

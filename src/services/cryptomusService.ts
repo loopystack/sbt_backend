@@ -86,7 +86,7 @@ class CryptomusService {
       console.log('Creating Cryptomus payment with payload:', payload);
 
       // Use backend proxy to avoid CORS issues
-      const response = await fetch(`http://localhost:8000/api/deposits/cryptomus/create-payment`, {
+      const response = await fetch(`http://localhost:5001/api/deposits/cryptomus/create-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

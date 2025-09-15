@@ -15,8 +15,8 @@ router = APIRouter()
 @router.get("/", response_model=OddsListResponse)
 async def get_odds(
     page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(60, ge=1, le=100, description="Number of items per page"),
-    season: Optional[str] = Query(None, description="Filter by season"),
+    size: int = Query(60, ge=1, le=50000, description="Number of items per page"),
+    season: Optional[int] = Query(None, description="Filter by season"),
     country: Optional[str] = Query(None, description="Filter by country"),
     league: Optional[str] = Query(None, description="Filter by league"),
     home_team: Optional[str] = Query(None, description="Filter by home team"),
