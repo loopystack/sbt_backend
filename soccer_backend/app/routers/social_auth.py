@@ -247,8 +247,8 @@ async def google_callback(
         access_token = create_access_token(data={"sub": str(user.id)})
         refresh_token = create_refresh_token(data={"sub": str(user.id)})
         
-        # Redirect to frontend with tokens (successful login)
-        frontend_url = f"{settings.FRONTEND_URL}/signin?google_auth=success&access_token={access_token}&refresh_token={refresh_token}"
+        # Redirect directly to dashboard with tokens (no intermediate signin page)
+        frontend_url = f"{settings.FRONTEND_URL}/dashboard?google_auth=success&access_token={access_token}&refresh_token={refresh_token}"
         return RedirectResponse(
             url=frontend_url,
             status_code=status.HTTP_302_FOUND

@@ -16,7 +16,7 @@ export default function LeftSidebar() {
     try {
       const params = { 
         page: 1, 
-        size: 1000 
+        size: 100  // Reduced for better performance
       };
       
       const result = await dispatch(getMatchingInfoAction(params)).unwrap();
@@ -115,7 +115,7 @@ export default function LeftSidebar() {
                       key={league.name}
                       onClick={() => handleLeagueClick(league, country)} 
                       className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 ${
-                        selectedLeague?.name === league.name
+                        selectedLeague?.name === league.name && selectedCountry?.name === country.name
                           ? "bg-green-500/20 text-green-600 border border-green-500/30"
                           : "text-muted hover:text-text"
                       }`}

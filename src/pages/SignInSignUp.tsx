@@ -38,10 +38,8 @@ export default function SignInSignUp() {
       tokenManager.setTokens(accessToken, refreshToken);
       setSuccess('Successfully signed in with Google!');
       
-      // Redirect to dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
+      // Redirect to dashboard immediately - no delay!
+      navigate('/dashboard');
     }
     
     // Handle Google OAuth error

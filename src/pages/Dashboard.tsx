@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { authService, tokenManager } from "../services/authService";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [userFunds, setUserFunds] = useState(0);
   const [fundsLoading, setFundsLoading] = useState(true);
   const [recentBets, setRecentBets] = useState([
@@ -29,6 +30,23 @@ export default function Dashboard() {
   const wonBets = recentBets.filter(bet => bet.status === 'won').length;
   const winRate = totalBets > 0 ? ((wonBets / totalBets) * 100).toFixed(1) : '0';
   const totalProfit = recentBets.reduce((sum, bet) => sum + bet.profit, 0);
+
+  // Handle Google OAuth success redirect
+  useEffect(() => {
+    const googleAuth = searchParams.get('google_auth');
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    
+    if (googleAuth === 'success' && accessToken && refreshToken) {
+      console.log('🎉 Google OAuth success! Setting tokens and staying on dashboard...');
+      // Store tokens immediately
+      tokenManager.setTokens(accessToken, refreshToken);
+      
+      // Clean up URL parameters without redirecting
+      const cleanUrl = window.location.pathname; // Remove query params
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [searchParams]);
 
   // Fetch user funds on component mount
   useEffect(() => {

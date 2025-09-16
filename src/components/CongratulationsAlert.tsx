@@ -33,7 +33,7 @@ const CongratulationsAlert: React.FC<CongratulationsAlertProps> = ({
       setTimeout(() => {
         setAnimationPhase(0);
         setTimeout(onClose, 500);
-      }, 5000);
+      },);
     }
   }, [isVisible, onClose]);
 

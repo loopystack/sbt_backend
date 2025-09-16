@@ -35,11 +35,7 @@ type Bookmaker = {
   draw?: string;
   overUnder?: string;
 };
-interface OddsTableProps {
-  highlightMatchId?: number;
-}
-
-export default function OddsTable({ highlightMatchId }: OddsTableProps) {
+export default function OddsTable() {
   const dispatch = useAppDispatch();
   const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
@@ -48,10 +44,9 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
   
   // Debug authentication state
   console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
-  const [selectedMarket, setSelectedMarket] = useState("Next Matches");
+  const [selectedMarket, setSelectedMarket] = useState("Results");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
-  const [availableYears, setAvailableYears] = useState<number[]>([2021, 2022, 2023, 2024, 2025]);
   const [currentPage, setCurrentPage] = useState(1);
   const matchesPerPage = 20;
   const [selectedOdds, setSelectedOdds] = useState<{
@@ -66,8 +61,10 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
   const [isBetSlipHiding, setIsBetSlipHiding] = useState(false);
   const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currectPage, setCurrectPage] = useState(1);
-  const limit = 20000; // Show all matches (19,000+)
+  // API pagination state for total counts
+  const [apiTotalPages, setApiTotalPages] = useState(1);
+  const [apiTotalMatches, setApiTotalMatches] = useState(0);
+  const MATCHES_PER_PAGE = 20; // Show only 20 matches per page
   const [animatingOdds, setAnimatingOdds] = useState<{
     matchId: string;
     type: 'home' | 'draw' | 'away';
@@ -77,18 +74,18 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
     startPosition: { x: number; y: number };
   } | null>(null);
   const [selectedBetAmount, setSelectedBetAmount] = useState("0.0001");
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  // Betting states
-  const [isPlacingBet, setIsPlacingBet] = useState(false);
-  const [bettingError, setBettingError] = useState<string>("");
-  const [userFunds, setUserFunds] = useState<number>(0.5); // Mock user funds
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [betDetails, setBetDetails] = useState<{
     betAmount: string;
     potentialWin: string;
     teams: string;
   }>({ betAmount: "0.0001", potentialWin: "0.001026", teams: "Team A vs Team B" });
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Betting states
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [bettingError, setBettingError] = useState<string>("");
+  const [userFunds, setUserFunds] = useState<number>(0.5); // Mock user funds
   
   // Betting functions
   const handlePlaceBet = async () => {
@@ -110,20 +107,6 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Calculate potential win
-      const totalOdds = 10.26; // This could be calculated from selected odds
-      const potentialWin = (betAmount * totalOdds).toFixed(6);
-      
-      // Get team names from selected odds
-      const teams = selectedOdds.length > 0 ? selectedOdds[0].teams : "Selected Match";
-      
-      // Set bet details for congratulations alert
-      setBetDetails({
-        betAmount: selectedBetAmount,
-        potentialWin,
-        teams
-      });
-      
       // Mock successful bet placement
       setUserFunds(prev => prev - betAmount);
       setSelectedOdds([]);
@@ -132,11 +115,6 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
         setShowBetSlip(false);
         setIsBetSlipHiding(false);
       }, 500);
-      
-      // Show congratulations alert
-      setTimeout(() => {
-        setShowCongratulations(true);
-      }, 600);
       
     } catch (error) {
       setBettingError("Failed to place bet. Please try again.");
@@ -215,25 +193,6 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
         });
       }
       
-      // Apply year filter
-      if (selectedYear) {
-        filteredMatches = filteredMatches.filter(match => match.season === selectedYear);
-      }
-      
-      // Apply country filter
-      if (selectedCountry) {
-        filteredMatches = filteredMatches.filter(match => 
-          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
-        );
-      }
-      
-      // Apply league filter - THIS WAS MISSING!
-      if (selectedLeague) {
-        filteredMatches = filteredMatches.filter(match => 
-          match.league.toLowerCase() === selectedLeague.name.toLowerCase()
-        );
-      }
-      
       if (selectedMarket === "Results") {
         filteredMatches = filteredMatches.filter(match => {
           const matchDate = new Date(match.date + 'T00:00:00'); 
@@ -248,6 +207,14 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
           const isFutureMatch = matchDate.getTime() >= now.getTime();
           return isFutureMatch;
         });
+      } else if (selectedCountry) {
+        filteredMatches = filteredMatches.filter(match => 
+          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
+        );
+      }
+      
+      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear && !searchQuery.trim()) {
+        filteredMatches = matchingInfo;
       }
       
       return transformMatchingInfoToMatch(filteredMatches);
@@ -325,15 +292,19 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
   };
   const allGroupedMatches = groupMatchesByDate(matches);
   
+  // Use server-side pagination - no need to slice data since API already returns paginated results
   const allMatches = allGroupedMatches.flatMap(({ matches }) => matches);
-  const totalMatches = allMatches.length;
-  const totalPages = Math.ceil(totalMatches / matchesPerPage);
   
+  // For pagination info display - use API data when available, fallback to local count
+  const totalMatches = apiTotalMatches > 0 ? apiTotalMatches : allMatches.length;
+  const totalPages = apiTotalPages > 0 ? apiTotalPages : Math.ceil(allMatches.length / matchesPerPage);
+  
+  // For display calculations
   const startIndex = (currentPage - 1) * matchesPerPage;
   const endIndex = startIndex + matchesPerPage;
-  const paginatedMatches = allMatches.slice(startIndex, endIndex);
   
-  const groupedMatches = groupMatchesByDate(paginatedMatches);
+  // No slicing needed - API already returns the correct page data
+  const groupedMatches = allGroupedMatches;
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
     const selectedBet = {
       matchId: match.id,
@@ -431,89 +402,104 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
       default: return "text-muted bg-muted/20 border-muted/30";
     }
   };
-  const fetchAllMatchingInfo = useCallback(async () => {
+  const fetchCurrentPageMatches = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching with selectedYear:", selectedYear, "selectedLeague:", selectedLeague?.name, "selectedCountry:", selectedCountry?.name);
-      
-      // Build query parameters
-      const params: any = { 
-        page: "1",
-        size: limit.toString()
-      };
+      console.log("Fetching with selectedYear:", selectedYear);
       
       if (selectedYear) {
-        params.season = selectedYear;
+        // ⚡ SINGLE PAGE FETCH - Much faster!
+        const params: any = { 
+          page: currentPage,
+          size: MATCHES_PER_PAGE,
+          season: selectedYear
+        };
+        
+        if (selectedLeague && selectedCountry) {
+          params.league = selectedLeague.name;
+          params.country = selectedCountry?.name; // IMPORTANT: Filter by country too!
+        }
+        
+        // Add date filtering for "Next Matches"
+        if (selectedMarket === "Next Matches") {
+          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          params.date_from = today; // Only future matches
+        }
+        
+        console.log(`🚀 Fetching page ${currentPage} for year ${selectedYear}, market: ${selectedMarket}`, params);
+        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+        
+        setMatchingInfo(result.odds);
+        setApiTotalPages(result.pages);
+        setApiTotalMatches(result.total);
+        
+        console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages})`);
+      } else if (selectedLeague) {
+        // ⚡ SINGLE PAGE FETCH for league - Much faster!
+        const params: any = { 
+          page: currentPage,
+          size: MATCHES_PER_PAGE,
+          league: selectedLeague.name,
+          country: selectedCountry?.name // IMPORTANT: Filter by country too!
+        };
+        
+        // Add date filtering for "Next Matches"
+        if (selectedMarket === "Next Matches") {
+          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          params.date_from = today; // Only future matches
+        }
+        
+        console.log(`🚀 Fetching page ${currentPage} for league ${selectedLeague.name}, market: ${selectedMarket}`, params);
+        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+        
+        setMatchingInfo(result.odds);
+        setApiTotalPages(result.pages);
+        setApiTotalMatches(result.total);
+        
+        console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages})`);
+      } else {
+        const params: any = { 
+          page: currentPage, 
+          size: MATCHES_PER_PAGE
+        };
+        
+        if (selectedCountry && selectedCountry.name === "Brazil") {
+          params.country = "Brazil";
+          console.log("Sending country parameter:", params.country);
+        }
+        
+        // Add date filtering for "Next Matches"
+        if (selectedMarket === "Next Matches") {
+          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          params.date_from = today; // Only future matches
+        }
+        
+        console.log(`🚀 Fetching page ${currentPage}, market: ${selectedMarket}`, params);
+        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+        console.log("✅ API result:", result);
+        setMatchingInfo(result.odds);
+        setApiTotalPages(result.pages);
+        setApiTotalMatches(result.total);
+        setCurrentPage(result.page);
       }
-      
-      if (selectedLeague) {
-        params.league = selectedLeague.name;
-      }
-      
-      if (selectedCountry) {
-        params.country = selectedCountry.name.toLowerCase();
-      }
-      
-      console.log("Fetching with params:", params);
-      const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-      console.log("API result:", result);
-      console.log("Number of odds returned:", result.odds.length);
-      setMatchingInfo(result.odds);
-      setCurrectPage(result.page);
-      
     } catch (error) {
       console.error("Error fetching matching info:", error);
-      // Set empty array on error to prevent showing stale data
-      setMatchingInfo([]);
     } finally {
       setLoading(false);
     }
-  }, [dispatch, selectedYear, selectedLeague, selectedCountry, limit]);
+  }, [dispatch, currentPage, selectedYear, selectedCountry, selectedLeague, selectedMarket]);
     
   
-  // Fetch available years from the database
-  const fetchAvailableYears = useCallback(async () => {
-    try {
-      const response = await fetch('http://localhost:5001/api/odds/?size=20000');
-      if (response.ok) {
-        const data = await response.json();
-        // Extract unique years from the data
-        const years = [...new Set(data.odds.map((match: MatchingInfo) => match.season))].sort() as number[];
-        setAvailableYears(years);
-      }
-    } catch (error) {
-      console.error('Error fetching available years:', error);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchAvailableYears();
-  }, [fetchAvailableYears]);
+    fetchCurrentPageMatches();
+  }, [fetchCurrentPageMatches]);
 
-  useEffect(() => {
-    fetchAllMatchingInfo();
-  }, [fetchAllMatchingInfo]);
-
-  // Scroll to highlighted match when data loads
-  useEffect(() => {
-    if (highlightMatchId && matchingInfo.length > 0) {
-      setTimeout(() => {
-        const highlightedElement = document.querySelector(`[data-match-id="${highlightMatchId}"]`);
-        if (highlightedElement) {
-          highlightedElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-        }
-      }, 500); // Wait for rendering to complete
-    }
-  }, [highlightMatchId, matchingInfo]);
-
-  // Clear search query when league changes
+  // Reset to page 1 when filters change
   useEffect(() => {
     setSearchQuery("");
     setCurrentPage(1);
-  }, [selectedLeague]);
+  }, [selectedLeague, selectedYear, selectedCountry, selectedMarket]);
+  
 
   // Add global click listener for betslip collapse
   useEffect(() => {
@@ -531,24 +517,13 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
   }
     return (
     <section>
-      {selectedLeague ? (
+      {selectedLeague && (
         <div className="text-sm text-muted mb-4 px-2">
-          Home {'>'} Football {'>'} {getCountryNameFromLeague(selectedLeague.name)} {'>'} {selectedLeague.name}
-        </div>
-      ) : (
-        <div className="text-center py-20">
-          <h1 className="text-3xl font-bold text-text mb-4">Welcome to Sports Betting</h1>
-          <p className="text-muted text-lg mb-8">Select a country and league from the left sidebar to view matches and odds</p>
-          <div className="text-sm text-muted">
-            <p>Available countries: {countries.length}</p>
-            <p>Total leagues: {countries.reduce((total, country) => total + country.leagues.length, 0)}</p>
-          </div>
+          Home {'>'} Football {'>'} {selectedCountry?.name || getCountryNameFromLeague(selectedLeague.name)} {'>'} {selectedLeague.name}
         </div>
       )}
       
-      {selectedLeague && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0 px-2">
         <div>
                                <h2 className="text-xl sm:text-2xl font-bold text-text">
             {searchQuery.trim() 
@@ -557,31 +532,31 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
                 ? selectedLeague
                   ? `${selectedLeague.name} ${selectedYear} Results`
                   : `${selectedYear} Results Only` 
-                : selectedLeague
-                  ? `${selectedLeague.name} Matches & Odds`
+                : selectedLeague && selectedCountry
+                  ? `${selectedCountry.name} ${selectedLeague.name} Matches & Odds`
                   : selectedMarket === "Results"
                     ? "Match Results"
                     : selectedMarket === "Next Matches"
                       ? "Upcoming Matches & Odds"
                       : selectedCountry 
-                          ? `${selectedCountry.name} - Football` 
-                          : 'Live Matches & Odds'
+                        ? `${selectedCountry.name} - Football` 
+                        : 'Live Matches & Odds'
             }
           </h2>
                      <p className="text-sm text-muted mt-1">
              {searchQuery.trim() 
                ? `${matches.length} matches found for "${searchQuery}"`
                : selectedYear && selectedLeague
-                 ? `${matches.length} ${selectedLeague.name} matches from ${selectedYear}`
+                 ? `${totalMatches} ${selectedCountry?.name} ${selectedLeague.name} matches from ${selectedYear}`
                  : selectedYear && !selectedLeague
-                   ? `${matches.length} matches from ${selectedYear}`
+                   ? `${totalMatches} matches from ${selectedYear}`
                    : selectedLeague && !selectedYear
-                     ? `${matches.length} ${selectedLeague.name} matches`
+                     ? `${totalMatches} ${selectedCountry?.name} ${selectedLeague.name} matches`
                      : selectedMarket === "Results"
-                       ? `${matches.length} historical matches`
+                       ? `${totalMatches} historical matches`
                        : selectedMarket === "Next Matches"
-                         ? `${matches.length} upcoming matches`
-                         : `${matches.length} matches`
+                         ? `${totalMatches} upcoming matches`
+                         : `${totalMatches} matches`
              }
            </p>
         </div>
@@ -616,7 +591,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
           
           {selectedMarket !== "Next Matches" && (
             <div className="flex gap-1 bg-surface border border-border rounded-lg p-1 mr-2">
-              {availableYears.map(year => (
+              {[2021, 2022, 2023, 2024, 2025].map(year => (
                 <button
                   key={year}
                                      onClick={() => {
@@ -624,7 +599,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
                      console.log("Year button clicked:", year, "new selectedYear:", newYear);
                      setSelectedYear(newYear);
                      setCurrentPage(1); 
-                     setCurrectPage(1); 
+                     setCurrentPage(1); 
                    }}
                   className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
                     selectedYear === year
@@ -672,7 +647,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
                  console.log("Market button clicked:", market);
                  setSelectedMarket(market);
                  setCurrentPage(1);
-                 setCurrectPage(1); // Reset API page
+                 setCurrentPage(1); // Reset API page
                  if (market === "Next Matches") {
                    setSelectedYear(undefined);
                  }
@@ -691,18 +666,8 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
       {viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
-            matches.map((match: Match) => {
-              const isHighlighted = highlightMatchId && parseInt(match.id) === highlightMatchId;
-              return (
-              <div 
-                key={match.id} 
-                data-match-id={match.id}
-                className={`rounded-xl p-4 transition-all duration-500 ${
-                  isHighlighted 
-                    ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500 shadow-xl shadow-yellow-500/20 animate-pulse' 
-                    : 'bg-surface border border-border hover:shadow-lg'
-                }`}
-              >
+            matches.map((match: Match) => (
+              <div key={match.id} className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-200">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
@@ -863,8 +828,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
                   </div>
                 )}
               </div>
-            );
-            })
+            ))
           )}
         </div>
       ) : (
@@ -886,15 +850,11 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
             {groupedMatches.map(({ date, matches }) =>
               matches.map((match: Match, matchIndex: number) => {
                 const isLastMatchOfDay = matchIndex === matches.length - 1;
-                const isHighlighted = highlightMatchId && parseInt(match.id) === highlightMatchId;
                 return (
                 <div 
-                  key={match.id}
-                  data-match-id={match.id}
-                  className={`grid grid-cols-12 gap-1 px-2 py-2 transition-all duration-500 text-sm border-b ${
-                    isHighlighted 
-                      ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500 shadow-lg' 
-                      : isLastMatchOfDay ? 'hover:bg-surface/30 border-b border-gray-400/50' : 'hover:bg-surface/30 border-b border-border/30'
+                  key={match.id} 
+                  className={`grid grid-cols-12 gap-1 px-2 py-2 hover:bg-surface/30 transition-colors text-sm border-b ${
+                    isLastMatchOfDay ? 'border-b border-gray-400/50' : 'border-b border-border/30'
                   }`}
                 >
 
@@ -1379,7 +1339,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
              Last
            </button>
          </div>
-             )}
+       )}
       
              {totalMatches > 0 && (
          <div className="text-center mt-4 text-sm text-muted">
@@ -1388,15 +1348,13 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps) {
                ? `Showing ${totalMatches} ${selectedLeague.name} matches from ${selectedYear} only (${Math.ceil(totalMatches / matchesPerPage)} pages)`
                : `Showing ${totalMatches} matches from ${selectedYear} only (${Math.ceil(totalMatches / matchesPerPage)} pages)`
              : selectedLeague
-               ? `Showing all ${totalMatches} ${selectedLeague.name} matches (${Math.ceil(totalMatches / matchesPerPage)} pages)`
+               ? `Showing all ${totalMatches} ${selectedCountry?.name} ${selectedLeague.name} matches (${Math.ceil(totalMatches / matchesPerPage)} pages)`
                : `Showing ${Math.min(startIndex + 1, totalMatches)}-${Math.min(endIndex, totalMatches)} of ${totalMatches} matches`
            }
          </div>
-             )}
-         </>
-      )}
-      
-      {/* Congratulations Alert */}
+       )}
+
+             {/* Congratulations Alert */}
       <CongratulationsAlert
         isVisible={showCongratulations}
         onClose={() => setShowCongratulations(false)}

@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/", response_model=OddsListResponse)
 async def get_odds(
     page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(60, ge=1, le=50000, description="Number of items per page"),
+    size: int = Query(20, ge=1, le=100, description="Number of items per page"),
     season: Optional[int] = Query(None, description="Filter by season"),
     country: Optional[str] = Query(None, description="Filter by country"),
     league: Optional[str] = Query(None, description="Filter by league"),
@@ -80,8 +80,8 @@ async def get_odds(
     offset = (page - 1) * size
     pages = math.ceil(total / size) if total > 0 else 0
     
-    # Apply pagination and ordering
-    query = query.order_by(Odds.date.desc(), Odds.time.desc()).offset(offset).limit(size)
+    # Apply pagination and ordering (sooner to later - upcoming matches first)
+    query = query.order_by(Odds.date.asc(), Odds.time.asc()).offset(offset).limit(size)
     
     # Execute query
     result = await db.execute(query)
@@ -211,8 +211,8 @@ async def get_odds_by_team(
     offset = (page - 1) * size
     pages = math.ceil(total / size) if total > 0 else 0
     
-    # Apply pagination and ordering
-    query = query.order_by(Odds.date.desc(), Odds.time.desc()).offset(offset).limit(size)
+    # Apply pagination and ordering (sooner to later - upcoming matches first)
+    query = query.order_by(Odds.date.asc(), Odds.time.asc()).offset(offset).limit(size)
     
     # Execute query
     result = await db.execute(query)
