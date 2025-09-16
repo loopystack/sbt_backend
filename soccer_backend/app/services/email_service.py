@@ -56,10 +56,18 @@ class EmailService:
             # Create SMTP connection
             context = ssl.create_default_context()
             
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls(context=context)
-                server.login(self.smtp_username, self.smtp_password)
-                server.sendmail(self.from_email, to_emails, message.as_string())
+            # Use SMTP_SSL for port 465, SMTP with STARTTLS for port 587
+            if self.smtp_port == 465:
+                # Use SMTP_SSL for Gmail with port 465
+                with smtplib.SMTP_SSL(self.smtp_host, self.smtp_port, context=context) as server:
+                    server.login(self.smtp_username, self.smtp_password)
+                    server.sendmail(self.from_email, to_emails, message.as_string())
+            else:
+                # Use SMTP with STARTTLS for port 587
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls(context=context)
+                    server.login(self.smtp_username, self.smtp_password)
+                    server.sendmail(self.from_email, to_emails, message.as_string())
 
             logger.info(f"Email sent successfully to {to_emails}")
             return True
