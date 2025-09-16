@@ -1,7 +1,7 @@
 
 
 export type MatchingInfo = {
-    id: string;
+    id: number;
     season: number;
     date: string;
     time: string;
@@ -15,7 +15,7 @@ export type MatchingInfo = {
     country: string;
     league: string;
     pre_odd_1?: number | null;
-    pre_odd_x?: number | null;
+    pre_odd_X?: number | null;
     pre_odd_2?: number | null;
     createdAt?: string;
     updatedAt?: string;

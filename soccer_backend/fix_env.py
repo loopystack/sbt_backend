@@ -12,7 +12,7 @@ content = content.replace(
 
 # Update FRONTEND_URL to match your current dev server
 content = content.replace(
-    'FRONTEND_URL=http://localhost:3000',
+    'FRONTEND_URL=http://localhost:5173',
     'FRONTEND_URL=http://localhost:5174'
 )
 

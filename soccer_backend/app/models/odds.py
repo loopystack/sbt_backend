@@ -19,7 +19,7 @@ class Odds(Base):
     country = Column(String(50), nullable=True)
     league = Column(String(100), nullable=False)
     pre_odd_1 = Column(Numeric, nullable=True)
-    pre_odd_x = Column(Numeric, nullable=True)
+    pre_odd_X = Column(Numeric, nullable=True)
     pre_odd_2 = Column(Numeric, nullable=True)
 
     def __repr__(self):

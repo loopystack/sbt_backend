@@ -428,13 +428,6 @@ export default function OddsTable() {
     }
   };
   const fetchAllMatchingInfo = useCallback(async () => {
-    // Don't fetch if no league is selected
-    if (!selectedLeague) {
-      setMatchingInfo([]);
-      setLoading(false);
-      return;
-    }
-    
     try {
       setLoading(true);
       console.log("Fetching with selectedYear:", selectedYear, "selectedLeague:", selectedLeague?.name, "selectedCountry:", selectedCountry?.name);
@@ -466,6 +459,8 @@ export default function OddsTable() {
       
     } catch (error) {
       console.error("Error fetching matching info:", error);
+      // Set empty array on error to prevent showing stale data
+      setMatchingInfo([]);
     } finally {
       setLoading(false);
     }

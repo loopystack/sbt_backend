@@ -32,28 +32,26 @@ export default function SignInSignUp() {
       setIsLoading(true);
       setError("");
       
-      // Call backend to get Google OAuth URL
-      const response = await fetch('http://localhost:5001/api/auth/google');
+      // Redirect to Google OAuth using backend endpoint
+      const response = await fetch('http://localhost:5001/api/auth/google', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
       const data = await response.json();
       
-      if (response.ok) {
-        if (data.mock_mode) {
-          // Mock mode - show info and redirect
-          setSuccess('Mock Google login - redirecting to test flow...');
-          setTimeout(() => {
-            window.location.href = data.authorization_url;
-          }, 1000);
-        } else {
-          // Real Google OAuth
-          window.location.href = data.authorization_url;
-        }
+      if (response.ok && data.authorization_url) {
+        // Redirect to Google OAuth page
+        window.location.href = data.authorization_url;
       } else {
         setError(data.detail || 'Failed to initiate Google login');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Google login error:', error);
       setError('Failed to initiate Google login');
-    } finally {
       setIsLoading(false);
     }
   };

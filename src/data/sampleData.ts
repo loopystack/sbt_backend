@@ -68,7 +68,7 @@ export function transformMatchingInfoToMatch(matchingInfo: MatchingInfo[]): Matc
     ];
 
     return {
-      id: match.id || 'unknown',
+      id: match.id?.toString() || 'unknown',
       time: match.time || 'TBD',
       status,
       teams: `${match.home_team || 'Home Team'} vs ${match.away_team || 'Away Team'}`,
