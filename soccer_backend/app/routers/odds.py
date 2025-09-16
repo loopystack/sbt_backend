@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from typing import Optional, List
-from datetime import date
+from datetime import date, datetime
 import math
 
 from app.core.database import get_db
@@ -94,6 +94,68 @@ async def get_odds(
         size=size,
         pages=pages
     )
+
+
+@router.get("/best-odds")
+async def get_best_odds(
+    limit: int = Query(3, ge=1, le=10, description="Number of best odds to return"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get matches with the best/highest odds for betting.
+    Returns upcoming matches with highest odds values across all bet types.
+    """
+    # Get upcoming matches with highest odds (excluding null values and past dates)
+    today = datetime.now().date()
+    
+    query = select(Odds).where(
+        and_(
+            Odds.odd_1.isnot(None),
+            Odds.odd_X.isnot(None), 
+            Odds.odd_2.isnot(None),
+            Odds.odd_1 > 0,  # Positive odds only
+            Odds.odd_X > 0,
+            Odds.odd_2 > 0,
+            Odds.date >= today,  # Only upcoming matches
+            Odds.result.is_(None)  # Only matches without results
+        )
+    ).order_by(
+        # Order by the maximum odds value among the three options
+        func.greatest(Odds.odd_1, Odds.odd_X, Odds.odd_2).desc()
+    ).limit(limit)
+    
+    result = await db.execute(query)
+    best_odds = result.scalars().all()
+    
+    # Format the response with additional metadata
+    formatted_odds = []
+    for odds in best_odds:
+        # Find the best odd type and value
+        odds_values = [
+            ("Home Win", float(odds.odd_1) if odds.odd_1 else 0),
+            ("Draw", float(odds.odd_X) if odds.odd_X else 0),
+            ("Away Win", float(odds.odd_2) if odds.odd_2 else 0)
+        ]
+        
+        # Get the highest odds
+        best_bet_type, best_odds_value = max(odds_values, key=lambda x: x[1])
+        
+        formatted_odds.append({
+            "id": odds.id,
+            "home_team": odds.home_team,
+            "away_team": odds.away_team,
+            "league": odds.league,
+            "country": odds.country,
+            "date": odds.date,
+            "time": odds.time,
+            "best_bet_type": best_bet_type,
+            "best_odds_value": best_odds_value,
+            "odd_1": float(odds.odd_1) if odds.odd_1 else None,
+            "odd_X": float(odds.odd_X) if odds.odd_X else None,
+            "odd_2": float(odds.odd_2) if odds.odd_2 else None
+        })
+    
+    return {"best_odds": formatted_odds}
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)
@@ -215,3 +277,65 @@ async def get_seasons(db: AsyncSession = Depends(get_db)):
     seasons = result.scalars().all()
     
     return {"seasons": seasons}
+
+
+@router.get("/upcoming-best-odds")
+async def get_upcoming_best_odds(
+    limit: int = Query(3, ge=1, le=10, description="Number of best upcoming odds to return"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get upcoming matches with the best/highest odds for betting.
+    Returns only future matches without results that users can bet on.
+    """
+    # Get upcoming matches with highest odds (excluding null values and past dates)
+    today = datetime.now().date()
+    
+    query = select(Odds).where(
+        and_(
+            Odds.odd_1.isnot(None),
+            Odds.odd_X.isnot(None), 
+            Odds.odd_2.isnot(None),
+            Odds.odd_1 > 0,  # Positive odds only
+            Odds.odd_X > 0,
+            Odds.odd_2 > 0,
+            Odds.date >= today,  # Only upcoming matches
+            Odds.result.is_(None)  # Only matches without results
+        )
+    ).order_by(
+        # Order by the maximum odds value among the three options
+        func.greatest(Odds.odd_1, Odds.odd_X, Odds.odd_2).desc()
+    ).limit(limit)
+    
+    result = await db.execute(query)
+    best_odds = result.scalars().all()
+    
+    # Format the response with additional metadata
+    formatted_odds = []
+    for odds in best_odds:
+        # Find the best odd type and value
+        odds_values = [
+            ("Home Win", float(odds.odd_1) if odds.odd_1 else 0),
+            ("Draw", float(odds.odd_X) if odds.odd_X else 0),
+            ("Away Win", float(odds.odd_2) if odds.odd_2 else 0)
+        ]
+        
+        # Get the highest odds
+        best_bet_type, best_odds_value = max(odds_values, key=lambda x: x[1])
+        
+        formatted_odds.append({
+            "id": odds.id,
+            "home_team": odds.home_team,
+            "away_team": odds.away_team,
+            "league": odds.league,
+            "country": odds.country,
+            "date": odds.date,
+            "time": odds.time,
+            "best_bet_type": best_bet_type,
+            "best_odds_value": best_odds_value,
+            "odd_1": float(odds.odd_1) if odds.odd_1 else None,
+            "odd_X": float(odds.odd_X) if odds.odd_X else None,
+            "odd_2": float(odds.odd_2) if odds.odd_2 else None
+        })
+    
+    return {"best_odds": formatted_odds}

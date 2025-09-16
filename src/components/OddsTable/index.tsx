@@ -35,7 +35,11 @@ type Bookmaker = {
   draw?: string;
   overUnder?: string;
 };
-export default function OddsTable() {
+interface OddsTableProps {
+  highlightMatchId?: number;
+}
+
+export default function OddsTable({ highlightMatchId }: OddsTableProps) {
   const dispatch = useAppDispatch();
   const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
@@ -490,6 +494,21 @@ export default function OddsTable() {
     fetchAllMatchingInfo();
   }, [fetchAllMatchingInfo]);
 
+  // Scroll to highlighted match when data loads
+  useEffect(() => {
+    if (highlightMatchId && matchingInfo.length > 0) {
+      setTimeout(() => {
+        const highlightedElement = document.querySelector(`[data-match-id="${highlightMatchId}"]`);
+        if (highlightedElement) {
+          highlightedElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 500); // Wait for rendering to complete
+    }
+  }, [highlightMatchId, matchingInfo]);
+
   // Clear search query when league changes
   useEffect(() => {
     setSearchQuery("");
@@ -545,8 +564,8 @@ export default function OddsTable() {
                     : selectedMarket === "Next Matches"
                       ? "Upcoming Matches & Odds"
                       : selectedCountry 
-                        ? `${selectedCountry.name} - Football` 
-                        : 'Live Matches & Odds'
+                          ? `${selectedCountry.name} - Football` 
+                          : 'Live Matches & Odds'
             }
           </h2>
                      <p className="text-sm text-muted mt-1">
@@ -672,8 +691,18 @@ export default function OddsTable() {
       {viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
-            matches.map((match: Match) => (
-              <div key={match.id} className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-200">
+            matches.map((match: Match) => {
+              const isHighlighted = highlightMatchId && parseInt(match.id) === highlightMatchId;
+              return (
+              <div 
+                key={match.id} 
+                data-match-id={match.id}
+                className={`rounded-xl p-4 transition-all duration-500 ${
+                  isHighlighted 
+                    ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500 shadow-xl shadow-yellow-500/20 animate-pulse' 
+                    : 'bg-surface border border-border hover:shadow-lg'
+                }`}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
@@ -834,7 +863,8 @@ export default function OddsTable() {
                   </div>
                 )}
               </div>
-            ))
+            );
+            })
           )}
         </div>
       ) : (
@@ -856,11 +886,15 @@ export default function OddsTable() {
             {groupedMatches.map(({ date, matches }) =>
               matches.map((match: Match, matchIndex: number) => {
                 const isLastMatchOfDay = matchIndex === matches.length - 1;
+                const isHighlighted = highlightMatchId && parseInt(match.id) === highlightMatchId;
                 return (
                 <div 
-                  key={match.id} 
-                  className={`grid grid-cols-12 gap-1 px-2 py-2 hover:bg-surface/30 transition-colors text-sm border-b ${
-                    isLastMatchOfDay ? 'border-b border-gray-400/50' : 'border-b border-border/30'
+                  key={match.id}
+                  data-match-id={match.id}
+                  className={`grid grid-cols-12 gap-1 px-2 py-2 transition-all duration-500 text-sm border-b ${
+                    isHighlighted 
+                      ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500 shadow-lg' 
+                      : isLastMatchOfDay ? 'hover:bg-surface/30 border-b border-gray-400/50' : 'hover:bg-surface/30 border-b border-border/30'
                   }`}
                 >
 

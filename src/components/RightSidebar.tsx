@@ -1,18 +1,78 @@
 
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCountry } from "../contexts/CountryContext";
+import { getTeamIcon } from "../utils/teamIcons";
+
+interface BestOdd {
+  id: number;
+  home_team: string;
+  away_team: string;
+  league: string;
+  country: string;
+  date: string;
+  time: string;
+  best_bet_type: string;
+  best_odds_value: number;
+  odd_1: number;
+  odd_X: number;
+  odd_2: number;
+}
 
 export default function RightSidebar() {
-  const [favorites, setFavorites] = useState([
-    { id: 1, team: "Kansas City Chiefs", sport: "Football", league: "NFL" },
-    { id: 2, team: "Los Angeles Lakers", sport: "Basketball", league: "NBA" },
-    { id: 3, team: "Manchester United", sport: "Soccer", league: "Premier League" }
-  ]);
+  const navigate = useNavigate();
+  const { setSelectedLeague, countries } = useCountry();
+  const [bestOdds, setBestOdds] = useState<BestOdd[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [alerts, setAlerts] = useState([
-    { id: 1, message: "KC Chiefs odds changed to +150", time: "2 min ago", type: "odds" },
-    { id: 2, message: "Lakers vs Warriors starting soon", time: "15 min ago", type: "match" },
+    { id: 1, message: "Best odds updated: Getafe vs Leganes", time: "2 min ago", type: "odds" },
+    { id: 2, message: "High value bet: LaLiga matches", time: "15 min ago", type: "match" },
     { id: 3, message: "New bonus: 100% deposit match", time: "1 hour ago", type: "bonus" }
   ]);
+
+  // Fetch best odds from API
+  const fetchBestOdds = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5001/api/odds/best-odds?limit=3');
+      if (response.ok) {
+        const data = await response.json();
+        setBestOdds(data.best_odds);
+      }
+    } catch (error) {
+      console.error('Error fetching best odds:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle click to view matches for a specific league with match highlighting
+  const handleViewMatches = (league: string, country: string, matchId: number) => {
+    // Find the league in countries data
+    const targetCountry = countries.find(c => 
+      c.name.toLowerCase() === country.toLowerCase()
+    );
+    
+    if (targetCountry) {
+      const targetLeague = targetCountry.leagues.find(l => 
+        l.name.toLowerCase() === league.toLowerCase()
+      );
+      
+      if (targetLeague) {
+        setSelectedLeague(targetLeague);
+        // Navigate to home page with highlighted match ID
+        navigate(`/?highlight=${matchId}`);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchBestOdds();
+    // Refresh best odds every 30 seconds
+    const interval = setInterval(fetchBestOdds, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const favouriteLeagues = [
     {
@@ -35,9 +95,6 @@ export default function RightSidebar() {
     }
   ];
 
-  const removeFavorite = (id: number) => {
-    setFavorites(favorites.filter(fav => fav.id !== id));
-  };
 
   const removeAlert = (id: number) => {
     setAlerts(alerts.filter(alert => alert.id !== id));
@@ -46,66 +103,135 @@ export default function RightSidebar() {
   return (
     <aside className="w-full lg:w-64 xl:w-72 bg-surface border-l border-border p-3 sm:p-4 space-y-4 sm:space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-muted mb-2 sm:mb-3">FAVOURITES</h3>
-        <div className="space-y-2 sm:mb-3 relative overflow-hidden h-25">
-          <div className="animate-favourites-scroll relative">
-            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
-              <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
-                <img 
-                  src={favouriteLeagues[0].image} 
-                  alt={favouriteLeagues[0].title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              </div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-muted">🔥 BEST ODDS</h3>
+          {loading && (
+            <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          {bestOdds.length > 0 ? (
+            bestOdds.map((odd, index) => {
+              const homeIcon = getTeamIcon(odd.home_team, odd.country);
+              const awayIcon = getTeamIcon(odd.away_team, odd.country);
               
-              <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
-                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[0].title}</h4>
-                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[0].description}</p>
-                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
-                  View Matches
-                </button>
+              return (
+              <div key={odd.id} className="bg-gradient-to-br from-bg to-surface rounded-lg border border-border hover:border-yellow-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-yellow-500/10">
+                {/* Compact header */}
+                <div className="flex items-center justify-between p-2 border-b border-border/50">
+                  <div className="flex items-center gap-1">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold ${
+                      index === 0 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black' :
+                      index === 1 ? 'bg-gradient-to-r from-gray-300 to-gray-500 text-black' :
+                      'bg-gradient-to-r from-orange-400 to-orange-600 text-white'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <span className="text-xs font-medium text-muted truncate">{odd.league}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-yellow-400">{odd.best_odds_value}</div>
+                  </div>
+                </div>
+                
+                {/* Teams with bigger logos */}
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    {/* Home Team */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 mb-2 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shadow-md">
+                        {homeIcon ? (
+                          <img 
+                            src={homeIcon} 
+                            alt={odd.home_team}
+                            className="w-10 h-10 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold ${homeIcon ? 'hidden' : 'flex'}`}>
+                          {odd.home_team.substring(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold text-text text-center leading-tight truncate w-full">{odd.home_team}</span>
+                    </div>
+                    
+                    {/* VS */}
+                    <div className="flex flex-col items-center px-2">
+                      <div className="text-sm text-muted font-bold mb-1">VS</div>
+                      <div className="text-xs text-muted">{odd.date}</div>
+                    </div>
+                    
+                    {/* Away Team */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-12 h-12 mb-2 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden shadow-md">
+                        {awayIcon ? (
+                          <img 
+                            src={awayIcon} 
+                            alt={odd.away_team}
+                            className="w-10 h-10 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-sm font-bold ${awayIcon ? 'hidden' : 'flex'}`}>
+                          {odd.away_team.substring(0, 2).toUpperCase()}
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold text-text text-center leading-tight truncate w-full">{odd.away_team}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Compact odds */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="text-center bg-surface/50 rounded py-1.5">
+                      <div className={`text-xs font-bold ${odd.best_bet_type === 'Home Win' ? 'text-yellow-400' : 'text-text'}`}>
+                        {odd.odd_1}
+                      </div>
+                    </div>
+                    <div className="text-center bg-surface/50 rounded py-1.5">
+                      <div className={`text-xs font-bold ${odd.best_bet_type === 'Draw' ? 'text-yellow-400' : 'text-text'}`}>
+                        {odd.odd_X}
+                      </div>
+                    </div>
+                    <div className="text-center bg-surface/50 rounded py-1.5">
+                      <div className={`text-xs font-bold ${odd.best_bet_type === 'Away Win' ? 'text-yellow-400' : 'text-text'}`}>
+                        {odd.odd_2}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleViewMatches(odd.league, odd.country, odd.id)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-2 px-3 rounded-lg transition-all duration-300 font-bold text-xs shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View Matches
+                  </button>
+                </div>
               </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-6">
+              <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center mx-auto mb-3 border border-border">
+                <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <p className="text-sm text-muted">Loading best odds...</p>
             </div>
-
-            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
-              <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
-                <img 
-                  src={favouriteLeagues[1].image} 
-                  alt={favouriteLeagues[1].title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              </div>
-              
-              <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
-                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[1].title}</h4>
-                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[1].description}</p>
-                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
-                  View Matches
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-bg rounded-lg overflow-hidden border border-border hover:shadow-md transition-all duration-300 group mb-2 sm:mb-3">
-              <div className="relative h-16 sm:h-20 xl:h-24 overflow-hidden">
-                <img 
-                  src={favouriteLeagues[2].image} 
-                  alt={favouriteLeagues[2].title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-              </div>
-              
-              <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
-                <h4 className="text-sm font-semibold text-text truncate">{favouriteLeagues[2].title}</h4>
-                <p className="text-xs text-muted line-clamp-2">{favouriteLeagues[2].description}</p>
-                <button className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded text-xs font-medium transition-colors">
-                  View Matches
-                </button>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

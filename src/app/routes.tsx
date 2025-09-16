@@ -12,6 +12,7 @@ import Bonuses from "../pages/Bonuses";
 import Dashboard from "../pages/Dashboard";
 import SignInSignUp from "../pages/SignInSignUp";
 import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 import Profile from "../pages/Profile";
 
 export const routes: RouteObject[] = [
@@ -39,5 +40,9 @@ export const routes: RouteObject[] = [
   {
     path: "/forgot-password",
     element: <ForgotPassword />
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />
   }
 ];

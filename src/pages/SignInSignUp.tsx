@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
 export default function SignInSignUp() {
+  const [searchParams] = useSearchParams();
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -17,6 +18,14 @@ export default function SignInSignUp() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message === 'password_reset_success') {
+      setSuccess('Password reset successful! You can now sign in with your new password.');
+      setIsSignIn(true); // Switch to sign in mode
+    }
+  }, [searchParams]);
+
   const clearForm = () => {
     setEmail("");
     setUsername("");
@@ -28,30 +37,68 @@ export default function SignInSignUp() {
   };
 
   const handleGoogleLogin = async () => {
+    console.log('🚀 Google login button clicked');
+    
     try {
       setIsLoading(true);
       setError("");
       
-      // Redirect to Google OAuth using backend endpoint
-      const response = await fetch('http://localhost:5001/api/auth/google', {
+      console.log('📡 Making request to backend...');
+      
+      // Try direct redirect first as fallback
+      const backendUrl = 'http://localhost:5001/api/auth/google';
+      console.log('🔗 Backend URL:', backendUrl);
+      
+      // Use fetch with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(backendUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        signal: controller.signal,
       });
       
-      const data = await response.json();
+      clearTimeout(timeoutId);
       
-      if (response.ok && data.authorization_url) {
-        // Redirect to Google OAuth page
-        window.location.href = data.authorization_url;
-      } else {
-        setError(data.detail || 'Failed to initiate Google login');
-        setIsLoading(false);
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', [...response.headers.entries()]);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch (error) {
-      console.error('Google login error:', error);
-      setError('Failed to initiate Google login');
+      
+      const data = await response.json();
+      console.log('📡 Response data:', data);
+      
+      if (data.authorization_url) {
+        console.log('✅ Redirecting to Google OAuth:', data.authorization_url);
+        
+        // Try multiple redirect methods
+        try {
+          window.location.href = data.authorization_url;
+        } catch (redirectError) {
+          console.log('⚠️ window.location.href failed, trying window.open');
+          window.open(data.authorization_url, '_self');
+        }
+      } else {
+        throw new Error('No authorization_url in response');
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Google login error:', error);
+      
+      if (error.name === 'AbortError') {
+        setError('Request timeout - please check if backend is running');
+      } else if (error.message && error.message.includes('fetch')) {
+        setError('Cannot connect to backend - please check if backend is running on port 5001');
+      } else {
+        setError(`Failed to initiate Google login: ${error.message || 'Unknown error'}`);
+      }
+      
       setIsLoading(false);
     }
   };
@@ -318,12 +365,23 @@ export default function SignInSignUp() {
           </div>
           <div className="space-y-3">
             <button 
-              onClick={handleGoogleLogin}
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('🔘 Google button clicked!');
+                handleGoogleLogin();
+              }}
               disabled={isLoading}
               className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">G</div>
-              Continue with Google
+              {isLoading ? 'Connecting...' : 'Continue with Google'}
             </button>
+            
+            {/* Fallback direct link for testing */}
+            <a 
+              href="http://localhost:5001/api/auth/google"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm">
+              🔗 Direct Google Login (Test)
+            </a>
             <button className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02] text-sm">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.71 19.5c-.83 1.24-2.04 2.32-3.54 3.12-1.5.8-3.22 1.2-5.04 1.2-1.8 0-3.48-.4-4.96-1.2-1.48-.8-2.68-1.88-3.5-3.12-1.24-1.84-1.88-3.96-1.88-6.3 0-2.34.64-4.46 1.88-6.3.82-1.24 2.02-2.32 3.5-3.12 1.48-.8 3.16-1.2 4.96-1.2 1.82 0 3.54.4 5.04 1.2 1.5.8 2.71 1.88 3.54 3.12.82 1.24 1.24 2.66 1.24 4.18 0 1.52-.42 2.94-1.24 4.18z"/>

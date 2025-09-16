@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 import HeroSection from "../components/HeroSection";
 import PopularSports from "../components/PopularSports";
 import HotPicks from "../components/HotPicks";
@@ -8,12 +9,14 @@ import { useCountry } from "../contexts/CountryContext";
 import { openBettingSiteByName } from "../config/bettingSites";
 
 export default function Home() {
+  const [searchParams] = useSearchParams();
   const { selectedLeague } = useCountry();
+  const highlightMatchId = searchParams.get('highlight');
 
   if (selectedLeague) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <OddsTable />
+        <OddsTable highlightMatchId={highlightMatchId ? parseInt(highlightMatchId) : undefined} />
       </div>
     );
   }
