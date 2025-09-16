@@ -50,12 +50,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await authService.getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to get user data:", error);
-        tokenManager.clearTokens();
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        setUser(null);
+        
+        // Check if it's an authentication error (token expired/invalid)
+        if (error?.status === 401 || error?.message?.includes('401') || 
+            error?.message?.includes('Unauthorized') || error?.message?.includes('Invalid token')) {
+          console.log("Token expired or invalid - logging out user");
+          
+          // Clear all tokens and state
+          tokenManager.clearTokens();
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+          
+          // Dispatch Redux logout action
+          dispatch(logoutAction());
+          
+          // Dispatch custom event to notify other components
+          window.dispatchEvent(new CustomEvent('authStateChanged', { 
+            detail: { isAuthenticated: false, user: null } 
+          }));
+          
+          // Show a brief message that session expired
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/signin' && currentPath !== '/') {
+            console.log("Session expired - redirecting to sign in");
+            setTimeout(() => {
+              window.location.href = '/signin?message=session_expired';
+            }, 500);
+          }
+        } else {
+          // For other errors, just clear the state but don't redirect
+          tokenManager.clearTokens();
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       }
     } else {
       setIsAuthenticated(false);
@@ -135,14 +166,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
+    // Periodic token validation (check every 5 minutes)
+    const tokenValidationInterval = setInterval(() => {
+      if (isAuthenticated && !tokenManager.isAuthenticated()) {
+        console.log('Token expired during periodic check - logging out');
+        // Token is expired, trigger logout
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/signin' && currentPath !== '/') {
+          window.location.href = '/signin?message=session_expired';
+        } else {
+          // Clear state without redirect if already on signin page
+          tokenManager.clearTokens();
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+          dispatch(logoutAction());
+        }
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('authStateChanged', handleAuthStateChange as EventListener);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authStateChanged', handleAuthStateChange as EventListener);
+      clearInterval(tokenValidationInterval);
     };
-  }, []);
+  }, [isAuthenticated, dispatch]);
 
   const value: AuthContextType = {
     user,

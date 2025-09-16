@@ -21,7 +21,7 @@ interface BestOdd {
 
 export default function RightSidebar() {
   const navigate = useNavigate();
-  const { setSelectedLeague, countries } = useCountry();
+  const { setSelectedLeague, setSelectedCountry, countries } = useCountry();
   const [bestOdds, setBestOdds] = useState<BestOdd[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -60,7 +60,8 @@ export default function RightSidebar() {
       );
       
       if (targetLeague) {
-        setSelectedLeague(targetLeague);
+        setSelectedCountry(targetCountry);  // Set country first
+        setSelectedLeague(targetLeague);    // Then set league
         // Navigate to home page with highlighted match ID
         navigate(`/?highlight=${matchId}`);
       }

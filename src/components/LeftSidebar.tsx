@@ -66,8 +66,9 @@ export default function LeftSidebar() {
     toggleCountryExpansion(country.name);
   };
 
-  const handleLeagueClick = (league: any) => {
-    setSelectedLeague(league);
+  const handleLeagueClick = (league: any, country: any) => {
+    setSelectedCountry(country);  // Set the country first
+    setSelectedLeague(league);    // Then set the league
   };
 
   return (
@@ -112,7 +113,7 @@ export default function LeftSidebar() {
                   {country.leagues.map((league) => (
                     <button
                       key={league.name}
-                      onClick={() => handleLeagueClick(league)} 
+                      onClick={() => handleLeagueClick(league, country)} 
                       className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 ${
                         selectedLeague?.name === league.name
                           ? "bg-green-500/20 text-green-600 border border-green-500/30"

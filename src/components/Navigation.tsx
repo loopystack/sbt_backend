@@ -301,17 +301,11 @@ export default function Navigation() {
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                   className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors"
                 >
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.username}
-                      className="w-8 h-8 rounded-full border-2 border-yellow-500/30"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-black text-sm font-bold">
-                      {user?.username?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                  )}
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                  </div>
                   <span className="text-sm font-medium text-black dark:text-white hidden sm:block">{user?.username || 'User'}</span>
                   <svg 
                     className={`w-4 h-4 text-muted transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} 
@@ -328,17 +322,11 @@ export default function Navigation() {
                   <div className="absolute right-0 mt-2 w-64 bg-surface border border-border rounded-lg shadow-xl z-50">
                     <div className="p-4 border-b border-border">
                       <div className="flex items-center gap-3">
-                        {user?.avatar_url ? (
-                          <img
-                            src={user.avatar_url}
-                            alt={user.username}
-                            className="w-12 h-12 rounded-full border-2 border-yellow-500/30"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-black text-lg font-bold">
-                            {user?.username?.charAt(0).toUpperCase() || 'U'}
-                          </div>
-                        )}
+                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20">
+                          <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                          </svg>
+                        </div>
                         <div>
                           <p className="font-semibold text-text">{user?.username || 'User'}</p>
                           <p className="text-sm text-muted">{user?.email}</p>

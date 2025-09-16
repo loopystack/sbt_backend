@@ -49,8 +49,8 @@ async def google_login():
             GOOGLE_CLIENT_CONFIG,
             scopes=[
                 "openid",
-                "email", 
-                "profile"
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile"
             ],
             redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
@@ -119,25 +119,25 @@ async def mock_google_callback(
         activation_token = secrets.token_urlsafe(32)
         activation_expires = datetime.utcnow() + timedelta(hours=24)
         
-        # Create verification record
-        verification_result = await db.execute(
+        # Delete any existing verification records for this user
+        await db.execute(
             select(EmailVerification).where(EmailVerification.user_id == user.id)
         )
-        verification = verification_result.scalar_one_or_none()
+        existing_verifications = await db.execute(
+            select(EmailVerification).where(EmailVerification.user_id == user.id)
+        )
+        for existing in existing_verifications.scalars().all():
+            await db.delete(existing)
         
-        if verification:
-            verification.token = activation_token
-            verification.expires_at = activation_expires
-            verification.created_at = datetime.utcnow()
-        else:
-            verification = EmailVerification(
-                id=str(uuid.uuid4()),
-                user_id=user.id,
-                token=activation_token,
-                expires_at=activation_expires,
-                created_at=datetime.utcnow()
-            )
-            db.add(verification)
+        # Create new verification record (id will be auto-generated)
+        verification = EmailVerification(
+            user_id=user.id,
+            email=user.email,
+            token=activation_token,
+            expires_at=activation_expires,
+            created_at=datetime.utcnow()
+        )
+        db.add(verification)
         
         await db.commit()
         
@@ -171,7 +171,6 @@ async def google_callback(
         # Get the authorization code from the callback
         code = request.query_params.get("code")
         state = request.query_params.get("state")
-        
         if not code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -183,15 +182,14 @@ async def google_callback(
             GOOGLE_CLIENT_CONFIG,
             scopes=[
                 "openid",
-                "email",
-                "profile"
+                "https://www.googleapis.com/auth/userinfo.email",
+                "https://www.googleapis.com/auth/userinfo.profile"
             ],
             redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
         
         # Exchange code for token
         flow.fetch_token(code=code)
-        
         # Get user info from Google
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
@@ -241,43 +239,18 @@ async def google_callback(
             await db.commit()
             await db.refresh(user)
         
-        # Generate activation token for email verification
-        activation_token = secrets.token_urlsafe(32)
-        activation_expires = datetime.utcnow() + timedelta(hours=24)
-        
-        # Create or update email verification record
-        verification_result = await db.execute(
-            select(EmailVerification).where(EmailVerification.user_id == user.id)
-        )
-        verification = verification_result.scalar_one_or_none()
-        
-        if verification:
-            verification.token = activation_token
-            verification.expires_at = activation_expires
-            verification.created_at = datetime.utcnow()
-        else:
-            verification = EmailVerification(
-                id=str(uuid.uuid4()),
-                user_id=user.id,
-                token=activation_token,
-                expires_at=activation_expires,
-                created_at=datetime.utcnow()
-            )
-            db.add(verification)
-        
+        # For Google OAuth users, mark as verified immediately (Google has already verified the email)
+        user.is_verified = True
         await db.commit()
         
-        # Send activation email
-        activation_url = f"{settings.FRONTEND_URL}/activate?token={activation_token}"
-        await email_service.send_verification_email(
-            email=user.email,
-            username=user.username,
-            verification_token=activation_token
-        )
+        # Generate JWT tokens for immediate login
+        access_token = create_access_token(data={"sub": str(user.id)})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
         
-        # Redirect to frontend with success message
+        # Redirect to frontend with tokens (successful login)
+        frontend_url = f"{settings.FRONTEND_URL}/signin?google_auth=success&access_token={access_token}&refresh_token={refresh_token}"
         return RedirectResponse(
-            url=f"{settings.FRONTEND_URL}/signin?message=activation_sent",
+            url=frontend_url,
             status_code=status.HTTP_302_FOUND
         )
         

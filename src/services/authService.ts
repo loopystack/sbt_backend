@@ -94,7 +94,26 @@ export const tokenManager = {
   },
   isAuthenticated: () => {
     const token = localStorage.getItem('access_token');
-    return !!token && token.trim() !== '';
+    if (!token || token.trim() === '') {
+      return false;
+    }
+    
+    // Basic JWT token validation (check if it's not expired)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Math.floor(Date.now() / 1000);
+      
+      // Check if token is expired
+      if (payload.exp && payload.exp < currentTime) {
+        console.log('Token is expired');
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Invalid token format:', error);
+      return false;
+    }
   },
 };
 
