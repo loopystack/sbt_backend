@@ -54,7 +54,7 @@ export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const { setSelectedLeague } = useCountry();
+  const { selectedLeague, setSelectedLeague } = useCountry();
   const { user, isAuthenticated, logout } = useAuth();
   
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -134,6 +134,14 @@ export default function Navigation() {
     }
   }, [location.pathname]);
 
+  // 🎯 Clear active tab when league is selected (mutual exclusion)
+  useEffect(() => {
+    if (selectedLeague && location.pathname === "/") {
+      console.log(`🏆 League selected: ${selectedLeague.name}, clearing active tab`);
+      setActiveTab(""); // Clear active tab when league is selected on homepage
+    }
+  }, [selectedLeague, location.pathname]);
+
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
 
@@ -143,30 +151,39 @@ export default function Navigation() {
         navigate("/");
         break;
       case "next-matches":
+        setSelectedLeague(null); // Clear league selection
         navigate("/matches");
         break;
       case "dropping-odds":
+        setSelectedLeague(null); // Clear league selection
         navigate("/dropping-odds");
         break;
       case "sure-bets":
+        setSelectedLeague(null); // Clear league selection
         navigate("/sure-bets");
         break;
       case "in-play-odds":
+        setSelectedLeague(null); // Clear league selection
         navigate("/in-play-odds");
         break;
       case "all-events":
+        setSelectedLeague(null); // Clear league selection
         navigate("/all-events");
         break;
       case "betting":
+        setSelectedLeague(null); // Clear league selection
         navigate("/betting");
         break;
       case "bookmakers":
+        setSelectedLeague(null); // Clear league selection
         navigate("/bookmakers");
         break;
       case "bonuses":
+        setSelectedLeague(null); // Clear league selection
         navigate("/bonuses");
         break;
       case "dashboard":
+        setSelectedLeague(null); // Clear league selection
         navigate("/dashboard");
         break;
       default:

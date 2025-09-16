@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCountry } from "../contexts/CountryContext";
 import { useAppDispatch } from "../store/hooks";
 import { getMatchingInfoAction } from "../store/matchinginfo/actions";
@@ -9,6 +10,7 @@ export default function LeftSidebar() {
   const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
   const [leagueMatchCounts, setLeagueMatchCounts] = useState<Record<string, number>>({});
   
@@ -67,8 +69,12 @@ export default function LeftSidebar() {
   };
 
   const handleLeagueClick = (league: any, country: any) => {
+    console.log(`🏆 League clicked: ${country.name} ${league.name}`);
     setSelectedCountry(country);  // Set the country first
     setSelectedLeague(league);    // Then set the league
+    
+    // Navigate to homepage to show the league matches
+    navigate('/');
   };
 
   return (
