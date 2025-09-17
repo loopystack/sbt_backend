@@ -7,7 +7,7 @@ import { useAppDispatch } from "../../store/hooks";
 import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
 import { MatchingInfo, GetMatchingInfoResponse } from "../../store/matchinginfo/types";
 import { transformMatchingInfoToMatch } from "../../data/sampleData";
-import { getTeamIcon } from "../../utils/teamIcons";
+import { getTeamLogo } from "../../utils/teamLogos";
 import CongratulationsAlert from "../CongratulationsAlert";
 type Match = {
   id: string;
@@ -689,9 +689,9 @@ export default function OddsTable() {
                      {/* First Team */}
                      <div className="flex flex-col items-center text-center flex-1">
                        <div className="mb-2">
-                         {getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league)) && (
+                         {getTeamLogo(match.teams.split(' vs ')[0], selectedCountry?.name || getCountryNameFromLeague(match.league)) && (
                            <img 
-                             src={getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league))!}
+                             src={getTeamLogo(match.teams.split(' vs ')[0], selectedCountry?.name || getCountryNameFromLeague(match.league))!}
                              alt={`${match.teams.split(' vs ')[0]} icon`}
                              className="w-8 h-8"
                              onError={(e) => {
@@ -719,9 +719,9 @@ export default function OddsTable() {
                      {/* Second Team */}
                      <div className="flex flex-col items-center text-center flex-1">
                        <div className="mb-2">
-                         {getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league)) && (
+                         {getTeamLogo(match.teams.split(' vs ')[1], selectedCountry?.name || getCountryNameFromLeague(match.league)) && (
                            <img 
-                             src={getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league))!}
+                             src={getTeamLogo(match.teams.split(' vs ')[1], selectedCountry?.name || getCountryNameFromLeague(match.league))!}
                              alt={`${match.teams.split(' vs ')[1]} icon`}
                              className="w-8 h-8"
                              onError={(e) => {
@@ -868,9 +868,9 @@ export default function OddsTable() {
                   
                   <div className="col-span-4 flex items-center">
                     <div className="flex items-center gap-1 w-full min-w-0">
-                      {getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league)) && (
+                      {getTeamLogo(match.teams.split(' vs ')[0], selectedCountry?.name || getCountryNameFromLeague(match.league)) && (
                         <img 
-                          src={getTeamIcon(match.teams.split(' vs ')[0], getCountryNameFromLeague(match.league))!}
+                          src={getTeamLogo(match.teams.split(' vs ')[0], selectedCountry?.name || getCountryNameFromLeague(match.league))!}
                           alt={`${match.teams.split(' vs ')[0]} icon`}
                           className="w-4 h-4"
                           onError={(e) => {
@@ -880,9 +880,9 @@ export default function OddsTable() {
                       )}
                       <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[0]}</span>
                       <span className="text-sm text-muted font-bold px-1">VS</span>
-                      {getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league)) && (
+                      {getTeamLogo(match.teams.split(' vs ')[1], selectedCountry?.name || getCountryNameFromLeague(match.league)) && (
                         <img 
-                          src={getTeamIcon(match.teams.split(' vs ')[1], getCountryNameFromLeague(match.league))!}
+                          src={getTeamLogo(match.teams.split(' vs ')[1], selectedCountry?.name || getCountryNameFromLeague(match.league))!}
                           alt={`${match.teams.split(' vs ')[1]} icon`}
                           className="w-4 h-4"
                           onError={(e) => {
@@ -1064,9 +1064,9 @@ export default function OddsTable() {
                       <div className="flex items-center gap-2">
                         {odds.type === 'home' ? (
                           <>
-                            {getTeamIcon(odds.teams.split(' vs ')[0]) && (
-                              <img 
-                                src={getTeamIcon(odds.teams.split(' vs ')[0])!}
+                            {getTeamLogo(odds.teams.split(' vs ')[0], selectedCountry?.name) && (
+                              <img
+                                src={getTeamLogo(odds.teams.split(' vs ')[0], selectedCountry?.name)!}
                                 alt={`${odds.teams.split(' vs ')[0]} icon`}
                                 className="w-6 h-6"
                                 onError={(e) => {
@@ -1078,9 +1078,9 @@ export default function OddsTable() {
                           </>
                         ) : odds.type === 'away' ? (
                           <>
-                            {getTeamIcon(odds.teams.split(' vs ')[1]) && (
-                              <img 
-                                src={getTeamIcon(odds.teams.split(' vs ')[1])!}
+                            {getTeamLogo(odds.teams.split(' vs ')[1], selectedCountry?.name) && (
+                              <img
+                                src={getTeamLogo(odds.teams.split(' vs ')[1], selectedCountry?.name)!}
                                 alt={`${odds.teams.split(' vs ')[1]} icon`}
                                 className="w-6 h-6"
                                 onError={(e) => {
