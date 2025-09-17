@@ -31,6 +31,7 @@ class User(Base):
     # Relationships
     deposit_intents = relationship("DepositIntent", back_populates="user")
     crypto_balances = relationship("UserCryptoBalance", back_populates="user")
+    betting_records = relationship("BettingRecord", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', username='{self.username}')>"

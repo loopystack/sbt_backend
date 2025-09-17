@@ -154,7 +154,8 @@ export const getTeamLogo = (teamName: string, country?: string): string | null =
       'hoffenheim': 'Hoffenheim.png', 'tsg hoffenheim': 'Hoffenheim.png',
       'mainz': 'Mainz.png', 'rb leipzig': 'RB Leipzig.png', 'leipzig': 'RB Leipzig.png',
       'stuttgart': 'Stuttgart.png', 'vfb stuttgart': 'Stuttgart.png',
-      'union berlin': 'Union Berlin.png', 'wolfsburg': 'Wolfsburg.png', 'vfl wolfsburg': 'Wolfsburg.png'
+      'union berlin': 'Union Berlin.png', 'wolfsburg': 'Wolfsburg.png', 'vfl wolfsburg': 'Wolfsburg.png',
+      'werder bremen': 'Werder bremen.png', 'bremen': 'Werder bremen.png', 'werder': 'Werder bremen.png'
     },
     
     'Italy': {
@@ -168,6 +169,97 @@ export const getTeamLogo = (teamName: string, country?: string): string | null =
       'sassuolo': 'Sassuolo.png', 'spezia': 'Spezia.png', 'torino': 'Torino.png',
       'udinese': 'Udinese.png', 'venezia': 'Venezia.png',
       'verona': 'Verona.png', 'hellas verona': 'Verona.png'
+    },
+    
+    'Belgium': {
+      'anderlecht': 'Anderlecht.png', 'antwerp': 'Antwerp.png',
+      'beerschot va': 'Beerschot VA.png', 'beerschot': 'Beerschot VA.png',
+      'cercle brugge ksv': 'Cercle Brugge KSV.png', 'cercle brugge': 'Cercle Brugge KSV.png',
+      'charleroi': 'Charleroi.png', 'club brugge kv': 'Club Brugge KV.png',
+      'club brugge': 'Club Brugge KV.png', 'brugge': 'Club Brugge KV.png',
+      'eupen': 'Eupen.png', 'genk': 'Genk.png', 'krc genk': 'Genk.png',
+      'gent': 'Gent.png', 'kortrijk': 'Kortrijk.png', 'kv mechelen': 'KV Mechelen.png',
+      'mechelen': 'KV Mechelen.png', 'leuven': 'Leuven.png', 'oostende': 'Oostende.png',
+      'royale union sg': 'Royale Union SG.png', 'union sg': 'Royale Union SG.png',
+      'union': 'Royale Union SG.png', 'seraing': 'Seraing.png',
+      'st. liege': 'St. Liege.png', 'standard liege': 'St. Liege.png',
+      'standard': 'St. Liege.png', 'st. truiden': 'St. Truiden.png',
+      'sint-truiden': 'St. Truiden.png', 'waregem': 'Waregem.png'
+    },
+    
+    'Brazil': {
+      'america mg': 'America MG.png', 'america mineiro': 'America MG.png',
+      'athletico-pr': 'Athletico-PR.png', 'athletico paranaense': 'Athletico-PR.png',
+      'atletico go': 'Atletico GO.png', 'atletico goianiense': 'Atletico GO.png',
+      'atletico-mg': 'Atletico-MG.png', 'atletico mineiro': 'Atletico-MG.png',
+      'avai': 'Avai.png', 'bahia': 'Bahia.png', 'botafogo rj': 'Botafogo RJ.png',
+      'botafogo': 'Botafogo RJ.png', 'bragantino': 'Bragantino.png',
+      'red bull bragantino': 'Bragantino.png', 'ceara': 'Ceara.png',
+      'chapecoense-sc': 'Chapecoense-SC.png', 'chapecoense': 'Chapecoense-SC.png',
+      'corinthians': 'Corinthians.png', 'coritiba': 'Coritiba.png',
+      'cruzeiro': 'Cruzeiro.png', 'cuiaba': 'Cuiaba.png',
+      'flamengo rj': 'Flamengo RJ.png', 'flamengo': 'Flamengo RJ.png',
+      'fluminense': 'Fluminense.png', 'fortaleza': 'Fortaleza.png',
+      'goias': 'Goias.png', 'gremio': 'Gremio.png',
+      'internacional': 'Internacional.png', 'inter': 'Internacional.png',
+      'juventude': 'Juventude.png', 'mirassol': 'Mirassol.png',
+      'palmeiras': 'Palmeiras.png', 'santos': 'Santos.png',
+      'sao paulo': 'Sao Paulo.png', 'sport recife': 'Sport Recife.png',
+      'sport': 'Sport Recife.png', 'vasco': 'Vasco.png',
+      'vasco da gama': 'Vasco.png', 'vitoria': 'Vitoria.png'
+    },
+    
+    'Netherlands': {
+      'ajax': 'Ajax.png', 'afc ajax': 'Ajax.png',
+      'az alkmaar': 'AZ Alkmaar.png', 'az': 'AZ Alkmaar.png',
+      'cambuur': 'Cambuur.png', 'sc cambuur': 'Cambuur.png',
+      'feyenoord': 'Feyenoord.png', 'g.a. eagles': 'G.A. Eagles.png',
+      'go ahead eagles': 'G.A. Eagles.png', 'groningen': 'Groningen.png',
+      'fc groningen': 'Groningen.png', 'heerenveen': 'Heerenveen.png',
+      'sc heerenveen': 'Heerenveen.png', 'heracles': 'Heracles.png',
+      'heracles almelo': 'Heracles.png', 'nijmegen': 'Nijmegen.png',
+      'nec nijmegen': 'Nijmegen.png', 'psv': 'PSV.png', 'psv eindhoven': 'PSV.png',
+      'sittard': 'Sittard.png', 'fortuna sittard': 'Sittard.png',
+      'sparta rotterdam': 'Sparta Rotterdam.png', 'sparta': 'Sparta Rotterdam.png',
+      'twente': 'Twente.png', 'fc twente': 'Twente.png',
+      'utrecht': 'Utrecht.png', 'fc utrecht': 'Utrecht.png',
+      'vitesse': 'Vitesse.png', 'waalwijk': 'Waalwijk.png',
+      'rkc waalwijk': 'Waalwijk.png', 'willem ii': 'Willem II.png',
+      'zwolle': 'Zwolle.png', 'pec zwolle': 'Zwolle.png'
+    },
+    
+    'Poland': {
+      'cracovia': 'Cracovia.png', 'ks cracovia': 'Cracovia.png',
+      'gornik zabrze': 'Gornik Zabrze.png', 'gornik': 'Gornik Zabrze.png',
+      'jagiellonia': 'Jagiellonia.png', 'jagiellonia bialystok': 'Jagiellonia.png',
+      'lech poznan': 'Lech Poznan.png', 'lech': 'Lech Poznan.png',
+      'lechia gdansk': 'Lechia Gdansk.png', 'lechia': 'Lechia Gdansk.png',
+      'leczna': 'Leczna.png', 'gornik leczna': 'Leczna.png',
+      'legia': 'Legia.png', 'legia warsaw': 'Legia.png',
+      'legia warszawa': 'Legia.png', 'piast gliwice': 'Piast Gliwice.png',
+      'piast': 'Piast Gliwice.png', 'pogon szczecin': 'Pogon Szczecin.png',
+      'pogon': 'Pogon Szczecin.png', 'radomiak radom': 'Radomiak Radom.png',
+      'radomiak': 'Radomiak Radom.png', 'rakow': 'Rakow.png',
+      'rakow czestochowa': 'Rakow.png', 'slask wroclaw': 'Slask Wroclaw.png',
+      'slask': 'Slask Wroclaw.png', 'stal mielec': 'Stal Mielec.png',
+      'stal': 'Stal Mielec.png', 'termalica b-b..': 'Termalica B-B..png',
+      'termalica': 'Termalica B-B..png', 'warta poznan': 'Warta Poznan.png',
+      'warta': 'Warta Poznan.png', 'wisla plock': 'Wisla Plock.png',
+      'wisla': 'Wisla.png', 'wisla krakow': 'Wisla.png',
+      'zaglebie': 'Zaglebie.png', 'zaglebie lubin': 'Zaglebie.png'
+    },
+    
+    'Switzerland': {
+      'basel': 'Basel.png', 'fc basel': 'Basel.png',
+      'grasshoppers': 'Grasshoppers.png', 'gc zurich': 'Grasshoppers.png',
+      'lausanne': 'Lausanne.png', 'lausanne-sport': 'Lausanne.png',
+      'lugano': 'Lugano.png', 'fc lugano': 'Lugano.png',
+      'luzern': 'Luzern.png', 'fc luzern': 'Luzern.png',
+      'servette': 'Servette.png', 'servette fc': 'Servette.png',
+      'sion': 'Sion.png', 'fc sion': 'Sion.png',
+      'st. gallen': 'St. Gallen.png', 'st gallen': 'St. Gallen.png',
+      'young boys': 'Young Boys.png', 'yb bern': 'Young Boys.png',
+      'zurich': 'Zurich.png', 'fc zurich': 'Zurich.png'
     }
   };
 
@@ -198,42 +290,42 @@ export const getTeamLogo = (teamName: string, country?: string): string | null =
   return null;
 };
 
-// 🚨 MISSING TEAM LOGOS REPORT
+// 🚨 TEAM LOGOS SYSTEM REPORT
 export const reportMissingLogos = () => {
   console.log(`
 🏆 TEAM LOGO SYSTEM REPORT
 
 ✅ COUNTRIES MAPPED:
 - Austria: 12 teams ✅
-- Belgium: 18 teams ✅  
-- Brazil: 28 teams ✅
-- England: 26 teams ✅
-- France: 20 teams ✅
-- Germany: 18 teams ✅
-- Italy: 20 teams ✅
-- Netherlands: 18 teams ✅
-- Poland: 18 teams ✅
-- Portugal: 18 teams ✅
-- Russia: 16 teams ✅
-- Spain: 24 teams ✅
-- Switzerland: 10 teams ✅
-- Turkey: 19 teams ✅
-- Ukraine: 15 teams ✅
+- Belgium: 18 teams ✅ (Anderlecht, Antwerp, Brugge, Genk, etc.)
+- Brazil: 28 teams ✅ (Flamengo, Corinthians, Palmeiras, etc.)
+- England: 26 teams ✅ (Arsenal, Chelsea, Liverpool, etc.)
+- France: 20 teams ✅ (PSG, Lyon, Marseille, etc.)
+- Germany: 19 teams ✅ (Bayern, Dortmund, Leipzig, etc.)
+- Italy: 20 teams ✅ (Juventus, Inter, Milan, etc.)
+- Netherlands: 18 teams ✅ (Ajax, PSV, Feyenoord, etc.)
+- Poland: 18 teams ✅ (Legia, Lech, Wisla, etc.)
+- Portugal: 18 teams ✅ (Benfica, Porto, Sporting, etc.)
+- Russia: 16 teams ✅ (Zenit, CSKA, Spartak, etc.)
+- Spain: 24 teams ✅ (Real Madrid, Barcelona, Atletico, etc.)
+- Switzerland: 10 teams ✅ (Basel, Young Boys, Zurich, etc.)
+- Turkey: 19 teams ✅ (Galatasaray, Fenerbahce, Besiktas, etc.)
+- Ukraine: 15 teams ✅ (Shakhtar, Dynamo Kyiv, etc.)
 
 🚨 POTENTIAL CONFLICTS RESOLVED:
 - Arsenal (England) vs Arsenal Tula (Russia) ✅
-- Inter (Italy) vs any other Inter teams ✅
+- Inter (Italy) vs Internacional (Brazil) ✅
 - Vitoria (Brazil) vs Vitoria Guimaraes (Portugal) ✅
-- Dynamo (Russia) vs other Dynamo teams ✅
+- Dynamo (Russia) vs Dynamo Kyiv (Ukraine) ✅
 
 💡 USAGE: getTeamLogo(teamName, country)
 - Always provide country parameter for best results
 - System will fallback to global search if country not provided
 
-🎯 EXAMPLES FROM YOUR LIST:
-- Inter → getTeamLogo("Inter", "Italy") → /assets/team_icons/Italy/Inter.png
-- Braga → getTeamLogo("Braga", "Portugal") → /assets/team_icons/Portugal/Braga.png  
-- Vitoria Guimaraes → getTeamLogo("Vitoria Guimaraes", "Portugal") → /assets/team_icons/Portugal/Vitoria Guimaraes.png
-- Arsenal Tula → getTeamLogo("Arsenal Tula", "Russia") → /assets/team_icons/Russia/Arsenal Tula.png
+🎯 EXAMPLES FOR NEWLY ADDED COUNTRIES:
+- Ajax → getTeamLogo("Ajax", "Netherlands") → /assets/team_icons/Netherlands/Ajax.png
+- Flamengo → getTeamLogo("Flamengo", "Brazil") → /assets/team_icons/Brazil/Flamengo RJ.png
+- Legia → getTeamLogo("Legia", "Poland") → /assets/team_icons/Poland/Legia.png
+- Anderlecht → getTeamLogo("Anderlecht", "Belgium") → /assets/team_icons/Belgium/Anderlecht.png
   `);
 };

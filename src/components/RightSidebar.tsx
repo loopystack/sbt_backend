@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCountry } from "../contexts/CountryContext";
-import { getTeamIcon } from "../utils/teamIcons";
+import { getTeamLogo } from "../utils/teamLogos";
 
 interface BestOdd {
   id: number;
@@ -26,9 +26,33 @@ export default function RightSidebar() {
   const [loading, setLoading] = useState(false);
 
   const [alerts, setAlerts] = useState([
-    { id: 1, message: "Best odds updated: Getafe vs Leganes", time: "2 min ago", type: "odds" },
-    { id: 2, message: "High value bet: LaLiga matches", time: "15 min ago", type: "match" },
-    { id: 3, message: "New bonus: 100% deposit match", time: "1 hour ago", type: "bonus" }
+    { 
+      id: 1, 
+      message: "Best odds updated", 
+      homeTeam: "Getafe", 
+      awayTeam: "Leganes", 
+      country: "Spain",
+      time: "2 min ago", 
+      type: "odds" 
+    },
+    { 
+      id: 2, 
+      message: "High value bet", 
+      homeTeam: "Barcelona", 
+      awayTeam: "Real Madrid", 
+      country: "Spain",
+      time: "15 min ago", 
+      type: "match" 
+    },
+    { 
+      id: 3, 
+      message: "New bonus: 100% deposit match", 
+      homeTeam: null, 
+      awayTeam: null, 
+      country: null,
+      time: "1 hour ago", 
+      type: "bonus" 
+    }
   ]);
 
   // Fetch best odds from API
@@ -114,8 +138,8 @@ export default function RightSidebar() {
         <div className="space-y-2">
           {bestOdds.length > 0 ? (
             bestOdds.map((odd, index) => {
-              const homeIcon = getTeamIcon(odd.home_team, odd.country);
-              const awayIcon = getTeamIcon(odd.away_team, odd.country);
+              const homeIcon = getTeamLogo(odd.home_team, odd.country);
+              const awayIcon = getTeamLogo(odd.away_team, odd.country);
               
               return (
               <div key={odd.id} className="bg-gradient-to-br from-bg to-surface rounded-lg border border-border hover:border-yellow-500/50 transition-all duration-300 group hover:shadow-lg hover:shadow-yellow-500/10">
@@ -279,7 +303,44 @@ export default function RightSidebar() {
                      alert.type === 'match' ? '⚽' : '🎁'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-text leading-tight line-clamp-2">{alert.message}</p>
+                    {alert.homeTeam && alert.awayTeam ? (
+                      <div className="space-y-1">
+                        <p className="text-xs sm:text-sm font-medium text-text">{alert.message}</p>
+                        <div className="flex items-center gap-2">
+                          {/* Home Team Logo */}
+                          {getTeamLogo(alert.homeTeam, alert.country) ? (
+                            <img
+                              src={getTeamLogo(alert.homeTeam, alert.country)!}
+                              alt={alert.homeTeam}
+                              className="w-4 h-4 rounded-full"
+                              onError={(e) => e.currentTarget.style.display = 'none'}
+                            />
+                          ) : (
+                            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                              {alert.homeTeam.substring(0, 1)}
+                            </div>
+                          )}
+                          <span className="text-xs text-text font-medium">{alert.homeTeam}</span>
+                          <span className="text-xs text-muted">vs</span>
+                          {/* Away Team Logo */}
+                          {getTeamLogo(alert.awayTeam, alert.country) ? (
+                            <img
+                              src={getTeamLogo(alert.awayTeam, alert.country)!}
+                              alt={alert.awayTeam}
+                              className="w-4 h-4 rounded-full"
+                              onError={(e) => e.currentTarget.style.display = 'none'}
+                            />
+                          ) : (
+                            <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                              {alert.awayTeam.substring(0, 1)}
+                            </div>
+                          )}
+                          <span className="text-xs text-text font-medium">{alert.awayTeam}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm font-medium text-text leading-tight line-clamp-2">{alert.message}</p>
+                    )}
                     <p className="text-xs text-muted mt-1 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 bg-muted rounded-full flex-shrink-0"></span>
                       {alert.time}

@@ -2,6 +2,7 @@ from app.core.database import Base
 from .user import User, EmailVerification, PasswordReset
 from .odds import Odds
 from .deposit import DepositIntent, CryptoTransaction, CryptoInventory, UserCryptoBalance
+from .betting_record import BettingRecord
 
 __all__ = [
     "Base", 
@@ -12,5 +13,6 @@ __all__ = [
     "DepositIntent",
     "CryptoTransaction", 
     "CryptoInventory",
-    "UserCryptoBalance"
+    "UserCryptoBalance",
+    "BettingRecord"
 ]

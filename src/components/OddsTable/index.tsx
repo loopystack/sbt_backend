@@ -5,6 +5,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../store/hooks";
 import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
+import { authService } from "../../services/authService";
+import { bettingService, BettingRecordCreate } from "../../services/bettingService";
 import { MatchingInfo, GetMatchingInfoResponse } from "../../store/matchinginfo/types";
 import { transformMatchingInfoToMatch } from "../../data/sampleData";
 import { getTeamLogo } from "../../utils/teamLogos";
@@ -35,7 +37,11 @@ type Bookmaker = {
   draw?: string;
   overUnder?: string;
 };
-export default function OddsTable() {
+interface OddsTableProps {
+  highlightMatchId?: number;
+}
+
+export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
   const dispatch = useAppDispatch();
   const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
@@ -44,7 +50,7 @@ export default function OddsTable() {
   
   // Debug authentication state
   console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
-  const [selectedMarket, setSelectedMarket] = useState("Results");
+  const [selectedMarket, setSelectedMarket] = useState("Next Matches");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,6 +61,7 @@ export default function OddsTable() {
     odds: string;
     teams: string;
     league: string;
+    stake: string;
   }[]>([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [isBetSlipCollapsed, setIsBetSlipCollapsed] = useState(false);
@@ -73,19 +80,22 @@ export default function OddsTable() {
     league: string;
     startPosition: { x: number; y: number };
   } | null>(null);
-  const [selectedBetAmount, setSelectedBetAmount] = useState("0.0001");
+  const [selectedBetAmount, setSelectedBetAmount] = useState("10");
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [betDetails, setBetDetails] = useState<{
     betAmount: string;
     potentialWin: string;
     teams: string;
-  }>({ betAmount: "0.0001", potentialWin: "0.001026", teams: "Team A vs Team B" });
+  }>({ betAmount: "10", potentialWin: "102.60", teams: "Team A vs Team B" });
   const [searchQuery, setSearchQuery] = useState("");
   
   // Betting states
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [bettingError, setBettingError] = useState<string>("");
-  const [userFunds, setUserFunds] = useState<number>(0.5); // Mock user funds
+  const [showBetConfirmation, setShowBetConfirmation] = useState(false);
+  
+  // Get user funds from auth context
+  const userFunds = user?.funds_usd || 0;
   
   // Betting functions
   const handlePlaceBet = async () => {
@@ -94,30 +104,93 @@ export default function OddsTable() {
       return;
     }
     
-    const betAmount = parseFloat(selectedBetAmount);
-    if (betAmount > userFunds) {
-      setBettingError("Not enough funds to make a bet. Top up your account to bet more!");
+    const totalBetAmount = selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0);
+    if (totalBetAmount > userFunds) {
+      setBettingError("Balance is not enough, plz add fund");
       return;
     }
     
-    setIsPlacingBet(true);
     setBettingError("");
+    setShowBetConfirmation(true);
+  };
+
+  const confirmBet = async () => {
+    setShowBetConfirmation(false);
+    setIsPlacingBet(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const totalBetAmount = selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0);
       
-      // Mock successful bet placement
-      setUserFunds(prev => prev - betAmount);
+      // Deduct funds from database using real API
+      await authService.deductFunds(totalBetAmount);
+      
+      // Save each betting record to database
+      for (const odds of selectedOdds) {
+        const bettingRecord: BettingRecordCreate = {
+          bet_amount: parseFloat(odds.stake || '0'),
+          potential_win: parseFloat(odds.stake || '0') * americanToDecimal(odds.odds),
+          match_teams: odds.teams,
+          match_league: odds.league,
+          match_status: "upcoming",
+          selected_outcome: odds.type,
+          selected_team: odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
+                        odds.type === 'away' ? odds.teams.split(' vs ')[1] : undefined,
+          odds_value: odds.odds,
+          odds_decimal: americanToDecimal(odds.odds)
+        };
+        
+        await bettingService.createBettingRecord(bettingRecord);
+      }
+      
+      // Refresh user data to get updated funds
+      const updatedUser = await authService.getCurrentUser();
+      
+      // Store bet details for congratulations
+      setBetDetails({
+        betAmount: totalBetAmount.toFixed(2),
+        potentialWin: calculatePotentialWin().toFixed(2),
+        teams: selectedOdds.map(odds => odds.teams).join(", ")
+      });
+      
+      // Clear selected odds and show congratulations
       setSelectedOdds([]);
       setIsBetSlipHiding(true);
       setTimeout(() => {
         setShowBetSlip(false);
         setIsBetSlipHiding(false);
+        // Show congratulations after betslip is fully hidden
+        setTimeout(() => {
+          setShowCongratulations(true);
+        }, 100);
       }, 500);
       
-    } catch (error) {
-      setBettingError("Failed to place bet. Please try again.");
+      // Update auth context with new user data
+      window.dispatchEvent(new CustomEvent('authStateChanged', { 
+        detail: { isAuthenticated: true, user: updatedUser } 
+      }));
+      
+    } catch (error: any) {
+      console.error('Betting error:', error);
+      
+      // Handle different types of errors
+      let errorMessage = "Failed to place bet. Please try again.";
+      
+      if (error.message) {
+        if (error.message.includes('Network error')) {
+          errorMessage = "Network error - please check your connection and try again.";
+        } else if (error.message.includes('No access token')) {
+          errorMessage = "Please sign in again to place bets.";
+        } else if (error.message.includes('Failed to create betting record')) {
+          errorMessage = "Error saving bet record. Please try again.";
+        } else if (error.message.includes('Failed to deduct funds')) {
+          errorMessage = "Error processing payment. Please check your balance.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setBettingError(errorMessage);
+      setShowBetConfirmation(true); // Show confirmation again on error
     } finally {
       setIsPlacingBet(false);
     }
@@ -311,7 +384,8 @@ export default function OddsTable() {
       type,
       odds,
       teams: match.teams,
-      league: match.league
+      league: match.league,
+      stake: "10"
     };
     
     const button = event.currentTarget as HTMLElement;
@@ -355,6 +429,61 @@ export default function OddsTable() {
   };
   const handleBetAmountClick = (amount: string) => {
     setSelectedBetAmount(amount);
+    // Update all individual stakes when buttons are clicked
+    setSelectedOdds(prev => prev.map(odds => ({
+      ...odds,
+      stake: amount
+    })));
+  };
+
+  const handleIndividualStakeChange = (matchId: string, type: 'home' | 'draw' | 'away', newStake: string) => {
+    setSelectedOdds(prev => prev.map(odds => 
+      odds.matchId === matchId && odds.type === type
+        ? { ...odds, stake: newStake }
+        : odds
+    ));
+  };
+
+  // Convert American odds to decimal odds
+  const americanToDecimal = (americanOdds: string): number => {
+    const odds = parseFloat(americanOdds.replace('+', ''));
+    if (odds > 0) {
+      return (odds / 100) + 1;
+    } else {
+      return (100 / Math.abs(odds)) + 1;
+    }
+  };
+
+  // Calculate total odds (multiply all decimal odds)
+  const calculateTotalOdds = (): number => {
+    return selectedOdds.reduce((total, odds) => {
+      const decimalOdd = americanToDecimal(odds.odds);
+      return total * decimalOdd;
+    }, 1);
+  };
+
+  // Calculate potential win based on individual bets (Single mode)
+  const calculatePotentialWin = (): number => {
+    return selectedOdds.reduce((totalWin, odds) => {
+      const stake = parseFloat(odds.stake || '0');
+      const decimalOdd = americanToDecimal(odds.odds);
+      return totalWin + (stake * decimalOdd);
+    }, 0);
+  };
+
+  // Convert decimal odds back to American/Moneyline format
+  const decimalToAmerican = (decimalOdds: number): string => {
+    if (decimalOdds >= 2.0) {
+      return `+${Math.round((decimalOdds - 1) * 100)}`;
+    } else {
+      return `${Math.round(-100 / (decimalOdds - 1))}`;
+    }
+  };
+
+  // Get total odds in American format
+  const getTotalOddsAmerican = (): string => {
+    const decimalOdds = calculateTotalOdds();
+    return decimalToAmerican(decimalOdds);
   };
 
   // Handle clicks outside odd buttons to collapse betslip
@@ -510,6 +639,13 @@ export default function OddsTable() {
       };
     }
   }, [showBetSlip, selectedOdds]);
+
+  // Reset bet amount to $10 when betslip opens
+  useEffect(() => {
+    if (showBetSlip) {
+      setSelectedBetAmount("10");
+    }
+  }, [showBetSlip]);
   if (loading) {
     return <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -667,7 +803,38 @@ export default function OddsTable() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
             matches.map((match: Match) => (
-              <div key={match.id} className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-200">
+              <div 
+                key={match.id} 
+                className={`relative overflow-hidden rounded-xl p-4 transition-all duration-500 ${
+                  highlightMatchId && parseInt(match.id) === highlightMatchId 
+                    ? 'bg-gradient-to-br from-yellow-400/20 via-orange-400/15 to-red-400/10 border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 transform scale-105 animate-glow-pulse' 
+                    : 'bg-surface border border-border hover:shadow-lg'
+                }`}
+              >
+                {highlightMatchId && parseInt(match.id) === highlightMatchId && (
+                  <>
+                    {/* Animated background glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 animate-pulse rounded-xl"></div>
+                    
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer opacity-40"></div>
+                    
+                    {/* Sparkle effects */}
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-sparkle"></div>
+                    <div className="absolute bottom-2 left-2 w-1.5 h-1.5 bg-orange-400 rounded-full animate-sparkle animation-delay-300"></div>
+                    <div className="absolute top-1/2 left-2 w-1 h-1 bg-red-400 rounded-full animate-sparkle animation-delay-700"></div>
+                    
+                    {/* Rotating border gradient */}
+                    <div className="absolute inset-0 rounded-xl border-2 border-transparent bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 animate-spin-slow opacity-60"></div>
+                    
+                    {/* Floating particles */}
+                    <div className="absolute top-1 right-1 w-1 h-1 bg-yellow-300 rounded-full animate-bounce-gentle"></div>
+                    <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-orange-300 rounded-full animate-bounce-gentle animation-delay-500"></div>
+                  </>
+                )}
+                
+                {/* Content with relative positioning to stay above effects */}
+                <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
@@ -827,6 +994,7 @@ export default function OddsTable() {
                     </div>
                   </div>
                 )}
+                </div>
               </div>
             ))
           )}
@@ -853,10 +1021,30 @@ export default function OddsTable() {
                 return (
                 <div 
                   key={match.id} 
-                  className={`grid grid-cols-12 gap-1 px-2 py-2 hover:bg-surface/30 transition-colors text-sm border-b ${
+                  className={`relative grid grid-cols-12 gap-1 px-2 py-2 transition-all duration-500 text-sm border-b ${
+                    highlightMatchId && parseInt(match.id) === highlightMatchId
+                      ? 'bg-gradient-to-r from-yellow-400/15 via-orange-400/10 to-red-400/15 border-l-4 border-l-yellow-400 shadow-lg shadow-yellow-400/20 transform scale-[1.02]'
+                      : 'hover:bg-surface/30'
+                  } ${
                     isLastMatchOfDay ? 'border-b border-gray-400/50' : 'border-b border-border/30'
                   }`}
                 >
+                  {highlightMatchId && parseInt(match.id) === highlightMatchId && (
+                    <>
+                      {/* Animated left border */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 via-orange-400 to-red-400 animate-pulse"></div>
+                      
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer opacity-60"></div>
+                      
+                      {/* Sparkle dots */}
+                      <div className="absolute top-1 right-1 w-1 h-1 bg-yellow-400 rounded-full animate-sparkle"></div>
+                      <div className="absolute bottom-1 right-1 w-1 h-1 bg-orange-400 rounded-full animate-sparkle animation-delay-500"></div>
+                      
+                      {/* Floating indicator */}
+                      <div className="absolute top-1/2 right-0 w-0.5 h-4 bg-gradient-to-b from-yellow-400 to-orange-400 animate-bounce-gentle"></div>
+                    </>
+                  )}
 
                   <div className="col-span-2 flex items-center justify-center">
                     <div className="text-sm text-muted">{match.date}</div>
@@ -1104,9 +1292,9 @@ export default function OddsTable() {
                        <input 
                          type="text" 
                          className="w-20 px-2 py-1 bg-bg border border-border rounded text-sm text-text"
-                         placeholder="0.0001"
-                         value={selectedBetAmount}
-                         onChange={(e) => setSelectedBetAmount(e.target.value)}
+                         placeholder="10"
+                         value={odds.stake}
+                         onChange={(e) => handleIndividualStakeChange(odds.matchId, odds.type, e.target.value)}
                        />
                      </div>
                   </div>
@@ -1133,50 +1321,49 @@ export default function OddsTable() {
               </div>
             ))
             )}
-             <div className="flex gap-2 mb-4">
-               <button 
-                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                   selectedBetAmount === "0.0001" 
-                     ? "bg-yellow-500 text-black" 
-                     : "bg-surface border border-border text-text hover:bg-bg/50"
-                 }`}
-                 onClick={() => handleBetAmountClick("0.0001")}
-               >
-                 0.0001
-               </button>
-               <button 
-                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                   selectedBetAmount === "0.0002" 
-                     ? "bg-yellow-500 text-black" 
-                     : "bg-surface border border-border text-text hover:bg-bg/50"
-                 }`}
-                 onClick={() => handleBetAmountClick("0.0002")}
-               >
-                 0.0002
-               </button>
-               <button 
-                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                   selectedBetAmount === "0.0005" 
-                     ? "bg-yellow-500 text-black" 
-                     : "bg-surface border border-border text-text hover:bg-bg/50"
-                 }`}
-                 onClick={() => handleBetAmountClick("0.0005")}
-               >
-                 0.0005
-               </button>
-             </div>
+            
+            {/* Stake Amount Buttons */}
+            <div className="flex gap-2 mb-4">
+              <button 
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  selectedBetAmount === "10" 
+                    ? "bg-yellow-500 text-black" 
+                    : "bg-surface border border-border text-text hover:bg-bg/50"
+                }`}
+                onClick={() => handleBetAmountClick("10")}
+              >
+                10
+              </button>
+              <button 
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  selectedBetAmount === "20" 
+                    ? "bg-yellow-500 text-black" 
+                    : "bg-surface border border-border text-text hover:bg-bg/50"
+                }`}
+                onClick={() => handleBetAmountClick("20")}
+              >
+                20
+              </button>
+              <button 
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                  selectedBetAmount === "50" 
+                    ? "bg-yellow-500 text-black" 
+                    : "bg-surface border border-border text-text hover:bg-bg/50"
+                }`}
+                onClick={() => handleBetAmountClick("50")}
+              >
+                50
+              </button>
+            </div>
+            
                          <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted">Total Odds</span>
-                <span className="text-text">10.26</span>
-              </div>
-              <div className="flex justify-between text-sm">
                 <span className="text-muted">Total Bet</span>
-                <span className="text-text">{selectedBetAmount} B</span>
+                <span className="text-text">${selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted">POTENTIAL WIN</span>
-                <span className="text-text">{(parseFloat(selectedBetAmount) * 10.26).toFixed(6)} B</span>
+                <span className="text-text">${calculatePotentialWin().toFixed(2)}</span>
               </div>
             </div>
             
@@ -1353,6 +1540,105 @@ export default function OddsTable() {
            }
          </div>
        )}
+
+      {/* Bet Confirmation Modal */}
+      {showBetConfirmation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white">Confirm Your Bet</h3>
+              <button
+                onClick={() => setShowBetConfirmation(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <p className="text-white text-lg font-medium mb-2">Are you really going to bet?</p>
+              </div>
+
+              {/* Bet Details */}
+              <div className="space-y-4 mb-6">
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <h4 className="text-white font-medium mb-3">Your Bets:</h4>
+                  <div className="space-y-2">
+                    {selectedOdds.map((odds, index) => (
+                      <div key={index} className="flex justify-between items-center text-sm">
+                        <div>
+                          <div className="text-gray-300">{odds.teams}</div>
+                          <div className="text-gray-400 text-xs">
+                            {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
+                             odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'} 
+                            ({odds.odds})
+                          </div>
+                        </div>
+                        <div className="text-white font-medium">${odds.stake}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fund Information */}
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Total Bet Amount:</span>
+                      <span className="text-white font-medium">
+                        ${selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Potential Win:</span>
+                      <span className="text-green-400 font-medium">
+                        ${calculatePotentialWin().toFixed(2)}
+                      </span>
+                    </div>
+                    <hr className="border-gray-700 my-2" />
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Current Balance:</span>
+                      <span className="text-blue-400 font-medium">${userFunds.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">After Bet Balance:</span>
+                      <span className="text-red-400 font-medium">
+                        ${(userFunds - selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBetConfirmation(false)}
+                  className="flex-1 py-3 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmBet}
+                  className="flex-1 py-3 px-4 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-colors"
+                >
+                  Yes, Place Bet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
              {/* Congratulations Alert */}
       <CongratulationsAlert

@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     BLOCKCHAIN_TEST_MODE: str = "false"  # 'true' or 'false'
     
     # Stripe API Keys
-    STRIPE_TEST_SECRET_KEY: str = ""
-    STRIPE_TEST_PUBLISHABLE_KEY: str = ""
+    STRIPE_TEST_SECRET_KEY: str = "sk_test_51Rgrh93T5FbZuPOdDCyXaP3lGcyyQ4sHINuOouajd1WWCRTYS7RFnBWiJOw5FTfCixXkhn1cyESAzpVWHzhujBG8003q0kSbOt"
+    STRIPE_TEST_PUBLISHABLE_KEY: str = "pk_test_51Rgrh93T5FbZuPOdE4BCOM8K2qji0kivAxaCwK3AQwMaTLj54awtW0xsIbqcTwVDijIVTc5xw6XjdBywMPDcnMuz008Kg0KjMD"
     STRIPE_LIVE_SECRET_KEY: str = ""
     STRIPE_LIVE_PUBLISHABLE_KEY: str = ""
     
@@ -69,7 +69,8 @@ class Settings(BaseSettings):
 
     model_config = {
         "env_file": ".env",
-        "case_sensitive": True
+        "case_sensitive": True,
+        "extra": "ignore"  # Ignore extra environment variables
     }
 
 

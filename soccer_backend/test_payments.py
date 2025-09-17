@@ -8,8 +8,8 @@ import sys
 
 # Set environment variables
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
-os.environ["STRIPE_TEST_SECRET_KEY"] = "sk_test_51S5nIdEPfR8232yqb72jbFUfB1rH6XmYaPoZCmXEDiduE1qJgQUHbF9tSLeiZUtfkruG0XgwmlYmbI5mwPrHC6c700Mltm9zhD"
-os.environ["STRIPE_TEST_PUBLISHABLE_KEY"] = "pk_test_51S5nIdEPfR8232yqBZKdH2rIt70y8YPK9QIMKrMtLlCjew9IpjXzMdGPASFfDg8SH9u9g6ss9CWlyXcwVyWnzq4B00XubMZyoj"
+os.environ["STRIPE_TEST_SECRET_KEY"] = "sk_test_51Rgrh93T5FbZuPOdDCyXaP3lGcyyQ4sHINuOouajd1WWCRTYS7RFnBWiJOw5FTfCixXkhn1cyESAzpVWHzhujBG8003q0kSbOt"
+os.environ["STRIPE_TEST_PUBLISHABLE_KEY"] = "pk_test_51Rgrh93T5FbZuPOdE4BCOM8K2qji0kivAxaCwK3AQwMaTLj54awtW0xsIbqcTwVDijIVTc5xw6XjdBywMPDcnMuz008Kg0KjMD"
 os.environ["PAYMENT_MODE"] = "test"
 
 try:

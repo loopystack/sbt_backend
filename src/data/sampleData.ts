@@ -32,53 +32,45 @@ export function transformMatchingInfoToMatch(matchingInfo: MatchingInfo[]): Matc
     if (isLive) {
       status = "Live";
     } else if (isFinished) {
-      status = "Finished";
+      status = "Finished"; 
     } else {
       status = "Upcoming";
     }
 
     // Create bookmakers array with the odds data
-    // Handle null/undefined odd values safely
-    const safeToString = (value: number | null | undefined): string => {
-      if (value === null || value === undefined) {
-        return 'N/A';
-      }
-      return value.toString();
-    };
-
     const bookmakers = [
       {
         name: "Bet365",
-        home: safeToString(match.odd_1),
-        away: safeToString(match.odd_2),
-        draw: safeToString(match.odd_X),
+        home: match.odd_1?.toString() || "N/A",
+        away: match.odd_2?.toString() || "N/A",
+        draw: match.odd_X?.toString() || "N/A",
       },
       {
         name: "DraftKings", 
-        home: safeToString(match.odd_1),
-        away: safeToString(match.odd_2),
-        draw: safeToString(match.odd_X),
+        home: match.odd_1?.toString() || "N/A",
+        away: match.odd_2?.toString() || "N/A",
+        draw: match.odd_X?.toString() || "N/A",
       },
       {
         name: "FanDuel",
-        home: safeToString(match.odd_1),
-        away: safeToString(match.odd_2),
-        draw: safeToString(match.odd_X),
+        home: match.odd_1?.toString() || "N/A",
+        away: match.odd_2?.toString() || "N/A",
+        draw: match.odd_X?.toString() || "N/A",
       }
     ];
 
     return {
-      id: match.id?.toString() || 'unknown',
-      time: match.time || 'TBD',
+      id: match.id.toString(),
+      time: match.time,
       status,
-      teams: `${match.home_team || 'Home Team'} vs ${match.away_team || 'Away Team'}`,
+      teams: `${match.home_team} vs ${match.away_team}`,
       sport: "Football",
-      league: match.league || 'Unknown League',
+      league: match.league,
       result: match.result || undefined,
       isHistorical: status === "Finished",
       bookmakers,
-      date: match.date || new Date().toISOString().split('T')[0],
-      bookmakerCount: match.bets || 0,
+      date: match.date,
+      bookmakerCount: match.bets,
     };
   });
 }
