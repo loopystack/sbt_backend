@@ -6,6 +6,7 @@ from sqlalchemy import desc, and_, select, func
 from ..core.deps import get_db, get_current_user
 from ..models.user import User
 from ..models.betting_record import BettingRecord
+from ..services.transaction_service import TransactionService
 from ..schemas.betting_record import (
     BettingRecordCreate, 
     BettingRecordResponse, 
@@ -27,6 +28,27 @@ async def create_betting_record(
             **betting_record.model_dump()
         )
         db.add(db_record)
+        await db.flush()  # Flush to get the ID
+        
+        # Create transaction record for the bet placement
+        await TransactionService.create_bet_placed_transaction(
+            db=db,
+            user_id=current_user.id,
+            amount=betting_record.bet_amount,
+            betting_record_id=str(db_record.id),
+            match_teams=betting_record.match_teams,
+            selected_outcome=betting_record.selected_outcome,
+            odds_value=betting_record.odds_value,
+            extra_data={
+                "match_date": betting_record.match_date.isoformat() if betting_record.match_date else None,
+                "match_league": betting_record.match_league,
+                "match_status": betting_record.match_status,
+                "selected_team": betting_record.selected_team,
+                "odds_decimal": betting_record.odds_decimal,
+                "potential_win": betting_record.potential_win
+            }
+        )
+        
         await db.commit()
         await db.refresh(db_record)
         return db_record
@@ -112,3 +134,59 @@ async def get_betting_stats(
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch betting stats: {str(e)}")
+
+@router.post("/fix-missing-dates")
+async def fix_missing_match_dates(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Fix existing betting records with missing match dates"""
+    try:
+        # Get all records with missing match dates for current user
+        query = select(BettingRecord).where(
+            and_(
+                BettingRecord.user_id == current_user.id,
+                BettingRecord.match_date.is_(None)
+            )
+        )
+        result = await db.execute(query)
+        records_to_fix = result.scalars().all()
+        
+        updated_count = 0
+        
+        for record in records_to_fix:
+            # Generate a reasonable future date based on when bet was placed
+            from datetime import timedelta, datetime
+            import random
+            
+            bet_date = record.created_at
+            # Add 1-7 days to bet date for match date
+            days_ahead = random.randint(1, 7)
+            hours = random.randint(12, 22)  # Between 12 PM and 10 PM
+            minutes = random.choice([0, 15, 30, 45])
+            
+            # Create a new datetime for the match
+            match_date = datetime(
+                year=bet_date.year,
+                month=bet_date.month,
+                day=bet_date.day,
+                hour=hours,
+                minute=minutes,
+                second=0,
+                microsecond=0,
+                tzinfo=bet_date.tzinfo
+            ) + timedelta(days=days_ahead)
+            
+            record.match_date = match_date
+            updated_count += 1
+        
+        await db.commit()
+        
+        return {
+            "message": f"Updated {updated_count} betting records with match dates",
+            "updated_count": updated_count
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to fix match dates: {str(e)}")

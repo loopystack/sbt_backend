@@ -24,6 +24,7 @@ from app.schemas.payment import (
     PayPalPaymentRequest
 )
 from app.services.blockchain_verifier import blockchain_verifier
+from app.services.transaction_service import TransactionService
 
 router = APIRouter(tags=["payments"])
 logger = logging.getLogger(__name__)
@@ -133,6 +134,21 @@ async def process_card_payment(
                 # For unsupported test cards, create a simulated transaction
                 logger.info(f"No test token available for card {card_number}, simulating payment")
                 
+                # Create transaction record first
+                await TransactionService.create_deposit_transaction(
+                    db=db,
+                    user_id=current_user.id,
+                    amount=payment_data.amount,
+                    payment_method="card_simulation",
+                    external_reference=f"sim_{current_user.id}_{int(datetime.now().timestamp())}",
+                    extra_data={
+                        "card_type": payment_data.card_type,
+                        "card_last4": card_number[-4:],
+                        "cardholder_name": payment_data.cardholder_name,
+                        "simulated": True
+                    }
+                )
+                
                 # Update user funds
                 current_user.funds_usd += Decimal(str(payment_data.amount))
                 await db.commit()
@@ -152,6 +168,22 @@ async def process_card_payment(
             if intent.status == 'succeeded':
                 # Log current user info
                 logger.info(f"Stripe payment successful for user {current_user.id}, current balance: {current_user.funds_usd}")
+                
+                # Create transaction record first
+                await TransactionService.create_deposit_transaction(
+                    db=db,
+                    user_id=current_user.id,
+                    amount=payment_data.amount,
+                    payment_method=f"stripe_{payment_data.card_type}",
+                    external_reference=intent.id,
+                    extra_data={
+                        "stripe_intent_id": intent.id,
+                        "card_type": payment_data.card_type,
+                        "card_last4": card_number[-4:],
+                        "cardholder_name": payment_data.cardholder_name,
+                        "stripe_mode": key_info['mode']
+                    }
+                )
                 
                 # Update user funds
                 current_user.funds_usd += Decimal(str(payment_data.amount))
@@ -239,6 +271,21 @@ async def process_bank_transfer(
         # Log current user info
         logger.info(f"Processing bank transfer for user {current_user.id}, current balance: {current_user.funds_usd}")
         
+        # Create transaction record first
+        await TransactionService.create_deposit_transaction(
+            db=db,
+            user_id=current_user.id,
+            amount=payment_data.amount,
+            payment_method="bank_transfer",
+            external_reference=transaction_id,
+            extra_data={
+                "bank_name": payment_data.bank_name,
+                "account_number": payment_data.account_number[-4:],  # Only last 4 digits for security
+                "account_holder": payment_data.account_holder,
+                "routing_number": payment_data.routing_number
+            }
+        )
+        
         # Update user funds
         current_user.funds_usd += Decimal(str(payment_data.amount))
         await db.commit()
@@ -295,6 +342,19 @@ async def process_paypal_payment(
         
         # Log current user info
         logger.info(f"Processing PayPal payment for user {current_user.id}, current balance: {current_user.funds_usd}")
+        
+        # Create transaction record first
+        await TransactionService.create_deposit_transaction(
+            db=db,
+            user_id=current_user.id,
+            amount=payment_data.amount,
+            payment_method="paypal",
+            external_reference=transaction_id,
+            extra_data={
+                "paypal_email": payment_data.email,
+                "paypal_mode": key_info['mode']
+            }
+        )
         
         # Update user funds
         current_user.funds_usd += Decimal(str(payment_data.amount))

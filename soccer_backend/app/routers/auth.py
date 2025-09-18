@@ -34,6 +34,7 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserCreate, UserResponse
 from app.services.email_service import email_service
+from app.services.transaction_service import TransactionService
 
 router = APIRouter()
 
@@ -491,6 +492,19 @@ async def add_funds(
                 detail="Amount must be greater than 0"
             )
         
+        # Create transaction record first
+        await TransactionService.create_deposit_transaction(
+            db=db,
+            user_id=current_user.id,
+            amount=amount,
+            payment_method="admin_add",  # This is for testing/admin purposes
+            extra_data={
+                "admin_action": True,
+                "call_id": call_id,
+                "original_balance": float(current_user.funds_usd)
+            }
+        )
+        
         # Add funds to user account
         current_user.funds_usd += Decimal(str(amount))
         await db.commit()
@@ -538,6 +552,10 @@ async def deduct_funds(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Insufficient funds"
             )
+        
+        # Note: We don't create a transaction here anymore
+        # The betting record creation will handle the transaction
+        # This prevents duplicate transactions for the same bet
         
         # Deduct funds from user account
         current_user.funds_usd -= Decimal(str(amount))
