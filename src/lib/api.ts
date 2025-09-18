@@ -52,6 +52,12 @@ export async function api<T = any>(
   try {
     console.log(`Making API request to: ${absoluteUrl}`);
     console.log('Request options:', requestOptions);
+    console.log('Environment check:', {
+      viteApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+      baseUrl,
+      absoluteUrl,
+      originalUrl: url
+    });
     
     const response = await fetch(absoluteUrl, requestOptions);
     

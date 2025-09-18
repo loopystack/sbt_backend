@@ -3,6 +3,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService, tokenManager } from "../services/authService";
 import { bettingService, BettingRecord, BettingStats } from "../services/bettingService";
+import { transactionService, Transaction, TransactionSummary } from "../services/transactionService";
+import { getTeamLogo } from "../utils/teamLogos";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -12,9 +14,50 @@ export default function Dashboard() {
   const [fundsLoading, setFundsLoading] = useState(true);
   const [bettingRecords, setBettingRecords] = useState<BettingRecord[]>([]);
   const [bettingStats, setBettingStats] = useState<BettingStats | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionSummary, setTransactionSummary] = useState<TransactionSummary | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [transactionCurrentPage, setTransactionCurrentPage] = useState(1);
+  const [transactionTotalPages, setTransactionTotalPages] = useState(1);
   const [recordsLoading, setRecordsLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [sortField, setSortField] = useState<string>('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // Handle column sorting
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Sort betting records
+  const sortedBettingRecords = [...bettingRecords].sort((a, b) => {
+    let aValue: any = a[sortField as keyof BettingRecord];
+    let bValue: any = b[sortField as keyof BettingRecord];
+
+    // Handle different data types
+    if (sortField === 'bet_amount' || sortField === 'potential_win') {
+      aValue = parseFloat(aValue) || 0;
+      bValue = parseFloat(bValue) || 0;
+    } else if (sortField === 'created_at') {
+      aValue = new Date(aValue).getTime();
+      bValue = new Date(bValue).getTime();
+    } else {
+      aValue = String(aValue || '').toLowerCase();
+      bValue = String(bValue || '').toLowerCase();
+    }
+
+    if (sortDirection === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
 
   // Fetch betting records and stats
   const fetchBettingData = async () => {
@@ -22,8 +65,16 @@ export default function Dashboard() {
     
     try {
       setRecordsLoading(true);
+      
+      // First, fix any missing match dates
+      try {
+        await bettingService.fixMissingMatchDates();
+      } catch (error) {
+        console.log('No missing dates to fix or error fixing dates:', error);
+      }
+      
       const [recordsResponse, statsResponse] = await Promise.all([
-        bettingService.getBettingRecords(currentPage, 5), // 5 records per page for dashboard
+        bettingService.getBettingRecords(currentPage, 10), // 10 records per page for dashboard
         bettingService.getBettingStats()
       ]);
       
@@ -36,6 +87,33 @@ export default function Dashboard() {
       setBettingStats(null);
     } finally {
       setRecordsLoading(false);
+    }
+  };
+
+  // Fetch transaction data
+  const fetchTransactionData = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      setTransactionsLoading(true);
+      console.log('🔄 Fetching transaction data...');
+      const transactionsResponse = await transactionService.getTransactions(transactionCurrentPage, 10);
+      
+      console.log('📊 Transaction data received:', {
+        transactionCount: transactionsResponse.transactions.length,
+        transactions: transactionsResponse.transactions,
+        page: transactionsResponse.page,
+        totalPages: transactionsResponse.total_pages
+      });
+      
+      setTransactions(transactionsResponse.transactions);
+      setTransactionTotalPages(transactionsResponse.total_pages);
+    } catch (error) {
+      console.error('❌ Error fetching transaction data:', error);
+      setTransactions([]);
+      setTransactionTotalPages(1);
+    } finally {
+      setTransactionsLoading(false);
     }
   };
 
@@ -75,7 +153,23 @@ export default function Dashboard() {
 
     fetchUserFunds();
     fetchBettingData();
-  }, [isAuthenticated, currentPage]);
+    fetchTransactionData();
+  }, [isAuthenticated, currentPage, transactionCurrentPage]);
+
+  // Listen for betting data changes
+  useEffect(() => {
+    const handleBettingDataChange = () => {
+      console.log('🔄 Betting data changed, refreshing...');
+      fetchBettingData();
+      fetchTransactionData(); // Also refresh transaction data
+    };
+
+    window.addEventListener('bettingDataChanged', handleBettingDataChange);
+    
+    return () => {
+      window.removeEventListener('bettingDataChanged', handleBettingDataChange);
+    };
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -186,6 +280,13 @@ export default function Dashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Your Betting History
+            <button
+              onClick={fetchBettingData}
+              className="ml-2 px-3 py-1 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-lg transition-colors"
+              title="Refresh betting history"
+            >
+              🔄 Refresh
+            </button>
           </h3>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
@@ -211,24 +312,35 @@ export default function Dashboard() {
         </div>
 
         {recordsLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="flex items-center justify-between p-4 bg-bg rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-300 rounded w-40"></div>
-                      <div className="h-3 bg-gray-300 rounded w-24"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-300 rounded w-20"></div>
-                    <div className="h-3 bg-gray-300 rounded w-16"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Status</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Match</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Bet</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Odds</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Amount</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Match Date</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Bet Date</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="border-b border-border/10 animate-pulse">
+                    <td className="py-3 px-2"><div className="w-8 h-8 bg-gray-300 rounded-full"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-32"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
+                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300 rounded w-16 ml-auto"></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : bettingRecords.length === 0 ? (
           <div className="text-center py-12">
@@ -247,176 +359,405 @@ export default function Dashboard() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {bettingRecords.map((record) => (
-              <div key={record.id} className="bg-gradient-to-r from-bg to-bg/50 border border-border/50 rounded-xl p-4 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* Status Icon */}
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      record.bet_status === 'won' ? 'bg-green-500/20 text-green-500' :
-                      record.bet_status === 'lost' ? 'bg-red-500/20 text-red-500' :
-                      'bg-yellow-500/20 text-yellow-500'
-                    }`}>
-                      {record.bet_status === 'won' ? (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : record.bet_status === 'lost' ? (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      ) : (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      )}
-                    </div>
-
-                    {/* Bet Details */}
-                    <div>
-                      <div className="font-semibold text-text mb-1">{record.match_teams}</div>
-                      <div className="flex items-center gap-4 text-sm text-muted">
-                        <span>🎯 {record.selected_team || record.selected_outcome}</span>
-                        <span>📊 {record.odds_value}</span>
-                        <span>💰 ${record.bet_amount.toFixed(2)}</span>
-                        <span>📅 {new Date(record.created_at).toLocaleDateString()}</span>
-                        <span>🕐 {new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('bet_status')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Status
+                      <span className="text-xs ml-1">
+                        {sortField === 'bet_status' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('match_teams')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Match
+                      <span className="text-xs ml-1">
+                        {sortField === 'match_teams' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('selected_outcome')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Bet
+                      <span className="text-xs ml-1">
+                        {sortField === 'selected_outcome' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('odds_value')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Odds
+                      <span className="text-xs ml-1">
+                        {sortField === 'odds_value' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('bet_amount')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Amount
+                      <span className="text-xs ml-1">
+                        {sortField === 'bet_amount' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    Match Date
+                  </th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('created_at')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Bet Date
+                      <span className="text-xs ml-1">
+                        {sortField === 'created_at' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted">
+                    <button
+                      onClick={() => handleSort('potential_win')}
+                      className="flex items-center gap-1 hover:text-text transition-colors"
+                    >
+                      Result
+                      <span className="text-xs ml-1">
+                        {sortField === 'potential_win' ? (sortDirection === 'asc' ? '↑' : '↓') : '⇅'}
+                      </span>
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedBettingRecords.map((record) => (
+                  <tr key={record.id} className="border-b border-border/10 hover:bg-bg/50 transition-colors">
+                    {/* Status */}
+                    <td className="py-3 px-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        record.bet_status === 'won' ? 'bg-green-500/20 text-green-500' :
+                        record.bet_status === 'lost' ? 'bg-red-500/20 text-red-500' :
+                        'bg-yellow-500/20 text-yellow-500'
+                      }`}>
+                        {record.bet_status === 'won' ? '✓' : record.bet_status === 'lost' ? '✗' : '⏳'}
+                      </div>
+                    </td>
+                    
+                    {/* Match */}
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        {(() => {
+                          const teams = record.match_teams.split(' vs ');
+                          const homeTeam = teams[0];
+                          const awayTeam = teams[1];
+                          return (
+                            <>
+                              {getTeamLogo(homeTeam, record.match_league) && (
+                                <img
+                                  src={getTeamLogo(homeTeam, record.match_league)!}
+                                  alt={homeTeam}
+                                  className="w-4 h-4"
+                                  onError={(e) => e.currentTarget.style.display = 'none'}
+                                />
+                              )}
+                              <span className="text-sm font-medium text-text">{homeTeam}</span>
+                              <span className="text-xs text-muted">vs</span>
+                              {getTeamLogo(awayTeam, record.match_league) && (
+                                <img
+                                  src={getTeamLogo(awayTeam, record.match_league)!}
+                                  alt={awayTeam}
+                                  className="w-4 h-4"
+                                  onError={(e) => e.currentTarget.style.display = 'none'}
+                                />
+                              )}
+                              <span className="text-sm font-medium text-text">{awayTeam}</span>
+                            </>
+                          );
+                        })()}
                       </div>
                       {record.match_league && (
-                        <div className="text-xs text-muted mt-1">🏆 {record.match_league}</div>
+                        <div className="text-xs text-muted">{record.match_league}</div>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Profit/Status */}
-                  <div className="text-right">
-                    <div className={`font-bold text-lg ${
-                      record.bet_status === 'won' ? 'text-green-500' :
-                      record.bet_status === 'lost' ? 'text-red-500' :
-                      'text-yellow-500'
-                    }`}>
-                      {record.bet_status === 'pending' ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                          ${record.potential_win.toFixed(2)}
-                        </span>
-                      ) : record.actual_profit !== undefined ? (
-                        `${record.actual_profit >= 0 ? '+' : ''}$${record.actual_profit.toFixed(2)}`
+                    </td>
+                    
+                    {/* Bet Selection */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text">{record.selected_team || record.selected_outcome}</div>
+                      <div className="text-xs text-muted capitalize">{record.match_status}</div>
+                    </td>
+                    
+                    {/* Odds */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm font-medium text-text">{record.odds_value}</div>
+                    </td>
+                    
+                    {/* Amount */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text">${record.bet_amount.toFixed(2)}</div>
+                    </td>
+                    
+                    {/* Match Date */}
+                    <td className="py-3 px-2">
+                      {record.match_date ? (
+                        <>
+                          <div className="text-sm text-text">{new Date(record.match_date).toLocaleDateString()}</div>
+                          <div className="text-xs text-muted">{new Date(record.match_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        </>
                       ) : (
-                        record.bet_status === 'won' ? `+$${(record.potential_win - record.bet_amount).toFixed(2)}` : 
-                        `-$${record.bet_amount.toFixed(2)}`
+                        <div className="text-sm text-muted">
+                          No match date available
+                        </div>
                       )}
-                    </div>
-                    <div className="text-xs text-muted capitalize mt-1">
-                      {record.match_status} • {record.bet_status}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </td>
+                    
+                    {/* Bet Date */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text">{new Date(record.created_at).toLocaleDateString()}</div>
+                      <div className="text-xs text-muted">{new Date(record.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </td>
+                    
+                    {/* Result */}
+                    <td className="py-3 px-2 text-right">
+                      <div className={`text-sm font-semibold ${
+                        record.bet_status === 'won' ? 'text-green-500' :
+                        record.bet_status === 'lost' ? 'text-red-500' :
+                        'text-yellow-500'
+                      }`}>
+                        {record.bet_status === 'pending' ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+                            <span>${record.potential_win.toFixed(2)}</span>
+                          </div>
+                        ) : record.actual_profit !== undefined ? (
+                          `${record.actual_profit >= 0 ? '+' : ''}$${record.actual_profit.toFixed(2)}`
+                        ) : (
+                          record.bet_status === 'won' ? `+$${(record.potential_win - record.bet_amount).toFixed(2)}` : 
+                          `-$${record.bet_amount.toFixed(2)}`
+                        )}
+                      </div>
+                      <div className="text-xs text-muted capitalize">{record.bet_status}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      {/* Recent Activity & Live Matches */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Bets */}
-        <div className="lg:col-span-2 bg-surface border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-text flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Recent Bets
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {bettingRecords.slice(0, 3).map((record) => (
-              <div key={record.id} className="flex items-center justify-between p-4 bg-bg rounded-lg border border-border/50 hover:shadow-md transition-all duration-200">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    record.bet_status === 'won' ? 'bg-green-500/20 text-green-500' :
-                    record.bet_status === 'lost' ? 'bg-red-500/20 text-red-500' :
-                    'bg-yellow-500/20 text-yellow-500'
-                  }`}>
-                    {record.bet_status === 'won' ? '✓' : record.bet_status === 'lost' ? '✗' : '⏳'}
-                  </div>
-                  <div>
-                    <div className="font-medium text-text">{record.match_teams}</div>
-                    <div className="text-sm text-muted">
-                      {record.selected_team || record.selected_outcome} • {record.odds_value} • ${record.bet_amount.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`font-semibold ${
-                    record.bet_status === 'won' ? 'text-green-500' :
-                    record.bet_status === 'lost' ? 'text-red-500' :
-                    'text-yellow-500'
-                  }`}>
-                    {record.bet_status === 'pending' ? 'Pending' : 
-                     record.actual_profit !== undefined ? 
-                       `${record.actual_profit >= 0 ? '+' : ''}$${record.actual_profit.toFixed(2)}` :
-                       record.bet_status === 'won' ? `+$${(record.potential_win - record.bet_amount).toFixed(2)}` :
-                       `-$${record.bet_amount.toFixed(2)}`}
-                  </div>
-                  <div className="text-xs text-muted capitalize">{record.bet_status}</div>
-                </div>
-              </div>
-            ))}
-            {bettingRecords.length === 0 && (
-              <div className="text-center py-8 text-muted">
-                <p className="text-sm">No recent bets to show</p>
-              </div>
-            )}
-          </div>
+      {/* Transaction History */}
+      <div className="bg-surface border border-border rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-text flex items-center gap-2">
+            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Transaction History
+            <button
+              onClick={fetchTransactionData}
+              className="ml-2 px-3 py-1 bg-purple-500 hover:bg-purple-400 text-white text-xs rounded-lg transition-colors"
+              title="Refresh transaction history"
+            >
+              🔄 Refresh
+            </button>
+          </h3>
+          {transactionTotalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTransactionCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={transactionCurrentPage === 1}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  transactionCurrentPage === 1
+                    ? 'bg-surface text-muted cursor-not-allowed'
+                    : 'bg-surface text-text hover:bg-surface/80 border border-border'
+                }`}
+              >
+                ←
+              </button>
+              <span className="text-sm text-muted">
+                {transactionCurrentPage} of {transactionTotalPages}
+              </span>
+              <button
+                onClick={() => setTransactionCurrentPage(prev => Math.min(transactionTotalPages, prev + 1))}
+                disabled={transactionCurrentPage === transactionTotalPages}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  transactionCurrentPage === transactionTotalPages
+                    ? 'bg-surface text-muted cursor-not-allowed'
+                    : 'bg-surface text-text hover:bg-surface/80 border border-border'
+                }`}
+              >
+                →
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Live Matches */}
-        <div className="bg-surface border border-border rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-text mb-6 flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            Live Now
-          </h3>
-          <div className="space-y-4">
-            <div className="p-3 bg-bg rounded-lg border border-red-500/30">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-red-500">LIVE</span>
-                </div>
-                <span className="text-xs text-muted">45'</span>
-              </div>
-              <div className="text-sm font-medium text-text mb-1">Arsenal vs Chelsea</div>
-              <div className="text-xs text-muted">Premier League</div>
-              <div className="flex justify-between mt-2 text-xs">
-                <span>1.8</span>
-                <span>3.2</span>
-                <span>2.1</span>
-              </div>
+        {transactionsLoading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Type</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Description</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Amount</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Balance After</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Date</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="border-b border-border/10 animate-pulse">
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                        <div className="h-4 bg-gray-300 rounded w-20"></div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-40"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+                    <td className="py-3 px-2">
+                      <div className="h-4 bg-gray-300 rounded w-20 mb-1"></div>
+                      <div className="h-3 bg-gray-300 rounded w-16"></div>
+                    </td>
+                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300 rounded w-16 ml-auto"></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
-            
-            <div className="p-3 bg-bg rounded-lg border border-red-500/30">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-red-500">LIVE</span>
-                </div>
-                <span className="text-xs text-muted">67'</span>
-              </div>
-              <div className="text-sm font-medium text-text mb-1">Barcelona vs Real Madrid</div>
-              <div className="text-xs text-muted">La Liga</div>
-              <div className="flex justify-between mt-2 text-xs">
-                <span>2.1</span>
-                <span>3.5</span>
-                <span>1.9</span>
-              </div>
+            <h4 className="text-lg font-semibold text-text mb-2">No transactions yet</h4>
+            <p className="text-muted mb-4">Add funds or place bets to see your transaction history!</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => navigate('/profile')}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              >
+                Add Funds
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              >
+                Place Bet
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Type</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Description</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Amount</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Balance After</th>
+                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Date</th>
+                  <th className="text-right py-3 px-2 text-sm font-medium text-muted">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.slice(0, 10).map((transaction) => (
+                  <tr key={transaction.id} className="border-b border-border/10 hover:bg-bg/50 transition-colors">
+                    {/* Transaction Type */}
+                    <td className="py-3 px-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                          transaction.transaction_type === 'deposit' ? 'bg-green-500/20 text-green-500' :
+                          transaction.transaction_type === 'withdrawal' ? 'bg-red-500/20 text-red-500' :
+                          transaction.transaction_type === 'bet_placed' ? 'bg-blue-500/20 text-blue-500' :
+                          transaction.transaction_type === 'bet_won' ? 'bg-green-500/20 text-green-500' :
+                          transaction.transaction_type === 'bet_lost' ? 'bg-red-500/20 text-red-500' :
+                          'bg-gray-500/20 text-gray-500'
+                        }`}>
+                          {transactionService.getTransactionTypeIcon(transaction.transaction_type)}
+                        </div>
+                        <span className="text-sm font-medium text-text">
+                          {transactionService.formatTransactionType(transaction.transaction_type)}
+                        </span>
+                      </div>
+                    </td>
+                    
+                    {/* Description */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text max-w-xs">
+                        {transaction.description}
+                      </div>
+                      {transaction.payment_method && (
+                        <div className="text-xs text-muted mt-1">
+                          via {transaction.payment_method}
+                        </div>
+                      )}
+                    </td>
+                    
+                    {/* Amount */}
+                    <td className="py-3 px-2">
+                      <div className={`text-sm font-semibold ${
+                        transaction.amount >= 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+                      </div>
+                    </td>
+                    
+                    {/* Balance After */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text">
+                        ${transaction.balance_after.toFixed(2)}
+                      </div>
+                    </td>
+                    
+                    {/* Date */}
+                    <td className="py-3 px-2">
+                      <div className="text-sm text-text">
+                        {new Date(transaction.created_at).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-muted">
+                        {new Date(transaction.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </td>
+                    
+                    {/* Status */}
+                    <td className="py-3 px-2 text-right">
+                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                        transaction.status === 'completed' ? 'bg-green-500/20 text-green-500' :
+                        transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
+                        transaction.status === 'failed' ? 'bg-red-500/20 text-red-500' :
+                        'bg-gray-500/20 text-gray-500'
+                      }`}>
+                        {transaction.status}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+          </div>
+        )}
       </div>
 
       {/* Bottom Call-to-Action */}

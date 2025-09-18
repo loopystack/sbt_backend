@@ -130,11 +130,11 @@ const CongratulationsAlert: React.FC<CongratulationsAlertProps> = ({
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-white/80 text-sm">Bet Amount:</span>
-                  <span className="text-white font-semibold">{betAmount} B</span>
+                  <span className="text-white font-semibold">$ {betAmount}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-white/80 text-sm">Potential Win:</span>
-                  <span className="text-yellow-300 font-bold">{potentialWin} B</span>
+                  <span className="text-yellow-300 font-bold">$ {potentialWin}</span>
                 </div>
               </div>
             </div>

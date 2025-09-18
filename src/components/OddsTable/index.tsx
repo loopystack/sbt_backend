@@ -62,6 +62,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
     teams: string;
     league: string;
     stake: string;
+    matchDate?: string;
   }[]>([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [isBetSlipCollapsed, setIsBetSlipCollapsed] = useState(false);
@@ -124,22 +125,131 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       // Deduct funds from database using real API
       await authService.deductFunds(totalBetAmount);
       
-      // Save each betting record to database
-      for (const odds of selectedOdds) {
-        const bettingRecord: BettingRecordCreate = {
-          bet_amount: parseFloat(odds.stake || '0'),
-          potential_win: parseFloat(odds.stake || '0') * americanToDecimal(odds.odds),
-          match_teams: odds.teams,
-          match_league: odds.league,
-          match_status: "upcoming",
-          selected_outcome: odds.type,
-          selected_team: odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
-                        odds.type === 'away' ? odds.teams.split(' vs ')[1] : undefined,
-          odds_value: odds.odds,
-          odds_decimal: americanToDecimal(odds.odds)
-        };
+      // Save each betting record to database with better error handling
+      try {
+        console.log('💾 Starting to save betting records...');
         
-        await bettingService.createBettingRecord(bettingRecord);
+        // Check authentication first
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          throw new Error('No access token found - please sign in again');
+        }
+        
+        console.log('🔐 Authentication check passed, proceeding to save records...');
+        console.log('🔍 Debug info:', {
+          tokenExists: !!token,
+          tokenLength: token?.length,
+          tokenStart: token?.substring(0, 20),
+          baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
+          currentUser: user?.email,
+          selectedOddsCount: selectedOdds.length
+        });
+        
+        for (const odds of selectedOdds) {
+          // Get the ACTUAL match date and time from the selected match
+          const originalMatch = getMatches().find(m => m.id === odds.matchId);
+          let realMatchDate: string | null = null;
+          
+          console.log('🔍 Processing bet for match:', {
+            matchId: odds.matchId,
+            teams: odds.teams,
+            originalMatch: originalMatch ? {
+              id: originalMatch.id,
+              date: originalMatch.date,
+              time: originalMatch.time,
+              status: originalMatch.status
+            } : 'NOT FOUND'
+          });
+          
+          if (originalMatch && originalMatch.date && originalMatch.time && originalMatch.time !== "LIVE") {
+            try {
+              // Create datetime string without timezone conversion
+              // We want to preserve the exact time as shown in the UI
+              const dateTimeString = `${originalMatch.date}T${originalMatch.time}`;
+              
+              // Create a date object but convert it to a timezone-naive string
+              // This prevents timezone conversion issues
+              const matchDateTime = new Date(dateTimeString);
+              
+              if (isNaN(matchDateTime.getTime())) {
+                console.error('Invalid datetime from combined date+time:', {
+                  originalDate: originalMatch.date,
+                  originalTime: originalMatch.time,
+                  combined: dateTimeString
+                });
+                realMatchDate = null;
+              } else {
+                // Create timezone-naive datetime string by manually formatting
+                // This preserves the original time exactly as displayed
+                const year = matchDateTime.getFullYear();
+                const month = String(matchDateTime.getMonth() + 1).padStart(2, '0');
+                const day = String(matchDateTime.getDate()).padStart(2, '0');
+                const hours = String(matchDateTime.getHours()).padStart(2, '0');
+                const minutes = String(matchDateTime.getMinutes()).padStart(2, '0');
+                const seconds = String(matchDateTime.getSeconds()).padStart(2, '0');
+                
+                // Format as timezone-naive datetime string
+                realMatchDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                
+                console.log('📅 Successfully created match date (timezone-naive):', {
+                  matchId: odds.matchId,
+                  teams: odds.teams,
+                  originalDate: originalMatch.date,
+                  originalTime: originalMatch.time,
+                  combinedDateTime: dateTimeString,
+                  savedDateTime: realMatchDate,
+                  displayFormat: matchDateTime.toLocaleString(),
+                  preservedHour: hours,
+                  preservedMinute: minutes,
+                  originalHour: matchDateTime.getHours(),
+                  originalMinute: matchDateTime.getMinutes()
+                });
+              }
+            } catch (error) {
+              console.error('❌ Error creating match date:', error);
+              realMatchDate = null;
+            }
+          } else {
+            console.log('⚠️ No valid match date/time found, saving without match_date');
+          }
+
+          const bettingRecord: BettingRecordCreate = {
+            bet_amount: parseFloat(odds.stake || '10'),
+            potential_win: parseFloat(odds.stake || '10') * americanToDecimal(odds.odds || '+100'),
+            match_teams: odds.teams || 'Unknown Match',
+            match_date: realMatchDate, // Save the REAL match date from interface (or null)
+            match_league: odds.league || 'Unknown League',
+            match_status: originalMatch?.status === "Live" ? "live" : "upcoming",
+            selected_outcome: odds.type || 'home',
+            selected_team: odds.type === 'home' ? (odds.teams || '').split(' vs ')[0] : 
+                          odds.type === 'away' ? (odds.teams || '').split(' vs ')[1] : undefined,
+            odds_value: odds.odds || '+100',
+            odds_decimal: americanToDecimal(odds.odds || '+100')
+          };
+          
+          console.log('📝 Creating betting record with data:', bettingRecord);
+          
+          try {
+            const savedRecord = await bettingService.createBettingRecord(bettingRecord);
+            console.log('✅ Betting record saved successfully:', savedRecord);
+          } catch (saveError: any) {
+            console.error('❌ Failed to save individual betting record:', saveError);
+            throw saveError; // Re-throw to be caught by outer catch block
+          }
+        }
+        console.log('🎉 All betting records saved successfully');
+      } catch (recordError: any) {
+        console.error('❌ Error saving betting records - FULL ERROR DETAILS:', {
+          error: recordError,
+          message: recordError.message,
+          stack: recordError.stack,
+          name: recordError.name,
+          status: recordError.status,
+          details: recordError.details
+        });
+        
+        // Re-throw the original error without modification to see what's really happening
+        throw recordError;
       }
       
       // Refresh user data to get updated funds
@@ -169,27 +279,24 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
         detail: { isAuthenticated: true, user: updatedUser } 
       }));
       
+      // Trigger betting data refresh for Dashboard
+      window.dispatchEvent(new CustomEvent('bettingDataChanged', {
+        detail: { message: 'New bet placed, refresh betting history' }
+      }));
+      
     } catch (error: any) {
-      console.error('Betting error:', error);
+      console.error('❌ BETTING ERROR - FULL DETAILS:', {
+        error,
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        status: error.status,
+        details: error.details,
+        fullError: JSON.stringify(error, null, 2)
+      });
       
-      // Handle different types of errors
-      let errorMessage = "Failed to place bet. Please try again.";
-      
-      if (error.message) {
-        if (error.message.includes('Network error')) {
-          errorMessage = "Network error - please check your connection and try again.";
-        } else if (error.message.includes('No access token')) {
-          errorMessage = "Please sign in again to place bets.";
-        } else if (error.message.includes('Failed to create betting record')) {
-          errorMessage = "Error saving bet record. Please try again.";
-        } else if (error.message.includes('Failed to deduct funds')) {
-          errorMessage = "Error processing payment. Please check your balance.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      setBettingError(errorMessage);
+      // Show the actual error message to help with debugging
+      setBettingError(error.message || "Unknown error occurred");
       setShowBetConfirmation(true); // Show confirmation again on error
     } finally {
       setIsPlacingBet(false);
@@ -204,6 +311,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       teams: "Kansas City Chiefs vs Buffalo Bills",
       sport: "Football",
       league: "NFL",
+      date: new Date().toISOString().split('T')[0], // Today's date
       bookmakers: [
         { name: "Bet365", home: "+150", away: "-180", draw: undefined },
         { name: "DraftKings", home: "+155", away: "-175", draw: undefined },
@@ -217,10 +325,39 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       teams: "Lakers vs Warriors",
       sport: "Basketball",
       league: "NBA",
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow's date
       bookmakers: [
         { name: "Bet365", home: "-110", away: "-110", draw: undefined },
         { name: "DraftKings", home: "-105", away: "-115", draw: undefined },
         { name: "FanDuel", home: "-108", away: "-112", draw: undefined }
+      ]
+    },
+    {
+      id: "3",
+      time: "15:00",
+      status: "Upcoming",
+      teams: "Arsenal vs Chelsea",
+      sport: "Football",
+      league: "Premier League",
+      date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Day after tomorrow
+      bookmakers: [
+        { name: "Bet365", home: "+245", away: "-312", draw: "+190" },
+        { name: "DraftKings", home: "+250", away: "-305", draw: "+185" },
+        { name: "FanDuel", home: "+240", away: "-320", draw: "+195" }
+      ]
+    },
+    {
+      id: "4",
+      time: "20:45",
+      status: "Upcoming",
+      teams: "Barcelona vs Real Madrid",
+      sport: "Football",
+      league: "La Liga",
+      date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+      bookmakers: [
+        { name: "Bet365", home: "+180", away: "+165", draw: "+210" },
+        { name: "DraftKings", home: "+175", away: "+170", draw: "+205" },
+        { name: "FanDuel", home: "+185", away: "+160", draw: "+215" }
       ]
     }
   ];
@@ -253,6 +390,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
   };
 
   const getMatches = (): Match[] => {
+    // If we have API data, use it
     if (matchingInfo && matchingInfo.length > 0) {
       let filteredMatches = matchingInfo;
       
@@ -294,7 +432,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
     }
     
     if (selectedLeague && selectedLeague.matches.length > 0) {
-      return selectedLeague.matches.map((match: any) => ({
+      const leagueMatches = selectedLeague.matches.map((match: any) => ({
         id: match.id,
         time: match.time,
         status: "Upcoming" as const,
@@ -302,13 +440,25 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
         sport: "Football",
         league: selectedLeague.name,
         bookmakers: [
-          { name: "Bet365", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
-          { name: "DraftKings", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds },
-          { name: "FanDuel", home: match.homeOdds, away: match.awayOdds, draw: match.drawOdds }
+          { name: "Bet365", home: match.homeOdds || "+150", away: match.awayOdds || "-180", draw: match.drawOdds || "+200" },
+          { name: "DraftKings", home: match.homeOdds || "+155", away: match.awayOdds || "-175", draw: match.drawOdds || "+195" },
+          { name: "FanDuel", home: match.homeOdds || "+145", away: match.awayOdds || "-185", draw: match.drawOdds || "+205" }
         ],
-        date: match.date,
-        bookmakerCount: match.bookmakers
+        date: match.date || new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        bookmakerCount: match.bookmakers || 3
       }));
+      
+      // Check if matches have valid odds
+      const hasValidOdds = leagueMatches.some((match: Match) => 
+        match.bookmakers.some((bm: Bookmaker) => bm.home && bm.away)
+      );
+      
+      if (!hasValidOdds) {
+        console.log('⚠️ League matches have no valid odds, using default matches');
+        return defaultMatches;
+      }
+      
+      return leagueMatches;
     }
     
     if (selectedCountry) {
@@ -333,6 +483,8 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       return allMatches;
     }
     
+    // If no API data, always return default matches as fallback
+    console.log('⚠️ No API data available, using default matches');
     return defaultMatches;
   };
   const matches = getMatches();
@@ -385,7 +537,8 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       odds,
       teams: match.teams,
       league: match.league,
-      stake: "10"
+      stake: "10",
+      matchDate: match.date
     };
     
     const button = event.currentTarget as HTMLElement;
@@ -1637,8 +1790,8 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
               </div>
             </div>
           </div>
-        </div>
-      )}
+         </div>
+       )}
 
              {/* Congratulations Alert */}
       <CongratulationsAlert

@@ -27,7 +27,7 @@ export interface BettingRecordCreate {
   bet_amount: number;
   potential_win: number;
   match_teams: string;
-  match_date?: string;
+  match_date?: string | null;
   match_league?: string;
   match_status: string;
   selected_outcome: string;
@@ -63,14 +63,56 @@ export const bettingService = {
       throw new Error('No access token available');
     }
 
-    return api<BettingRecord>(`${BASE_URL}/records`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(record),
+    console.log('🚀 Sending betting record to API:', {
+      url: `${BASE_URL}/records`,
+      fullUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'}${BASE_URL}/records`,
+      token: token ? `${token.substring(0, 20)}...` : 'NONE',
+      record,
+      matchDateDetails: record.match_date ? {
+        originalValue: record.match_date,
+        parsedDate: new Date(record.match_date),
+        parsedHour: new Date(record.match_date).getHours(),
+        parsedMinute: new Date(record.match_date).getMinutes(),
+        utcHour: new Date(record.match_date).getUTCHours(),
+        utcMinute: new Date(record.match_date).getUTCMinutes()
+      } : null
     });
+
+    try {
+      const result = await api<BettingRecord>(`${BASE_URL}/records`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(record),
+      });
+      
+      console.log('✅ API returned success:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ API call failed with full details:', {
+        error,
+        errorMessage: error.message,
+        errorStatus: error.status,
+        errorDetails: error.details,
+        errorName: error.name,
+        fullError: JSON.stringify(error, null, 2)
+      });
+      
+      // Provide specific error messages based on the error type
+      if (error.status === 401) {
+        throw new Error('Authentication failed - please sign in again');
+      } else if (error.status === 422) {
+        throw new Error(`Validation error: ${error.message}`);
+      } else if (error.status === 500) {
+        throw new Error('Server error - please try again later');
+      } else if (error.message?.includes('Network error')) {
+        throw new Error('Network error - check your connection');
+      } else {
+        throw new Error(`Failed to create betting record: ${error.message || 'Unknown error'}`);
+      }
+    }
   },
 
   // Get betting records with pagination
@@ -110,6 +152,22 @@ export const bettingService = {
     return api<BettingStats>(`${BASE_URL}/records/stats`, {
       headers: {
         'Authorization': `Bearer ${token}`,
+      },
+    });
+  },
+
+  // Fix missing match dates in existing records
+  fixMissingMatchDates: async (): Promise<{ message: string; updated_count: number }> => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No access token available');
+    }
+
+    return api<{ message: string; updated_count: number }>(`${BASE_URL}/fix-missing-dates`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
     });
   },
