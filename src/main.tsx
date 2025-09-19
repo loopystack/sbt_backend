@@ -7,6 +7,7 @@ import { routes } from "./app/routes";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CountryProvider } from "./contexts/CountryContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { PreferencesProvider } from "./contexts/PreferencesContext";
 import ReduxProvider from "./contexts/ReduxContext";
 
 const router = createBrowserRouter(routes);
@@ -17,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
       <ThemeProvider>
         <CountryProvider>
           <AuthProvider>
-            <RouterProvider router={router} />
+            <PreferencesProvider>
+              <RouterProvider router={router} />
+            </PreferencesProvider>
           </AuthProvider>
         </CountryProvider>
       </ThemeProvider>

@@ -3,6 +3,8 @@ import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useOddsFormat } from "../../hooks/useOddsFormat";
+import { OddsConverter } from "../../utils/oddsConverter";
 import { useAppDispatch } from "../../store/hooks";
 import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
 import { authService } from "../../services/authService";
@@ -47,6 +49,22 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
   const { theme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`OddsTable: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
   
   // Debug authentication state
   console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
@@ -1070,9 +1088,9 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                         const drawOdd = parseFloat(match.bookmakers[0]?.draw || '0');
                         const awayOdd = parseFloat(match.bookmakers[0]?.away || '0');
                         const odds = [
-                          { value: homeOdd, label: '1', text: match.bookmakers[0]?.home || '-' },
-                          { value: drawOdd, label: 'X', text: match.bookmakers[0]?.draw || '-' },
-                          { value: awayOdd, label: '2', text: match.bookmakers[0]?.away || '-' }
+                          { value: homeOdd, label: '1', text: formatOdds(match.bookmakers[0]?.home || '-') },
+                          { value: drawOdd, label: 'X', text: formatOdds(match.bookmakers[0]?.draw || '-') },
+                          { value: awayOdd, label: '2', text: formatOdds(match.bookmakers[0]?.away || '-') }
                         ];
                         const sortedOdds = [...odds].sort((a, b) => b.value - a.value);
                         
@@ -1115,7 +1133,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
                         >
-                          {match.bookmakers[0]?.home || '-'}
+                          {formatOdds(match.bookmakers[0]?.home || '-')}
                         </button>
                       </div>
                       <div className="text-center">
@@ -1128,7 +1146,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
                         >
-                          {match.bookmakers[0]?.draw || '-'}
+                          {formatOdds(match.bookmakers[0]?.draw || '-')}
                         </button>
                       </div>
                       <div className="text-center">
@@ -1141,7 +1159,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
                         >
-                          {match.bookmakers[0]?.away || '-'}
+                          {formatOdds(match.bookmakers[0]?.away || '-')}
                         </button>
                       </div>
                     </div>
@@ -1286,7 +1304,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
                         >
-                          {match.bookmakers[0]?.home || '-'}
+                          {formatOdds(match.bookmakers[0]?.home || '-')}
                         </button>
                         <button 
                           className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
@@ -1296,7 +1314,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
                         >
-                          {match.bookmakers[0]?.draw || '-'}
+                          {formatOdds(match.bookmakers[0]?.draw || '-')}
                         </button>
                         <button 
                           className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
@@ -1306,7 +1324,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           }`}
                           onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
                         >
-                          {match.bookmakers[0]?.away || '-'}
+                          {formatOdds(match.bookmakers[0]?.away || '-')}
                         </button>
                       </div>
                     )}
@@ -1441,7 +1459,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                       <div className="text-xs text-muted">1x2</div>
                     </div>
                                          <div className="flex items-center justify-between">
-                       <span className="text-lg font-bold text-text">{odds.odds}</span>
+                       <span className="text-lg font-bold text-text">{formatOdds(odds.odds)}</span>
                        <input 
                          type="text" 
                          className="w-20 px-2 py-1 bg-bg border border-border rounded text-sm text-text"
@@ -1734,7 +1752,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                           <div className="text-gray-400 text-xs">
                             {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
                              odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'} 
-                            ({odds.odds})
+                            ({formatOdds(odds.odds)})
                           </div>
                         </div>
                         <div className="text-white font-medium">${odds.stake}</div>

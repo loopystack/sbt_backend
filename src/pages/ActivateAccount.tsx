@@ -39,7 +39,7 @@ export default function ActivateAccount() {
           localStorage.setItem('refresh_token', data.refresh_token);
           
           // Update auth context
-          login(data.user);
+          login(data.user.email, '');
           
           // Redirect to home page after 2 seconds
           setTimeout(() => {

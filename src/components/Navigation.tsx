@@ -5,6 +5,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
+import OddsFormatSelector from "./OddsFormatSelector";
+import LanguageSelector from "./LanguageSelector";
 
 // Hook to determine which sports should be visible and if text should be shown
 const useVisibleSports = () => {
@@ -407,6 +409,11 @@ export default function Navigation() {
         <div className="border-t border-border/30 from-bg/50 to-surface/50">
           <div ref={containerRef} className="flex items-center justify-center gap-1 md:gap-2 overflow-x-auto scrollbar-hide py-4 px-2">
           
+            {/* Odds Format Selector */}
+            <div className="mr-2">
+              <OddsFormatSelector />
+            </div>
+            
             <button
               title="Favorites"
               className="flex items-center gap-1 md:gap-2 lg:gap-3 px-2 md:px-3 lg:px-5 py-2 md:py-3 lg:py-3.5 rounded-xl transition-all duration-300 text-muted hover:text-text hover:bg-gradient-to-r hover:from-yellow-400/20 hover:to-orange-400/20 hover:scale-105 group border border-transparent hover:border-yellow-400/30"
@@ -534,6 +541,11 @@ export default function Navigation() {
                   </div>
                 </div>
               )}
+            </div>
+            
+            {/* Language Selector - positioned next to More tab */}
+            <div className="ml-2">
+              <LanguageSelector />
             </div>
           </div>
         </div>

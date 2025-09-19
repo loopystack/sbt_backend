@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCountry } from "../contexts/CountryContext";
 import { getTeamLogo } from "../utils/teamLogos";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 
 interface BestOdd {
   id: number;
@@ -24,6 +26,23 @@ export default function RightSidebar() {
   const { setSelectedLeague, setSelectedCountry, countries } = useCountry();
   const [bestOdds, setBestOdds] = useState<BestOdd[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string | number): string => {
+    const oddsString = odds.toString();
+    if (!oddsString || oddsString.trim() === '') {
+      return oddsString || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(oddsString);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`RightSidebar: Converting ${oddsString} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
 
   const [alerts, setAlerts] = useState([
     { 
@@ -156,7 +175,7 @@ export default function RightSidebar() {
                     <span className="text-xs font-medium text-muted truncate">{odd.league}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-yellow-400">{odd.best_odds_value}</div>
+                    <div className="text-sm font-bold text-yellow-400">{formatOdds(odd.best_odds_value)}</div>
                   </div>
                 </div>
                 
@@ -218,17 +237,17 @@ export default function RightSidebar() {
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className="text-center bg-surface/50 rounded py-1.5">
                       <div className={`text-xs font-bold ${odd.best_bet_type === 'Home Win' ? 'text-yellow-400' : 'text-text'}`}>
-                        {odd.odd_1}
+                        {formatOdds(odd.odd_1)}
                       </div>
                     </div>
                     <div className="text-center bg-surface/50 rounded py-1.5">
                       <div className={`text-xs font-bold ${odd.best_bet_type === 'Draw' ? 'text-yellow-400' : 'text-text'}`}>
-                        {odd.odd_X}
+                        {formatOdds(odd.odd_X)}
                       </div>
                     </div>
                     <div className="text-center bg-surface/50 rounded py-1.5">
                       <div className={`text-xs font-bold ${odd.best_bet_type === 'Away Win' ? 'text-yellow-400' : 'text-text'}`}>
-                        {odd.odd_2}
+                        {formatOdds(odd.odd_2)}
                       </div>
                     </div>
                   </div>

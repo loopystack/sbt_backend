@@ -1,12 +1,31 @@
 import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
 import { useCountry } from "../contexts/CountryContext";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 import OddsTable from "../components/OddsTable";
 
 export default function Matches() {
   const { selectedLeague } = useCountry();
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedSport, setSelectedSport] = useState("Football");
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`Matches: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
+  
   const [selectedView, setSelectedView] = useState("kickoff");
 
   const dates = [
@@ -264,7 +283,7 @@ export default function Matches() {
                   <div className={`text-xs sm:text-sm font-semibold ${
                     match.bestOdds === 'odds1' ? 'text-green-500 bg-green-500/20 px-2 py-1 rounded' : 'text-text'
                   }`}>
-                    {match.odds1}
+                    {formatOdds(match.odds1)}
                   </div>
                 </div>
                 <div className="text-center">
@@ -272,7 +291,7 @@ export default function Matches() {
                   <div className={`text-xs sm:text-sm font-semibold ${
                     match.bestOdds === 'oddsX' ? 'text-green-500 bg-green-500/20 px-2 py-1 rounded' : 'text-text'
                   }`}>
-                    {match.oddsX}
+                    {formatOdds(match.oddsX)}
                   </div>
                 </div>
                 <div className="text-center">
@@ -280,7 +299,7 @@ export default function Matches() {
                   <div className={`text-xs sm:text-sm font-semibold ${
                     match.bestOdds === 'odds2' ? 'text-green-500 bg-green-500/20 px-2 py-1 rounded' : 'text-text'
                   }`}>
-                    {match.odds2}
+                    {formatOdds(match.odds2)}
                   </div>
                 </div>
               </div>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { openBettingSiteByName } from "../config/bettingSites";
 import { getTeamIcon } from "../utils/teamIcons";
 import { useCountry } from "../contexts/CountryContext";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 import OddsTable from "../components/OddsTable";
 
 const formatScore = (score: string): string => {
@@ -26,6 +28,22 @@ export default function InPlayOdds() {
   const { selectedLeague } = useCountry();
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedView, setSelectedView] = useState("live");
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`InPlayOdds: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
 
   const sports = [
     { name: "All sports", icon: "🏆" },
@@ -326,11 +344,11 @@ export default function InPlayOdds() {
                   </div>
 
                   <div className="col-span-2 text-center">
-                    <div className="text-sm font-medium text-text">{match.odds1}</div>
+                    <div className="text-sm font-medium text-text">{formatOdds(match.odds1)}</div>
                   </div>
 
                   <div className="col-span-2 text-center">
-                    <div className="text-sm font-medium text-text">{match.odds2}</div>
+                    <div className="text-sm font-medium text-text">{formatOdds(match.odds2)}</div>
                   </div>
 
                   <div className="col-span-1 text-center">

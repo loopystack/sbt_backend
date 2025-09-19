@@ -124,6 +124,30 @@ body {
   animation: confetti linear infinite;
 }
 
+/* Add floating animation for dashboard particles */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.3;
+  }
+  25% { 
+    transform: translateY(-10px) translateX(5px);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateY(-20px) translateX(-5px);
+    opacity: 0.9;
+  }
+  75% { 
+    transform: translateY(-10px) translateX(10px);
+    opacity: 0.6;
+  }
+}
+
+.animate-float {
+  animation: float ease-in-out infinite;
+}
+
 /* Ensure proper spacing on very small screens */
 @media (max-width: 640px) {
   .nav-button {

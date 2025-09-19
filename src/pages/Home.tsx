@@ -5,6 +5,7 @@ import PopularSports from "../components/PopularSports";
 import HotPicks from "../components/HotPicks";
 import LatestBonuses from "../components/LatestBonuses";
 import OddsTable from "../components/OddsTable";
+import OddsDemo from "../components/OddsDemo";
 import { useCountry } from "../contexts/CountryContext";
 import { openBettingSiteByName } from "../config/bettingSites";
 
@@ -80,6 +81,7 @@ export default function Home() {
         </div>
       </div>
       <HeroSection />
+      <OddsDemo />
       <PopularSports />
       <HotPicks />
       <LatestBonuses />

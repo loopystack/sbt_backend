@@ -7,7 +7,7 @@ import { getMatchingInfoAction } from "../store/matchinginfo/actions";
 import { MatchingInfo } from "../store/matchinginfo/types";
 
 export default function LeftSidebar() {
-  const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
+  const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries, loading } = useCountry();
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -76,6 +76,30 @@ export default function LeftSidebar() {
     // Navigate to homepage to show the league matches
     navigate('/');
   };
+
+  if (loading) {
+    return (
+      <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">
+        <div>
+          <div className="h-4 bg-muted/20 rounded w-20 mb-3 animate-pulse"></div>
+          
+          <div className="space-y-1 max-h-100 overflow-y-auto">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="space-y-1 animate-pulse">
+                <div className="w-full px-3 py-2 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-4 bg-muted/20 rounded"></div>
+                    <div className="h-4 bg-muted/15 rounded w-24"></div>
+                  </div>
+                  <div className="w-2 h-2 bg-muted/15 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">

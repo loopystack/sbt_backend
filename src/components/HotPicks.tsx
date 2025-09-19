@@ -1,6 +1,24 @@
 import React from "react";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 
 export default function HotPicks() {
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`HotPicks: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
+
   const hotPicks = [
     {
       id: 1,
@@ -105,7 +123,7 @@ export default function HotPicks() {
             <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
               <div className="text-center">
                 <span className="text-xs text-muted block">Best Odds</span>
-                <span className="text-xl sm:text-2xl font-bold text-text">{pick.odds}</span>
+                <span className="text-xl sm:text-2xl font-bold text-text">{formatOdds(pick.odds)}</span>
               </div>
               <button className="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors group-hover:scale-105 flex-shrink-0">
                 Compare Odds

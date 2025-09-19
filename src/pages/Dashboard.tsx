@@ -5,6 +5,8 @@ import { authService, tokenManager } from "../services/authService";
 import { bettingService, BettingRecord, BettingStats } from "../services/bettingService";
 import { transactionService, Transaction, TransactionSummary } from "../services/transactionService";
 import { getTeamLogo } from "../utils/teamLogos";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -12,6 +14,51 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const [userFunds, setUserFunds] = useState(0);
   const [fundsLoading, setFundsLoading] = useState(true);
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string | number): string => {
+    const oddsString = odds.toString();
+    if (!oddsString || oddsString.trim() === '') {
+      return oddsString || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(oddsString);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`Dashboard: Converting ${oddsString} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
+
+  // Helper function to format transaction description with odds conversion
+  const formatTransactionDescription = (description: string): string => {
+    if (!description || description.trim() === '') {
+      return description || '';
+    }
+    
+    // Look for odds patterns in the description (e.g., "at odds +150", "odds: 2.50", "with odds 3/2", "@ 189")
+    const oddsPatterns = [
+      /@\s*([+-]?\d+(?:\.\d+)?)/gi,  // "@ 189" format
+      /at odds ([+-]?\d+(?:\.\d+)?)/gi,
+      /odds:?\s*([+-]?\d+(?:\.\d+)?)/gi,
+      /with odds\s*([+-]?\d+(?:\.\d+)?)/gi,
+      /odds\s*([+-]?\d+(?:\.\d+)?)/gi,
+      /([+-]?\d+(?:\.\d+)?)\s*odds/gi
+    ];
+    
+    let formattedDescription = description;
+    
+    oddsPatterns.forEach(pattern => {
+      formattedDescription = formattedDescription.replace(pattern, (match, oddsValue) => {
+        const convertedOdds = formatOdds(oddsValue);
+        return match.replace(oddsValue, convertedOdds);
+      });
+    });
+    
+    return formattedDescription;
+  };
   const [bettingRecords, setBettingRecords] = useState<BettingRecord[]>([]);
   const [bettingStats, setBettingStats] = useState<BettingStats | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -196,79 +243,160 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 p-4 max-w-7xl mx-auto">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.username}! 👋</h1>
-            <p className="text-green-100">Ready to make some winning bets today?</p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-green-100">Account Balance</div>
-            {fundsLoading ? (
-              <div className="text-3xl font-bold">
-                <div className="animate-pulse bg-green-300 h-8 w-24 rounded"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 rounded-2xl p-8 text-white shadow-2xl">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-4 left-4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
+          <div className="absolute bottom-4 right-4 w-24 h-24 bg-white/5 rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        </div>
+        
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${3 + Math.random() * 2}s`
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {/* User Avatar */}
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-2xl font-bold text-white">
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
-            ) : (
-              <div className="text-3xl font-bold">${userFunds.toFixed(2)}</div>
-            )}
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
+                Welcome back, {user?.username}! 👋
+              </h1>
+              <p className="text-lg text-white/90 font-medium">Ready to make some winning bets today?</p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-sm text-white/80">Online • Active Session</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-right">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
+              <div className="text-sm text-white/80 mb-2 flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                </svg>
+                Account Balance
+              </div>
+              {fundsLoading ? (
+                <div className="text-4xl font-bold">
+                  <div className="animate-pulse bg-white/20 h-10 w-32 rounded-lg"></div>
+                </div>
+              ) : (
+                <div className="text-4xl font-bold text-yellow-300 drop-shadow-lg">
+                  ${userFunds.toFixed(2)}
+                </div>
+              )}
+              <div className="text-xs text-white/70 mt-1">Available for betting</div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
-              </svg>
+        {/* Total Bets Card */}
+        <div className="group relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
+                </svg>
+              </div>
+              <span className="text-3xl">📊</span>
             </div>
-            <span className="text-xl">📊</span>
+            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.total_bets || 0}</div>
+            <div className="text-blue-100 font-medium">Total Bets Placed</div>
           </div>
-          <div className="text-xl font-bold text-text mb-1">{bettingStats?.total_bets || 0}</div>
-          <div className="text-xs text-muted">Total Bets</div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+        {/* Win Rate Card */}
+        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="text-3xl">🏆</span>
             </div>
-            <span className="text-xl">🏆</span>
+            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.win_rate || 0}%</div>
+            <div className="text-emerald-100 font-medium">Success Rate</div>
           </div>
-          <div className="text-xl font-bold text-green-500 mb-1">{bettingStats?.win_rate || 0}%</div>
-          <div className="text-xs text-muted">Win Rate</div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <div className={`w-10 h-10 bg-gradient-to-r ${(bettingStats?.total_profit || 0) >= 0 ? 'from-green-500 to-green-600' : 'from-red-500 to-red-600'} rounded-full flex items-center justify-center`}>
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
+        {/* Total Profit Card */}
+        <div className={`group relative overflow-hidden ${(bettingStats?.total_profit || 0) >= 0 ? 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700' : 'bg-gradient-to-br from-red-500 via-rose-600 to-pink-700'} rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105`}>
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <span className="text-3xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
             </div>
-            <span className="text-xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
+            <div className="text-3xl font-bold mb-2 drop-shadow-lg">
+              ${(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}{(bettingStats?.total_profit || 0).toFixed(2)}
+            </div>
+            <div className={`font-medium ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
+              {(bettingStats?.total_profit || 0) >= 0 ? 'Total Profit' : 'Total Loss'}
+            </div>
           </div>
-          <div className={`text-xl font-bold mb-1 ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            ${(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}{(bettingStats?.total_profit || 0).toFixed(2)}
-          </div>
-          <div className="text-xs text-muted">Total Profit</div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-4 hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+        {/* Active Bets Card */}
+        <div className="group relative overflow-hidden bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1.5s'}}></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <span className="text-3xl">⚡</span>
             </div>
-            <span className="text-xl">⚡</span>
+            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.pending_bets || 0}</div>
+            <div className="text-purple-100 font-medium">Active Bets</div>
           </div>
-          <div className="text-xl font-bold text-text mb-1">{bettingStats?.pending_bets || 0}</div>
-          <div className="text-xs text-muted">Active Bets</div>
         </div>
       </div>
 
@@ -504,7 +632,7 @@ export default function Dashboard() {
                     
                     {/* Odds */}
                     <td className="py-3 px-2">
-                      <div className="text-sm font-medium text-text">{record.odds_value}</div>
+                      <div className="text-sm font-medium text-text">{formatOdds(record.odds_value)}</div>
                     </td>
                     
                     {/* Amount */}
@@ -705,7 +833,7 @@ export default function Dashboard() {
                     {/* Description */}
                     <td className="py-3 px-2">
                       <div className="text-sm text-text max-w-xs">
-                        {transaction.description}
+                        {formatTransactionDescription(transaction.description)}
                       </div>
                       {transaction.payment_method && (
                         <div className="text-xs text-muted mt-1">

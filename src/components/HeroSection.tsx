@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useOddsFormat } from "../hooks/useOddsFormat";
+import { OddsConverter } from "../utils/oddsConverter";
 
 // Custom hook for animated counting
 const useCountUp = (end: number, duration: number = 2000, delay: number = 0) => {
@@ -41,6 +43,27 @@ export default function HeroSection() {
   const { count: bookmakersCount } = useCountUp(80, 2000, 0);
   const { count: sportsCount } = useCountUp(50, 2000, 0);
   const { count: matchesCount } = useCountUp(1000, 2000, 0);
+  
+  // Odds format conversion
+  const { getOddsInFormat, oddsFormat } = useOddsFormat();
+  
+  // Debug: Log when odds format changes
+  useEffect(() => {
+    console.log('HeroSection: Odds format changed to:', oddsFormat);
+  }, [oddsFormat]);
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`HeroSection: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
 
   const featuredMatches = [
     {
@@ -232,19 +255,19 @@ export default function HeroSection() {
                 {match.odds.home && match.odds.away && (
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-muted">Home:</span>
-                    <span className="font-semibold text-text">{match.odds.home}</span>
+                    <span className="font-semibold text-text">{formatOdds(match.odds.home)}</span>
                   </div>
                 )}
                 {match.odds.away && (
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-muted">Away:</span>
-                    <span className="font-semibold text-text">{match.odds.away}</span>
+                    <span className="font-semibold text-text">{formatOdds(match.odds.away)}</span>
                   </div>
                 )}
                 {match.odds.draw && (
                   <div className="flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-muted">Draw:</span>
-                    <span className="font-semibold text-text">{match.odds.draw}</span>
+                    <span className="font-semibold text-text">{formatOdds(match.odds.draw)}</span>
                   </div>
                 )}
                 {match.odds.overUnder && (

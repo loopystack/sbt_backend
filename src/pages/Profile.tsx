@@ -999,10 +999,154 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-text text-lg">Loading your profile...</p>
+      <div className="min-h-screen bg-bg text-text">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header Skeleton */}
+          <div className="mb-8 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-8 bg-muted/20 rounded w-48 mb-2"></div>
+                <div className="h-4 bg-muted/15 rounded w-80"></div>
+              </div>
+              <div className="h-10 bg-muted/20 rounded w-32"></div>
+            </div>
+          </div>
+
+          {/* Profile Overview Card Skeleton */}
+          <div className="bg-surface border border-border rounded-xl p-6 mb-6 animate-pulse">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 bg-muted/20 rounded-full"></div>
+                <div>
+                  <div className="h-6 bg-muted/20 rounded w-48 mb-2"></div>
+                  <div className="h-4 bg-muted/15 rounded w-32 mb-2"></div>
+                  <div className="h-4 bg-muted/15 rounded w-56 mb-3"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 bg-muted/20 rounded-full w-20"></div>
+                    <div className="h-6 bg-muted/20 rounded-full w-16"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-12 bg-muted/20 rounded w-32"></div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Profile Information Skeleton */}
+            <div className="lg:col-span-2">
+              <div className="bg-surface border border-border rounded-xl p-6 animate-pulse">
+                <div className="h-6 bg-muted/20 rounded w-40 mb-6"></div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <div className="h-4 bg-muted/15 rounded w-20 mb-2"></div>
+                      <div className="h-12 bg-muted/20 rounded"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-muted/15 rounded w-20 mb-2"></div>
+                      <div className="h-12 bg-muted/20 rounded"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="h-4 bg-muted/15 rounded w-24 mb-2"></div>
+                    <div className="h-12 bg-muted/20 rounded"></div>
+                    <div className="h-4 bg-muted/15 rounded w-64 mt-2"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Security Settings Skeleton */}
+              <div className="bg-surface border border-border rounded-xl p-6 mt-6 animate-pulse">
+                <div className="h-6 bg-muted/20 rounded w-36 mb-6"></div>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-4 bg-bg/50 rounded-lg border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-muted/20 rounded-lg"></div>
+                        <div>
+                          <div className="h-4 bg-muted/20 rounded w-32 mb-1"></div>
+                          <div className="h-3 bg-muted/15 rounded w-24"></div>
+                        </div>
+                      </div>
+                      <div className="h-8 bg-muted/20 rounded w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Account Statistics Skeleton */}
+              <div className="bg-surface border border-border rounded-xl p-6 mt-6 animate-pulse">
+                <div className="h-6 bg-muted/20 rounded w-36 mb-6"></div>
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="flex items-center p-4 bg-bg/50 rounded-lg border border-border/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-muted/20 rounded-lg"></div>
+                        <div>
+                          <div className="h-4 bg-muted/20 rounded w-24 mb-1"></div>
+                          <div className="h-3 bg-muted/15 rounded w-20"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="space-y-6">
+              {/* Available Funds Skeleton */}
+              <div className="bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-emerald-600/20 border border-emerald-500/30 rounded-xl p-6 mb-6 animate-pulse">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-emerald-400/30 rounded-full"></div>
+                    <div className="h-5 bg-emerald-400/30 rounded w-32"></div>
+                  </div>
+                  <div className="mb-8">
+                    <div className="h-12 bg-emerald-400/30 rounded w-40 mx-auto mb-2"></div>
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <div className="h-10 bg-emerald-400/30 rounded w-24"></div>
+                    <div className="h-10 bg-emerald-400/30 rounded w-24"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Betting Stats Skeleton */}
+              <div className="bg-surface border border-border rounded-xl p-6 animate-pulse">
+                <div className="h-5 bg-muted/20 rounded w-32 mb-4"></div>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-muted/20 rounded-lg"></div>
+                        <div>
+                          <div className="h-3 bg-muted/15 rounded w-16 mb-1"></div>
+                          <div className="h-4 bg-muted/20 rounded w-12"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions Skeleton */}
+              <div className="bg-surface border border-border rounded-xl p-6 animate-pulse">
+                <div className="h-5 bg-muted/20 rounded w-24 mb-4"></div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-bg border border-border rounded-lg">
+                      <div className="w-8 h-8 bg-muted/20 rounded-lg"></div>
+                      <div>
+                        <div className="h-4 bg-muted/20 rounded w-20 mb-1"></div>
+                        <div className="h-3 bg-muted/15 rounded w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

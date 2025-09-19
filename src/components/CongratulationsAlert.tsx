@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface CongratulationsAlertProps {
   isVisible: boolean;
@@ -15,6 +16,7 @@ const CongratulationsAlert: React.FC<CongratulationsAlertProps> = ({
   potentialWin = "0.001026",
   teams = "Team A vs Team B"
 }) => {
+  const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(0);
 
@@ -151,12 +153,12 @@ const CongratulationsAlert: React.FC<CongratulationsAlertProps> = ({
               </button>
               <button
                 onClick={() => {
-                  // Could add share functionality here
-                  navigator.clipboard.writeText(`I just placed a bet on ${teams} for ${betAmount} B! 🎯`);
+                  onClose();
+                  navigate('/dashboard');
                 }}
                 className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg"
               >
-                Share 🎯
+                Check History 📊
               </button>
             </div>
           </div>
