@@ -26,6 +26,7 @@ export interface BettingRecord {
 export interface BettingRecordCreate {
   bet_amount: number;
   potential_win: number;
+  match_id?: number | null;  // Direct link to odds table
   match_teams: string;
   match_date?: string | null;
   match_league?: string;

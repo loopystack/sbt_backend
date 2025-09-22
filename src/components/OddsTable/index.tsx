@@ -361,6 +361,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
           const bettingRecord: BettingRecordCreate = {
             bet_amount: parseFloat(odds.stake || '10'),
             potential_win: parseFloat(odds.stake || '10') * americanToDecimal(odds.odds || '+100'),
+            match_id: odds.matchId ? parseInt(odds.matchId.toString()) : null, // Store exact match ID
             match_teams: odds.teams || 'Unknown Match',
             match_date: realMatchDate, // Save the REAL match date from interface (or null)
             match_league: odds.league || 'Unknown League',

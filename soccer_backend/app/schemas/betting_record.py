@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_validator
 class BettingRecordBase(BaseModel):
     bet_amount: float
     potential_win: float
+    match_id: Optional[int] = None  # Direct link to odds table
     match_teams: str
     match_date: Optional[Union[datetime, str]] = None
     match_league: Optional[str] = None
@@ -52,6 +53,7 @@ class BettingRecordUpdate(BaseModel):
 class BettingRecord(BettingRecordBase):
     id: int
     user_id: int
+    match_id: Optional[int] = None
     actual_profit: Optional[float] = None
     bet_status: str = "pending"
     is_settled: bool = False

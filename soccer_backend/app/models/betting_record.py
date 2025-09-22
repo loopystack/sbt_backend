@@ -15,6 +15,7 @@ class BettingRecord(Base):
     actual_profit = Column(Float, nullable=True)  # Will be set when match is settled
     
     # Match Information
+    match_id = Column(Integer, nullable=True)  # Direct link to odds table (added safely)
     match_teams = Column(String(255), nullable=False)
     match_date = Column(DateTime, nullable=True)  # When the actual match is/was played
     match_league = Column(String(100), nullable=True)

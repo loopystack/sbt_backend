@@ -462,7 +462,7 @@ export default function Dashboard() {
               <span className="text-3xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
             </div>
             <div className="text-3xl font-bold mb-2 drop-shadow-lg">
-              ${(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}{(bettingStats?.total_profit || 0).toFixed(2)}
+              {(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}${(bettingStats?.total_profit || 0).toFixed(2)}
             </div>
             <div className={`font-medium ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
               {(bettingStats?.total_profit || 0) >= 0 ? 'Total Profit' : 'Total Loss'}
@@ -672,8 +672,12 @@ export default function Dashboard() {
                         record.bet_status === 'won' ? 'bg-green-500/20 text-green-500' :
                         record.bet_status === 'lost' ? 'bg-red-500/20 text-red-500' :
                         'bg-yellow-500/20 text-yellow-500'
-                      }`}>
-                        {record.bet_status === 'won' ? '✓' : record.bet_status === 'lost' ? '✗' : '⏳'}
+                      }`} title={
+                        record.bet_status === 'won' ? 'Bet Won! 🎉' :
+                        record.bet_status === 'lost' ? 'Bet Lost 😞' :
+                        'Match Pending ⏳'
+                      }>
+                        {record.bet_status === 'won' ? '🎉' : record.bet_status === 'lost' ? '💔' : '⏳'}
                       </div>
                     </td>
                     
@@ -763,13 +767,24 @@ export default function Dashboard() {
                             <span>${record.potential_win.toFixed(2)}</span>
                           </div>
                         ) : record.actual_profit !== undefined ? (
-                          `${record.actual_profit >= 0 ? '+' : ''}$${record.actual_profit.toFixed(2)}`
+                          `${record.actual_profit >= 0 ? '+' : '-'}$${Math.abs(record.actual_profit).toFixed(2)}`
                         ) : (
                           record.bet_status === 'won' ? `+$${(record.potential_win - record.bet_amount).toFixed(2)}` : 
                           `-$${record.bet_amount.toFixed(2)}`
                         )}
                       </div>
-                      <div className="text-xs text-muted capitalize">{record.bet_status}</div>
+                      <div className="text-xs text-muted capitalize">
+                        {record.bet_status === 'pending' ? 'Pending' : 
+                         record.bet_status === 'won' ? '🏆 Won' : 
+                         record.bet_status === 'lost' ? '❌ Lost' : 
+                         record.bet_status}
+                      </div>
+                      {/* Show match result if available and settled */}
+                      {record.is_settled && record.match_result && (
+                        <div className="text-xs text-muted mt-1">
+                          Final: {record.match_result}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
