@@ -50,6 +50,133 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
+
+  // Helper function to check if a match should be highlighted
+  const isMatchHighlighted = (match: Match): boolean => {
+    if (!highlightMatchId) return false;
+    
+    // Parse teams from the match
+    const [homeTeam, awayTeam] = match.teams.split(' vs ');
+    
+    // First try exact ID match
+    if (parseInt(match.id) === highlightMatchId) {
+      console.log('🎯 Match highlighted by ID:', match.id, 'Teams:', homeTeam, 'vs', awayTeam);
+      return true;
+    }
+    
+    // If ID doesn't match, try to extract team names from URL and match them
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightParam = urlParams.get('highlight');
+    
+    if (highlightParam && highlightParam.includes('_')) {
+      const parts = highlightParam.split('_');
+      if (parts.length >= 3) {
+        const targetHomeTeam = parts[1].replace(/_/g, ' ').toLowerCase();
+        const targetAwayTeam = parts[2].replace(/_/g, ' ').toLowerCase();
+        
+        console.log('🔍 Checking match for highlighting:', {
+          currentMatch: `${homeTeam} vs ${awayTeam}`,
+          targetMatch: `${targetHomeTeam} vs ${targetAwayTeam}`,
+          matchId: match.id,
+          highlightParam
+        });
+        
+        // Flexible team name matching
+        const normalizeTeamName = (name: string) => {
+          return name.toLowerCase()
+            .replace(/fc\s+/g, '') // Remove "FC "
+            .replace(/\s+fc$/g, '') // Remove " FC" at end
+            .replace(/^the\s+/g, '') // Remove "The " at start
+            .replace(/[^\w\s]/g, '') // Remove special characters
+            .trim();
+        };
+        
+        const normalizedHomeTarget = normalizeTeamName(targetHomeTeam);
+        const normalizedAwayTarget = normalizeTeamName(targetAwayTeam);
+        const normalizedHomeMatch = normalizeTeamName(homeTeam);
+        const normalizedAwayMatch = normalizeTeamName(awayTeam);
+        
+        console.log('🔍 Normalized team names:', {
+          target: `${normalizedHomeTarget} vs ${normalizedAwayTarget}`,
+          current: `${normalizedHomeMatch} vs ${normalizedAwayMatch}`
+        });
+        
+        // Check if team names match (either direction)
+        const homeMatch = normalizedHomeMatch.includes(normalizedHomeTarget) ||
+                         normalizedHomeTarget.includes(normalizedHomeMatch) ||
+                         normalizedHomeMatch === normalizedHomeTarget;
+        
+        const awayMatch = normalizedAwayMatch.includes(normalizedAwayTarget) ||
+                         normalizedAwayTarget.includes(normalizedAwayMatch) ||
+                         normalizedAwayMatch === normalizedAwayTarget;
+        
+        console.log('🔍 Match results:', { homeMatch, awayMatch });
+        
+        if (homeMatch && awayMatch) {
+          console.log('✅ Match highlighted by team names:', {
+            target: `${targetHomeTeam} vs ${targetAwayTeam}`,
+            found: `${homeTeam} vs ${awayTeam}`,
+            matchId: match.id
+          });
+          return true;
+        }
+        
+        // Also try reverse matching (home vs away swapped)
+        const homeMatchReversed = normalizedHomeMatch.includes(normalizedAwayTarget) ||
+                                 normalizedAwayTarget.includes(normalizedHomeMatch) ||
+                                 normalizedHomeMatch === normalizedAwayTarget;
+        
+        const awayMatchReversed = normalizedAwayMatch.includes(normalizedHomeTarget) ||
+                                 normalizedHomeTarget.includes(normalizedAwayMatch) ||
+                                 normalizedAwayMatch === normalizedHomeTarget;
+        
+        console.log('🔍 Reverse match results:', { homeMatchReversed, awayMatchReversed });
+        
+        if (homeMatchReversed && awayMatchReversed) {
+          console.log('✅ Match highlighted by REVERSED team names:', {
+            target: `${targetHomeTeam} vs ${targetAwayTeam}`,
+            found: `${homeTeam} vs ${awayTeam}`,
+            matchId: match.id,
+            note: 'Teams were in reverse order'
+          });
+          return true;
+        }
+        
+        // If no match found, log why
+        console.log('❌ No match found for:', {
+          target: `${targetHomeTeam} vs ${targetAwayTeam}`,
+          current: `${homeTeam} vs ${awayTeam}`,
+          normalizedTarget: `${normalizedHomeTarget} vs ${normalizedAwayTarget}`,
+          normalizedCurrent: `${normalizedHomeMatch} vs ${normalizedAwayMatch}`,
+          homeMatch, awayMatch, homeMatchReversed, awayMatchReversed
+        });
+        
+        // Special case: If we're looking for BEST ODDS matches that don't exist in the main list,
+        // we'll log it but NOT highlight anything - only exact matches should be highlighted
+        if (highlightMatchId === 1 || highlightMatchId === 2 || highlightMatchId === 3) {
+          console.log('🔄 BEST ODDS match not found in current league:', {
+            targetMatch: `${targetHomeTeam} vs ${targetAwayTeam}`,
+            currentMatch: `${homeTeam} vs ${awayTeam}`,
+            matchId: match.id,
+            league: match.league,
+            note: 'This is expected - BEST ODDS matches may not exist in the current league'
+          });
+          
+          return false; // Don't highlight anything if it's not an exact match
+        }
+      }
+    }
+    
+    return false;
+  };
+
+  // Debug highlighting
+  useEffect(() => {
+    if (highlightMatchId) {
+      console.log('🎯 OddsTable received highlightMatchId:', highlightMatchId);
+    }
+  }, [highlightMatchId]);
+  
   // Odds format conversion
   const { getOddsInFormat, oddsFormat } = useOddsFormat();
   
@@ -424,16 +551,18 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
       
       if (selectedMarket === "Results") {
         filteredMatches = filteredMatches.filter(match => {
-          const matchDate = new Date(match.date + 'T00:00:00'); 
+          // Use the full date and time, not just date at midnight
+          const matchDateTime = new Date(match.date + 'T' + match.time); 
           const now = new Date();
-          const isPastMatch = matchDate.getTime() < now.getTime();
+          const isPastMatch = matchDateTime.getTime() < now.getTime();
           return isPastMatch;
         });
       } else if (selectedMarket === "Next Matches") {
         filteredMatches = filteredMatches.filter(match => {
-          const matchDate = new Date(match.date + 'T00:00:00'); 
+          // Use the full date and time, not just date at midnight
+          const matchDateTime = new Date(match.date + 'T' + match.time); 
           const now = new Date();
-          const isFutureMatch = matchDate.getTime() >= now.getTime();
+          const isFutureMatch = matchDateTime.getTime() >= now.getTime();
           return isFutureMatch;
         });
       } else if (selectedCountry) {
@@ -977,12 +1106,18 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
               <div 
                 key={match.id} 
                 className={`relative overflow-hidden rounded-xl p-4 transition-all duration-500 ${
-                  highlightMatchId && parseInt(match.id) === highlightMatchId 
-                    ? 'bg-gradient-to-br from-yellow-400/20 via-orange-400/15 to-red-400/10 border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 transform scale-105 animate-glow-pulse' 
+                  isMatchHighlighted(match)
+                    ? 'bg-gradient-to-br from-yellow-400/20 via-orange-400/15 to-red-400/10 border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 transform scale-105 animate-glow-pulse'
                     : 'bg-surface border border-border hover:shadow-lg'
                 }`}
               >
-                {highlightMatchId && parseInt(match.id) === highlightMatchId && (
+                {/* Debug highlighting */}
+                {isMatchHighlighted(match) && (
+                  <div className="absolute top-1 right-1 text-xs text-yellow-400 font-bold bg-yellow-400/20 px-2 py-1 rounded-full">
+                    ✨ HIGHLIGHTED ✨
+                  </div>
+                )}
+                {isMatchHighlighted(match) && (
                   <>
                     {/* Animated background glow */}
                     <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 animate-pulse rounded-xl"></div>
@@ -1193,14 +1328,20 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
                 <div 
                   key={match.id} 
                   className={`relative grid grid-cols-12 gap-1 px-2 py-2 transition-all duration-500 text-sm border-b ${
-                    highlightMatchId && parseInt(match.id) === highlightMatchId
+                    isMatchHighlighted(match)
                       ? 'bg-gradient-to-r from-yellow-400/15 via-orange-400/10 to-red-400/15 border-l-4 border-l-yellow-400 shadow-lg shadow-yellow-400/20 transform scale-[1.02]'
                       : 'hover:bg-surface/30'
                   } ${
                     isLastMatchOfDay ? 'border-b border-gray-400/50' : 'border-b border-border/30'
                   }`}
                 >
-                  {highlightMatchId && parseInt(match.id) === highlightMatchId && (
+                  {/* Debug highlighting for list view */}
+                  {isMatchHighlighted(match) && (
+                    <div className="absolute top-0 right-0 text-xs text-yellow-400 font-bold bg-yellow-400/20 px-2 py-1 rounded-full z-10">
+                      ✨ HIGHLIGHTED ✨
+                    </div>
+                  )}
+                  {isMatchHighlighted(match) && (
                     <>
                       {/* Animated left border */}
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 via-orange-400 to-red-400 animate-pulse"></div>

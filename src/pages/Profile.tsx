@@ -2206,7 +2206,7 @@ export default function Profile() {
                         </div>
                         <span className={`text-sm font-medium ${
                           passwordStrength.color === 'red' ? 'text-red-400' :
-                          passwordStrength.color === 'orange' ? 'text-orange-400' :
+                          passwordStrength.color === 'orange' ? 'text-o``range-400' :
                           passwordStrength.color === 'yellow' ? 'text-yellow-400' :
                           passwordStrength.color === 'blue' ? 'text-blue-400' :
                           'text-green-400'

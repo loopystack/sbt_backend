@@ -12,12 +12,27 @@ import { openBettingSiteByName } from "../config/bettingSites";
 export default function Home() {
   const [searchParams] = useSearchParams();
   const { selectedLeague } = useCountry();
-  const highlightMatchId = searchParams.get('highlight');
+  const highlightParam = searchParams.get('highlight');
+
+  // Handle both old format (just number) and new format (id_team1_team2_date)
+  let highlightMatchId: number | undefined;
+  if (highlightParam) {
+    if (highlightParam.includes('_')) {
+      // New format: extract just the ID part
+      const matchId = highlightParam.split('_')[0];
+      highlightMatchId = parseInt(matchId);
+      console.log('🎯 New highlight format detected:', { highlightParam, extractedId: matchId });
+    } else {
+      // Old format: just a number
+      highlightMatchId = parseInt(highlightParam);
+      console.log('🎯 Old highlight format detected:', highlightMatchId);
+    }
+  }
 
   if (selectedLeague) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <OddsTable highlightMatchId={highlightMatchId ? parseInt(highlightMatchId) : undefined} />
+        <OddsTable highlightMatchId={highlightMatchId} />
       </div>
     );
   }

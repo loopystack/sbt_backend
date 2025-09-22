@@ -12,6 +12,36 @@ from app.schemas.odds import OddsResponse, OddsListResponse, OddsQueryParams
 router = APIRouter()
 
 
+def convert_to_decimal_odds(odds: float) -> float:
+    """
+    Convert odds to decimal format.
+    
+    Handles:
+    - American odds (positive/negative)
+    - Already decimal odds (>= 1.01)
+    
+    Args:
+        odds: Odds value to convert
+        
+    Returns:
+        Decimal odds (e.g., 2.50 means 2.5x return)
+    """
+    if odds == 0:
+        return 1.01  # Avoid division by zero
+    
+    # If already decimal odds (positive and >= 1.01), return as is
+    if odds >= 1.01:
+        return odds
+    
+    # Handle American odds
+    if odds > 0:
+        # Positive American odds: +150 -> 2.50 decimal
+        return (odds / 100) + 1
+    else:
+        # Negative American odds: -150 -> 1.67 decimal  
+        return (100 / abs(odds)) + 1
+
+
 @router.get("/", response_model=OddsListResponse)
 async def get_odds(
     page: int = Query(1, ge=1, description="Page number"),
@@ -102,6 +132,7 @@ async def get_best_odds(
     db: AsyncSession = Depends(get_db)
 ):
     """
+    DEPRECATED: Use /value-bets instead for proper value betting opportunities.
     Get matches with the best/highest odds for betting.
     Returns upcoming matches with highest odds values across all bet types.
     """
@@ -156,6 +187,217 @@ async def get_best_odds(
         })
     
     return {"best_odds": formatted_odds}
+
+
+@router.get("/value-bets")
+async def get_value_bets(
+    limit: int = Query(3, ge=1, le=10, description="Number of value bets to return"),
+    min_ev: float = Query(0.05, ge=0.01, le=0.5, description="Minimum expected value (5% default)"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get matches with positive expected value (value betting opportunities).
+    
+    Value betting means the bookmaker's implied probability is lower than the true probability.
+    
+    Example:
+    - Bookmaker odds: 4.00 (25% implied probability)  
+    - True probability: 35%
+    - Expected Value = (0.35 * 4.00) - 1 = 0.40 (40% positive EV)
+    
+    Args:
+        limit: Number of value bets to return
+        min_ev: Minimum expected value threshold (e.g., 0.05 = 5%)
+    
+    Returns:
+        List of matches with positive expected value, sorted by EV descending
+    """
+    today = datetime.now().date()
+    
+    # Get all upcoming matches with valid odds
+    query = select(Odds).where(
+        and_(
+            Odds.odd_1.isnot(None),
+            Odds.odd_X.isnot(None), 
+            Odds.odd_2.isnot(None),
+            Odds.odd_1 != 0,  # Valid odds (will convert later)
+            Odds.odd_X != 0,
+            Odds.odd_2 != 0,
+            Odds.date >= today,  # Only upcoming matches
+            Odds.result.is_(None)  # Only matches without results
+        )
+    ).order_by(Odds.date.asc(), Odds.time.asc())
+    
+    result = await db.execute(query)
+    all_matches = result.scalars().all()
+    
+    value_bets = []
+    
+    for match in all_matches:
+        # Convert odds to decimal format (handle American odds)
+        odd_1 = convert_to_decimal_odds(float(match.odd_1))
+        odd_X = convert_to_decimal_odds(float(match.odd_X)) 
+        odd_2 = convert_to_decimal_odds(float(match.odd_2))
+        
+        # Calculate implied probabilities from bookmaker odds
+        implied_prob_1 = 1 / odd_1  # Home win
+        implied_prob_X = 1 / odd_X  # Draw
+        implied_prob_2 = 1 / odd_2  # Away win
+        
+        # Calculate bookmaker margin (overround)
+        total_implied = implied_prob_1 + implied_prob_X + implied_prob_2
+        margin = total_implied - 1.0
+        
+        # Adjust for bookmaker margin to get fair probabilities
+        fair_prob_1 = implied_prob_1 / total_implied
+        fair_prob_X = implied_prob_X / total_implied  
+        fair_prob_2 = implied_prob_2 / total_implied
+        
+        # Estimate true probabilities using statistical model
+        # For now, we'll use a simple model based on historical data patterns
+        # In a real system, this would use machine learning or complex statistical models
+        
+        # Simple model: Adjust probabilities based on team strength indicators
+        # Use league and historical performance patterns
+        true_prob_1, true_prob_X, true_prob_2 = estimate_true_probabilities(
+            match.home_team, match.away_team, match.league, match.country,
+            fair_prob_1, fair_prob_X, fair_prob_2
+        )
+        
+        # Calculate expected values for each outcome
+        ev_1 = (true_prob_1 * odd_1) - 1  # Home win EV
+        ev_X = (true_prob_X * odd_X) - 1  # Draw EV  
+        ev_2 = (true_prob_2 * odd_2) - 1  # Away win EV
+        
+        # Find the best value bet
+        value_bets_for_match = [
+            ("Home Win", ev_1, odd_1, true_prob_1, implied_prob_1),
+            ("Draw", ev_X, odd_X, true_prob_X, implied_prob_X),
+            ("Away Win", ev_2, odd_2, true_prob_2, implied_prob_2)
+        ]
+        
+        # Get the bet with highest positive EV
+        best_bet = max(value_bets_for_match, key=lambda x: x[1])
+        bet_type, expected_value, odds_value, true_prob, implied_prob = best_bet
+        
+        # Only include if EV meets minimum threshold
+        if expected_value >= min_ev:
+            value_bets.append({
+                "id": match.id,
+                "home_team": match.home_team,
+                "away_team": match.away_team,
+                "league": match.league,
+                "country": match.country,
+                "date": match.date,
+                "time": match.time,
+                "best_bet_type": bet_type,
+                "best_odds_value": odds_value,
+                "expected_value": round(expected_value, 4),
+                "expected_value_percent": round(expected_value * 100, 2),
+                "true_probability": round(true_prob, 4),
+                "implied_probability": round(implied_prob, 4),
+                "value_edge": round((true_prob - implied_prob) * 100, 2),  # Edge in percentage points
+                "odd_1": odd_1,
+                "odd_X": odd_X,
+                "odd_2": odd_2,
+                "bookmaker_margin": round(margin * 100, 2)
+            })
+    
+    # Sort by expected value descending and return top matches
+    value_bets.sort(key=lambda x: x["expected_value"], reverse=True)
+    
+    return {
+        "value_bets": value_bets[:limit],
+        "total_found": len(value_bets),
+        "min_ev_threshold": min_ev,
+        "explanation": {
+            "what_is_value_betting": "Value betting means finding odds where the bookmaker's implied probability is lower than the true probability of the outcome.",
+            "expected_value": "EV = (True Probability × Odds) - 1. Positive EV indicates a profitable bet long-term.",
+            "example": "If true probability is 35% and odds are 4.00 (25% implied), EV = (0.35 × 4.00) - 1 = 0.40 (40% edge)"
+        }
+    }
+
+
+def estimate_true_probabilities(home_team: str, away_team: str, league: str, country: str, 
+                               fair_prob_1: float, fair_prob_X: float, fair_prob_2: float):
+    """
+    Estimate true probabilities using a simple statistical model.
+    
+    In a production system, this would use:
+    - Historical head-to-head records
+    - Current team form and statistics  
+    - Player injuries and suspensions
+    - Home advantage factors
+    - League-specific patterns
+    - Machine learning models trained on historical data
+    
+    For now, we'll use a simplified model that adjusts based on known patterns.
+    """
+    
+    # Start with bookmaker's fair probabilities as baseline
+    true_prob_1 = fair_prob_1
+    true_prob_X = fair_prob_X  
+    true_prob_2 = fair_prob_2
+    
+    # Adjust based on league characteristics
+    league_lower = league.lower()
+    
+    # Premier League: More competitive, fewer draws
+    if "premier" in league_lower or "england" in country.lower():
+        true_prob_X *= 0.9  # Reduce draw probability
+        true_prob_1 *= 1.05  # Slight home advantage boost
+        
+    # La Liga: Technical play, more draws in mid-table games
+    elif "la liga" in league_lower or "spain" in country.lower():
+        if fair_prob_1 < 0.4 and fair_prob_2 < 0.4:  # Evenly matched teams
+            true_prob_X *= 1.1  # Increase draw probability
+            
+    # Bundesliga: High-scoring, fewer draws
+    elif "bundesliga" in league_lower or "germany" in country.lower():
+        true_prob_X *= 0.85  # Reduce draw probability
+        
+    # Serie A: Tactical, more draws
+    elif "serie a" in league_lower or "italy" in country.lower():
+        true_prob_X *= 1.05  # Increase draw probability
+        
+    # Ligue 1: PSG dominance affects home/away balance
+    elif "ligue" in league_lower or "france" in country.lower():
+        # If one team much stronger (high probability), boost it further
+        if fair_prob_1 > 0.6:
+            true_prob_1 *= 1.1
+        elif fair_prob_2 > 0.6:
+            true_prob_2 *= 1.1
+    
+    # Look for team name patterns that might indicate strength
+    home_lower = home_team.lower()
+    away_lower = away_team.lower()
+    
+    # Big teams (simplified detection)
+    big_teams = ["barcelona", "real madrid", "bayern", "manchester", "liverpool", 
+                 "arsenal", "chelsea", "juventus", "milan", "psg", "city"]
+    
+    home_is_big = any(big_team in home_lower for big_team in big_teams)
+    away_is_big = any(big_team in away_lower for big_team in big_teams)
+    
+    # Adjust for big team vs small team matchups
+    if home_is_big and not away_is_big:
+        true_prob_1 *= 1.08  # Boost home big team
+        true_prob_2 *= 0.85  # Reduce away small team
+    elif away_is_big and not home_is_big:
+        true_prob_2 *= 1.08  # Boost away big team  
+        true_prob_1 *= 0.85  # Reduce home small team
+    
+    # Home advantage (general boost for home team)
+    true_prob_1 *= 1.03  # Small home advantage
+    true_prob_2 *= 0.98  # Small away disadvantage
+    
+    # Normalize to ensure probabilities sum to 1
+    total = true_prob_1 + true_prob_X + true_prob_2
+    true_prob_1 /= total
+    true_prob_X /= total
+    true_prob_2 /= total
+    
+    return true_prob_1, true_prob_X, true_prob_2
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)

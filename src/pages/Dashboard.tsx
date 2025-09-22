@@ -203,6 +203,63 @@ export default function Dashboard() {
     fetchTransactionData();
   }, [isAuthenticated, currentPage, transactionCurrentPage]);
 
+  // Function to refresh all data
+  const refreshAllData = async () => {
+    if (isAuthenticated) {
+      try {
+        setFundsLoading(true);
+        setTransactionsLoading(true);
+        
+        // Fetch fresh balance
+        const fundsData = await authService.getUserFunds();
+        setUserFunds(fundsData.funds_usd);
+        
+        // Refresh transaction data to get latest balance_after values
+        await fetchTransactionData();
+        
+        console.log('✅ All data refreshed successfully');
+      } catch (error) {
+        console.error('❌ Error refreshing data:', error);
+      } finally {
+        setFundsLoading(false);
+        setTransactionsLoading(false);
+      }
+    }
+  };
+
+  // Function to check balance synchronization
+  const checkBalanceSync = () => {
+    if (transactions.length > 0) {
+      const latestTransaction = transactions[0]; // Assuming transactions are ordered by date (newest first)
+      const currentBalance = userFunds;
+      const latestTransactionBalance = latestTransaction.balance_after;
+      
+      const difference = Math.abs(currentBalance - latestTransactionBalance);
+      const isOutOfSync = difference > 0.01; // Allow for small floating point differences
+      
+      // Debug logging
+      if (isOutOfSync) {
+        console.log('⚠️ Balance discrepancy detected:', {
+          currentBalance,
+          latestTransactionBalance,
+          difference,
+          latestTransactionDate: latestTransaction.created_at,
+          latestTransactionType: latestTransaction.transaction_type,
+          latestTransactionAmount: latestTransaction.amount
+        });
+      }
+      
+      return {
+        isOutOfSync,
+        difference,
+        currentBalance,
+        latestTransactionBalance,
+        latestTransactionDate: latestTransaction.created_at
+      };
+    }
+    return null;
+  };
+
   // Listen for betting data changes
   useEffect(() => {
     const handleBettingDataChange = () => {
@@ -296,11 +353,22 @@ export default function Dashboard() {
           
           <div className="text-right">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
-              <div className="text-sm text-white/80 mb-2 flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                </svg>
-                Account Balance
+              <div className="text-sm text-white/80 mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                  </svg>
+                  Account Balance
+                </div>
+                <button
+                  onClick={refreshAllData}
+                  className="text-white/60 hover:text-white/90 hover:bg-white/10 p-1 rounded transition-all duration-200"
+                  title="Refresh balance and transaction data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
               </div>
               {fundsLoading ? (
                 <div className="text-4xl font-bold">
@@ -312,6 +380,28 @@ export default function Dashboard() {
                 </div>
               )}
               <div className="text-xs text-white/70 mt-1">Available for betting</div>
+              
+              {/* Balance Sync Warning */}
+              {(() => {
+                const syncCheck = checkBalanceSync();
+                if (syncCheck && syncCheck.isOutOfSync) {
+                  return (
+                    <div className="mt-3 p-2 bg-orange-500/20 border border-orange-500/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-orange-200">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        Balance may be out of sync
+                      </div>
+                      <div className="text-xs text-orange-300/80 mt-1">
+                        Current: ${syncCheck.currentBalance.toFixed(2)} | 
+                        Latest transaction: ${syncCheck.latestTransactionBalance.toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         </div>

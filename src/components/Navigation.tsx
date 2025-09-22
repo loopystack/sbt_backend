@@ -6,7 +6,6 @@ import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
 import OddsFormatSelector from "./OddsFormatSelector";
-import LanguageSelector from "./LanguageSelector";
 
 // Hook to determine which sports should be visible and if text should be shown
 const useVisibleSports = () => {
@@ -541,11 +540,6 @@ export default function Navigation() {
                   </div>
                 </div>
               )}
-            </div>
-            
-            {/* Language Selector - positioned next to More tab */}
-            <div className="ml-2">
-              <LanguageSelector />
             </div>
           </div>
         </div>
