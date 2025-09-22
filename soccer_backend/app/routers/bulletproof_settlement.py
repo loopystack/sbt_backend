@@ -121,42 +121,46 @@ async def settle_all_finished_matches(
                         new_balance = old_balance + winnings
                         user.funds_usd = new_balance
                         
-                        # Create winning transaction
+                        # Create winning transaction with proper details
                         transaction = Transaction(
                             user_id=user.id,
                             transaction_type="bet_won",
-                            amount=winnings,
+                            amount=winnings,  # Total return amount
                             balance_before=old_balance,
                             balance_after=new_balance,
-                            description=f"Bet won: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome}",
+                            description=f"🏆 Bet Won: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Profit: +${profit:.2f})",
                             reference_id=str(bet.id),
                             reference_type="betting_record",
-                            status="completed"
+                            status="completed",
+                            payment_method="betting_settlement"
                         )
                         db.add(transaction)
                         total_winnings += winnings
                         
                         print(f"      💰 Balance: ${old_balance:.2f} → ${new_balance:.2f}")
+                        print(f"      📝 Transaction created: bet_won, amount: ${winnings:.2f}")
                 else:
                     profit = -bet.bet_amount
                     print(f"      ❌ LOST: ${bet.bet_amount:.2f}")
                     
-                    # Create losing transaction for history
+                    # Create losing transaction for history (important for tracking)
                     user = await db.get(User, bet.user_id)
                     if user:
                         balance = float(user.funds_usd)
                         transaction = Transaction(
                             user_id=user.id,
                             transaction_type="bet_lost",
-                            amount=0.0,
+                            amount=0.0,  # No money added (loss already deducted when bet placed)
                             balance_before=balance,
                             balance_after=balance,
-                            description=f"Bet lost: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome}",
+                            description=f"❌ Bet Lost: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Loss: -${bet.bet_amount:.2f})",
                             reference_id=str(bet.id),
                             reference_type="betting_record",
-                            status="completed"
+                            status="completed",
+                            payment_method="betting_settlement"
                         )
                         db.add(transaction)
+                        print(f"      📝 Transaction created: bet_lost, loss: ${bet.bet_amount:.2f}")
                 
                 # Update betting record
                 bet.bet_status = "won" if bet_won else "lost"

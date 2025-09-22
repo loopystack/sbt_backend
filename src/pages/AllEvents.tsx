@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { openBettingSiteByName } from "../config/bettingSites";
 import { useCountry } from "../contexts/CountryContext";
 import OddsTable from "../components/OddsTable";
@@ -8,6 +9,10 @@ export default function AllEvents() {
   const [selectedSport, setSelectedSport] = useState("All sports");
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedLeague, setSelectedLeague] = useState("All leagues");
+  const [searchParams] = useSearchParams();
+  
+  // Get search term from URL parameter
+  const searchFromHome = searchParams.get('search');
   const sports = [
     { name: "All sports", icon: "🏆" },
     { name: "Football", icon: "⚽" },
@@ -188,11 +193,11 @@ export default function AllEvents() {
     if (odds.length === 0) return null;
     return Math.min(...odds);
   };
-  // If a league is selected from context, show the OddsTable (same as Home page)
-  if (contextSelectedLeague) {
+  // If a league is selected from context OR if there's a search term, show the OddsTable
+  if (contextSelectedLeague || searchFromHome) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <OddsTable />
+        <OddsTable initialSearchTerm={searchFromHome || undefined} />
       </div>
     );
   }

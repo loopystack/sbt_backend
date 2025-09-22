@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { openBettingSiteByName } from "../config/bettingSites";
 import { useCountry } from "../contexts/CountryContext";
 import { useOddsFormat } from "../hooks/useOddsFormat";
@@ -9,6 +10,10 @@ export default function Matches() {
   const { selectedLeague } = useCountry();
   const [selectedDate, setSelectedDate] = useState("today");
   const [selectedSport, setSelectedSport] = useState("Football");
+  const [searchParams] = useSearchParams();
+  
+  // Get search term from URL parameter
+  const searchFromHome = searchParams.get('search');
   
   // Odds format conversion
   const { getOddsInFormat, oddsFormat } = useOddsFormat();
@@ -119,7 +124,7 @@ export default function Matches() {
   if (selectedLeague) {
     return (
       <div className="space-y-6 sm:space-y-8">
-        <OddsTable />
+        <OddsTable initialSearchTerm={searchFromHome || undefined} />
       </div>
     );
   }

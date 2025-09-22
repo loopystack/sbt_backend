@@ -14,6 +14,7 @@ import SignInSignUp from "../pages/SignInSignUp";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import Profile from "../pages/Profile";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
 
 export const routes: RouteObject[] = [
   {
@@ -30,7 +31,8 @@ export const routes: RouteObject[] = [
       { path: "bookmakers", element: <Bookmakers /> },
       { path: "bonuses", element: <Bonuses /> },
       { path: "dashboard", element: <Dashboard /> },
-      { path: "profile", element: <Profile /> }
+      { path: "profile", element: <Profile /> },
+      { path: "privacy-policy", element: <PrivacyPolicy /> }
     ]
   },
   {

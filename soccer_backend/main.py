@@ -7,7 +7,7 @@ import asyncio
 from app.core.config import settings
 from app.core.database import engine
 from app.models import Base
-from app.routers import auth, odds, payments, deposits, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement
+from app.routers import auth, odds, payments, deposits, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement, match_result_update
 # from app.routers import wallet
 # from app.services.scheduler import start_crypto_scheduler, stop_crypto_scheduler
 
@@ -57,6 +57,7 @@ app.include_router(betting_records.router, tags=["Betting Records"])
 app.include_router(transactions.router, tags=["Transactions"])
 app.include_router(betting_settlement.router, prefix="/api/betting", tags=["Betting Settlement"])
 app.include_router(bulletproof_settlement.router, prefix="/api/settlement", tags=["Bulletproof Settlement"])
+app.include_router(match_result_update.router, prefix="/api/match", tags=["Match Result Update"])
 # app.include_router(wallet.router, prefix="/api/wallet", tags=["Wallet Management"])
 
 

@@ -41,9 +41,10 @@ type Bookmaker = {
 };
 interface OddsTableProps {
   highlightMatchId?: number;
+  initialSearchTerm?: string;
 }
 
-export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
+export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsTableProps = {}) {
   const dispatch = useAppDispatch();
   const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
@@ -233,7 +234,7 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
     potentialWin: string;
     teams: string;
   }>({ betAmount: "10", potentialWin: "102.60", teams: "Team A vs Team B" });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchTerm || "");
   
   // Betting states
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -929,6 +930,13 @@ export default function OddsTable({ highlightMatchId }: OddsTableProps = {}) {
     setSearchQuery("");
     setCurrentPage(1);
   }, [selectedLeague, selectedYear, selectedCountry, selectedMarket]);
+
+  // Update search query when initialSearchTerm prop changes
+  useEffect(() => {
+    if (initialSearchTerm) {
+      setSearchQuery(initialSearchTerm);
+    }
+  }, [initialSearchTerm]);
   
 
   // Add global click listener for betslip collapse

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useOddsFormat } from "../hooks/useOddsFormat";
 import { OddsConverter } from "../utils/oddsConverter";
 
@@ -39,6 +40,28 @@ const useCountUp = (end: number, duration: number = 2000, delay: number = 0) => 
 };
 
 export default function HeroSection() {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Handle search - redirect to matches page with search term
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      return;
+    }
+    
+    const encodedTerm = encodeURIComponent(searchTerm.trim());
+    const targetUrl = `/all-events?search=${encodedTerm}`;
+    
+    console.log('🔍 Home page search redirect:', {
+      searchTerm: searchTerm.trim(),
+      encodedTerm,
+      targetUrl
+    });
+    
+    // Navigate to all-events page (odds table) with search term as URL parameter
+    navigate(targetUrl);
+  };
+
   // Animated counters - all start and finish at the same time
   const { count: bookmakersCount } = useCountUp(80, 2000, 0);
   const { count: sportsCount } = useCountUp(50, 2000, 0);
@@ -195,12 +218,19 @@ export default function HeroSection() {
             <div className="relative">
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Search for teams, leagues, or matches..."
                 className="w-full px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 bg-bg border border-border rounded-xl text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm sm:text-base"
               />
-              <button className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 px-3 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg transition-colors text-xs sm:text-sm">
-                Search
-              </button>
+               <button 
+                 onClick={handleSearch}
+                 disabled={!searchTerm.trim()}
+                 className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 px-3 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-xs sm:text-sm"
+               >
+                 Search
+               </button>
             </div>
           </div>
           

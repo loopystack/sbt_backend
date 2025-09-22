@@ -321,8 +321,8 @@ export default function RightSidebar() {
 
   useEffect(() => {
     fetchValueBets();
-    // Refresh value bets every 60 seconds (less frequent since calculation is more intensive)
-    const interval = setInterval(fetchValueBets, 60000);
+    // Refresh value bets every 1 hour (3600 seconds) - value calculations don't change frequently
+    const interval = setInterval(fetchValueBets, 3600000);
     return () => clearInterval(interval);
   }, []);
 

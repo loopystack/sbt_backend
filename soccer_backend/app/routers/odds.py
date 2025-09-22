@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, text
 from typing import Optional, List
 from datetime import date, datetime
 import math
 
 from app.core.database import get_db
 from app.models.odds import Odds
+from app.models.betting_record import BettingRecord
+from app.models.transaction import Transaction
+from app.models.user import User
 from app.schemas.odds import OddsResponse, OddsListResponse, OddsQueryParams
 
 router = APIRouter()

@@ -95,44 +95,47 @@ async def settle_finished_matches(
             betting_record.settlement_date = datetime.utcnow()
             betting_record.match_status = "finished"
             
-            # Update user balance if they won
-            if bet_won and winnings > 0:
-                user = await db.get(User, betting_record.user_id)
-                if user:
-                    old_balance = float(user.funds_usd)
+            # Always create transaction records for both wins and losses
+            user = await db.get(User, betting_record.user_id)
+            if user:
+                old_balance = float(user.funds_usd)
+                
+                if bet_won and winnings > 0:
+                    # Update balance for wins
                     new_balance = old_balance + winnings
                     user.funds_usd = new_balance
                     
-                    # Create transaction record for winnings
+                    # Create winning transaction
                     transaction = Transaction(
                         user_id=user.id,
                         transaction_type="bet_won",
                         amount=winnings,
                         balance_before=old_balance,
                         balance_after=new_balance,
-                        description=f"Bet won: {betting_record.match_teams} - {betting_record.selected_outcome}",
+                        description=f"🏆 Bet Won: {betting_record.match_teams} - {betting_record.selected_outcome} (Profit: +${profit:.2f})",
                         reference_id=str(betting_record.id),
                         reference_type="betting_record",
-                        status="completed"
+                        status="completed",
+                        payment_method="betting_settlement"
                     )
                     db.add(transaction)
                     total_winnings += winnings
-            
-            # Create transaction record for lost bets (for history)
-            else:
-                user = await db.get(User, betting_record.user_id)
-                if user:
-                    balance = float(user.funds_usd)
+                else:
+                    # Balance stays same for losses (money already deducted when bet placed)
+                    new_balance = old_balance
+                    
+                    # Create losing transaction for history tracking
                     transaction = Transaction(
                         user_id=user.id,
                         transaction_type="bet_lost",
                         amount=0.0,  # No money added/removed (already deducted when bet was placed)
-                        balance_before=balance,
-                        balance_after=balance,
-                        description=f"Bet lost: {betting_record.match_teams} - {betting_record.selected_outcome}",
+                        balance_before=old_balance,
+                        balance_after=new_balance,
+                        description=f"❌ Bet Lost: {betting_record.match_teams} - {betting_record.selected_outcome} (Loss: -${betting_record.bet_amount:.2f})",
                         reference_id=str(betting_record.id),
                         reference_type="betting_record",
-                        status="completed"
+                        status="completed",
+                        payment_method="betting_settlement"
                     )
                     db.add(transaction)
             

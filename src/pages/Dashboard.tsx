@@ -304,9 +304,9 @@ export default function Dashboard() {
         {/* Animated Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-4 left-4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"></div>
-          <div className="absolute bottom-4 right-4 w-24 h-24 bg-white/5 rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-4 left-4 w-32 h-32 bg-white/5 rounded-full blur-xl"></div>
+          <div className="absolute bottom-4 right-4 w-24 h-24 bg-white/5 rounded-full blur-xl" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-white/5 rounded-full blur-xl" style={{animationDelay: '2s'}}></div>
         </div>
         
         {/* Floating Particles */}
@@ -335,7 +335,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
             </div>
             
@@ -345,7 +345,7 @@ export default function Dashboard() {
               </h1>
               <p className="text-lg text-white/90 font-medium">Ready to make some winning bets today?</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span className="text-sm text-white/80">Online • Active Session</span>
               </div>
             </div>
@@ -372,7 +372,7 @@ export default function Dashboard() {
               </div>
               {fundsLoading ? (
                 <div className="text-4xl font-bold">
-                  <div className="animate-pulse bg-white/20 h-10 w-32 rounded-lg"></div>
+                  <div className="bg-white/20 h-10 w-32 rounded-lg shimmer"></div>
                 </div>
               ) : (
                 <div className="text-4xl font-bold text-yellow-300 drop-shadow-lg">
@@ -412,7 +412,7 @@ export default function Dashboard() {
         {/* Total Bets Card */}
         <div className="group relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse"></div>
+          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full"></div>
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -546,15 +546,15 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i} className="border-b border-border/10 animate-pulse">
-                    <td className="py-3 px-2"><div className="w-8 h-8 bg-gray-300 rounded-full"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-32"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
-                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300 rounded w-16 ml-auto"></div></td>
+                  <tr key={i} className="border-b border-border/10">
+                    <td className="py-3 px-2"><div className="w-8 h-8 bg-gray-300/20 rounded-full shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-32 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-20 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-16 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-16 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-20 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-20 shimmer"></div></td>
+                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300/20 rounded w-16 ml-auto shimmer"></div></td>
                   </tr>
                 ))}
               </tbody>
@@ -763,7 +763,7 @@ export default function Dashboard() {
                       }`}>
                         {record.bet_status === 'pending' ? (
                           <div className="flex items-center justify-end gap-1">
-                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
                             <span>${record.potential_win.toFixed(2)}</span>
                           </div>
                         ) : record.actual_profit !== undefined ? (
@@ -779,12 +779,6 @@ export default function Dashboard() {
                          record.bet_status === 'lost' ? '❌ Lost' : 
                          record.bet_status}
                       </div>
-                      {/* Show match result if available and settled */}
-                      {record.is_settled && record.match_result && (
-                        <div className="text-xs text-muted mt-1">
-                          Final: {record.match_result}
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -856,21 +850,21 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i} className="border-b border-border/10 animate-pulse">
+                  <tr key={i} className="border-b border-border/10">
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                        <div className="h-4 bg-gray-300 rounded w-20"></div>
+                        <div className="w-8 h-8 bg-gray-300/20 rounded-full shimmer"></div>
+                        <div className="h-4 bg-gray-300/20 rounded w-20 shimmer"></div>
                       </div>
                     </td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-40"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
-                    <td className="py-3 px-2"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-40 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-16 shimmer"></div></td>
+                    <td className="py-3 px-2"><div className="h-4 bg-gray-300/20 rounded w-16 shimmer"></div></td>
                     <td className="py-3 px-2">
-                      <div className="h-4 bg-gray-300 rounded w-20 mb-1"></div>
-                      <div className="h-3 bg-gray-300 rounded w-16"></div>
+                      <div className="h-4 bg-gray-300/20 rounded w-20 mb-1 shimmer"></div>
+                      <div className="h-3 bg-gray-300/20 rounded w-16 shimmer"></div>
                     </td>
-                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300 rounded w-16 ml-auto"></div></td>
+                    <td className="py-3 px-2 text-right"><div className="h-4 bg-gray-300/20 rounded w-16 ml-auto shimmer"></div></td>
                   </tr>
                 ))}
               </tbody>
