@@ -154,8 +154,19 @@ async def mock_google_callback(
         host = request.headers.get("host", "")
         origin = request.headers.get("origin", "")
         
-        # Check if any of these indicate localhost
-        is_localhost = any([
+        # More precise localhost detection - prioritize production
+        is_localhost = False
+        
+        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
+        if any([
+            "sportsbetting-seiw.onrender.com" in referer.lower(),
+            "sportsbetting-seiw.onrender.com" in host.lower(),
+            "sportsbetting-seiw.onrender.com" in origin.lower(),
+            "sportsbetting-seiw.onrender.com" in str(request.url)
+        ]):
+            is_localhost = False
+        # Then check for localhost indicators
+        elif any([
             "localhost" in referer.lower(),
             "127.0.0.1" in referer.lower(),
             "localhost" in host.lower(),
@@ -163,7 +174,8 @@ async def mock_google_callback(
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
             "localhost:5001" in str(request.url)
-        ])
+        ]):
+            is_localhost = True
         
         if is_localhost:
             frontend_base_url = "http://localhost:5173"
@@ -182,8 +194,19 @@ async def mock_google_callback(
         host = request.headers.get("host", "")
         origin = request.headers.get("origin", "")
         
-        # Check if any of these indicate localhost
-        is_localhost = any([
+        # More precise localhost detection - prioritize production
+        is_localhost = False
+        
+        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
+        if any([
+            "sportsbetting-seiw.onrender.com" in referer.lower(),
+            "sportsbetting-seiw.onrender.com" in host.lower(),
+            "sportsbetting-seiw.onrender.com" in origin.lower(),
+            "sportsbetting-seiw.onrender.com" in str(request.url)
+        ]):
+            is_localhost = False
+        # Then check for localhost indicators
+        elif any([
             "localhost" in referer.lower(),
             "127.0.0.1" in referer.lower(),
             "localhost" in host.lower(),
@@ -191,7 +214,8 @@ async def mock_google_callback(
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
             "localhost:5001" in str(request.url)
-        ])
+        ]):
+            is_localhost = True
         
         if is_localhost:
             frontend_base_url = "http://localhost:5173"
@@ -295,17 +319,28 @@ async def google_callback(
         host = request.headers.get("host", "")
         origin = request.headers.get("origin", "")
         
-        # Check if any of these indicate localhost
-        is_localhost = any([
+        # More precise localhost detection - prioritize production
+        is_localhost = False
+        
+        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
+        if any([
+            "sportsbetting-seiw.onrender.com" in referer.lower(),
+            "sportsbetting-seiw.onrender.com" in host.lower(),
+            "sportsbetting-seiw.onrender.com" in origin.lower(),
+            "sportsbetting-seiw.onrender.com" in str(request.url)
+        ]):
+            is_localhost = False
+        # Then check for localhost indicators
+        elif any([
             "localhost" in referer.lower(),
             "127.0.0.1" in referer.lower(),
             "localhost" in host.lower(),
             "127.0.0.1" in host.lower(),
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
-            # Also check if the callback was called from localhost backend
             "localhost:5001" in str(request.url)
-        ])
+        ]):
+            is_localhost = True
         
         if is_localhost:
             frontend_base_url = "http://localhost:5173"
@@ -334,8 +369,19 @@ async def google_callback(
         host = request.headers.get("host", "")
         origin = request.headers.get("origin", "")
         
-        # Check if any of these indicate localhost
-        is_localhost = any([
+        # More precise localhost detection - prioritize production
+        is_localhost = False
+        
+        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
+        if any([
+            "sportsbetting-seiw.onrender.com" in referer.lower(),
+            "sportsbetting-seiw.onrender.com" in host.lower(),
+            "sportsbetting-seiw.onrender.com" in origin.lower(),
+            "sportsbetting-seiw.onrender.com" in str(request.url)
+        ]):
+            is_localhost = False
+        # Then check for localhost indicators
+        elif any([
             "localhost" in referer.lower(),
             "127.0.0.1" in referer.lower(),
             "localhost" in host.lower(),
@@ -343,7 +389,8 @@ async def google_callback(
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
             "localhost:5001" in str(request.url)
-        ])
+        ]):
+            is_localhost = True
         
         if is_localhost:
             frontend_base_url = "http://localhost:5173"
