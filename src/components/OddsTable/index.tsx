@@ -13,6 +13,7 @@ import { bettingService, BettingRecordCreate } from "../../services/bettingServi
 import { MatchingInfo, GetMatchingInfoResponse } from "../../store/matchinginfo/types";
 import { transformMatchingInfoToMatch } from "../../data/sampleData";
 import { getTeamLogo } from "../../utils/teamLogos";
+import FantasticLoader from "../FantasticLoader";
 import CongratulationsAlert from "../CongratulationsAlert";
 type Match = {
   id: string;
@@ -245,6 +246,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [bettingError, setBettingError] = useState<string>("");
   const [showBetConfirmation, setShowBetConfirmation] = useState(false);
+  const [isConfirmingBet, setIsConfirmingBet] = useState(false);
   
   // Get user funds from auth context
   const userFunds = user?.funds_usd || 0;
@@ -267,8 +269,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   };
 
   const confirmBet = async () => {
-    setShowBetConfirmation(false);
-    setIsPlacingBet(true);
+    setIsConfirmingBet(true);
     
     try {
       const totalBetAmount = selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0);
@@ -425,6 +426,10 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         teams: selectedOdds.map(odds => odds.teams).join(", ")
       });
       
+      // Close confirmation modal first
+      setShowBetConfirmation(false);
+      setIsConfirmingBet(false);
+      
       // Clear selected odds and show congratulations
       setSelectedOdds([]);
       setIsBetSlipHiding(true);
@@ -462,7 +467,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setBettingError(error.message || "Unknown error occurred");
       setShowBetConfirmation(true); // Show confirmation again on error
     } finally {
-      setIsPlacingBet(false);
+      setIsConfirmingBet(false);
     }
   };
   
@@ -923,9 +928,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     }
   }, [showBetSlip]);
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-    </div>
+    return (
+      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-bg via-surface to-bg">
+        <FantasticLoader 
+          size="large" 
+          text="Loading odds for you..." 
+        />
+      </div>
+    );
   }
     return (
     <section>
@@ -1693,13 +1703,6 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                   DEPOSIT
                 </button>
               </div>
-            ) : isPlacingBet ? (
-              <div className="mb-4 p-4 text-center">
-                <div className="w-8 h-8 mx-auto mb-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
-                </div>
-                <p className="text-sm text-muted">Please wait. We are processing your bets.</p>
-              </div>
             ) : (
               <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                 <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1712,9 +1715,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
             <div className="flex gap-2 mb-3">
               <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
               <button 
-                className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors"
                 onClick={handlePlaceBet}
-                disabled={isPlacingBet}
               >
                 {isAuthenticated ? "PLACE BET" : "LOGIN"}
               </button>
@@ -1844,104 +1846,224 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
          </div>
        )}
 
-      {/* Bet Confirmation Modal */}
+      {/* Beautiful Bet Confirmation Modal */}
       {showBetConfirmation && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-lg font-semibold text-white">Confirm Your Bet</h3>
-              <button
-                onClick={() => setShowBetConfirmation(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+        <>
+          {/* Confetti Animation */}
+          <div className="fixed inset-0 pointer-events-none z-[100001]">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-confetti"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 3}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`
+                }}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <p className="text-white text-lg font-medium mb-2">Are you really going to bet?</p>
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#A29BFE', '#FD79A8'][Math.floor(Math.random() * 8)]
+                  }}
+                />
               </div>
+            ))}
+          </div>
 
-              {/* Bet Details */}
-              <div className="space-y-4 mb-6">
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Your Bets:</h4>
-                  <div className="space-y-2">
-                    {selectedOdds.map((odds, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <div>
-                          <div className="text-gray-300">{odds.teams}</div>
-                          <div className="text-gray-400 text-xs">
-                            {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
-                             odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'} 
-                            ({formatOdds(odds.odds)})
+          {/* Main Modal */}
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100000] p-4">
+            <div className="relative w-full max-w-lg mx-auto">
+              {/* Background Glow Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-orange-500/20 to-red-500/20 rounded-3xl blur-xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-2xl"></div>
+              
+              {/* Main Card */}
+              <div 
+                className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl border border-white/10 backdrop-blur-xl overflow-hidden"
+                style={{
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-red-500/5 animate-gradient-shift"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 animate-aurora"></div>
+                
+                {/* Floating Particles */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-8 left-8 w-2 h-2 bg-yellow-400 rounded-full animate-floating-particles animation-delay-100"></div>
+                  <div className="absolute top-12 right-12 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-floating-particles animation-delay-300"></div>
+                  <div className="absolute bottom-12 left-12 w-1 h-1 bg-pink-400 rounded-full animate-floating-particles animation-delay-500"></div>
+                  <div className="absolute bottom-8 right-8 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-floating-particles animation-delay-700"></div>
+                </div>
+                
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer opacity-50"></div>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center animate-pulse-glow">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">🎯 Confirm Your Bet</h3>
+                        <p className="text-sm text-white/70">Double-check your selections</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowBetConfirmation(false)}
+                      className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-sm border border-white/20"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    {/* Main Question */}
+                    <div className="text-center mb-8">
+                      <div className="w-20 h-20 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-glow backdrop-blur-sm border border-yellow-500/30">
+                        <span className="text-4xl">🤔</span>
+                      </div>
+                      <h2 className="text-2xl font-bold text-white mb-2">Ready to Place Your Bet?</h2>
+                      <p className="text-white/80">Make sure everything looks good before confirming!</p>
+                    </div>
+
+                    {/* Bet Details */}
+                    <div className="space-y-4 mb-8">
+                      {/* Your Bets */}
+                      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-lg">🎲</span>
+                          <h4 className="text-white font-semibold">Your Selections</h4>
+                        </div>
+                        <div className="space-y-3">
+                          {selectedOdds.map((odds, index) => (
+                            <div key={index} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="text-white font-medium text-sm mb-1">{odds.teams}</div>
+                                  <div className="text-white/70 text-xs">
+                                    {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
+                                     odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'} 
+                                    <span className="text-yellow-400 font-semibold ml-2">({formatOdds(odds.odds)})</span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-white font-bold">${odds.stake}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Summary */}
+                      <div className="relative bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+                        {/* Loading Overlay */}
+                        {isConfirmingBet && (
+                          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+                            <div className="flex flex-col items-center gap-6">
+                              {/* Soccer Ball Loading Effect */}
+                              <div className="relative">
+                                <div className="w-16 h-16 animate-football-bounce shadow-lg">
+                                  {/* Real Soccer Ball Image */}
+                                  <img 
+                                    src="/assets/soccer_ball.png" 
+                                    alt="Soccer Ball" 
+                                    className="w-full h-full object-contain drop-shadow-lg"
+                                  />
+                                  
+                                  {/* Golden Glow Effect */}
+                                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400/30 to-yellow-600/30 blur-sm animate-football-spin"></div>
+                                </div>
+                                
+                                {/* Bouncing shadow */}
+                                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-3 bg-black/20 rounded-full blur-sm animate-football-bounce" style={{animationDelay: '0.1s'}}></div>
+                              </div>
+                              
+                              <p className="text-yellow-300 font-bold text-lg text-center animate-pulse">
+                                ⚽ Placing your bet...
+                              </p>
+                              <p className="text-white/80 text-sm text-center">
+                                Please wait while we process your bet...
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Summary Content */}
+                        <div className={isConfirmingBet ? "blur-sm" : ""}>
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">💰</span>
+                            <h4 className="text-white font-semibold">Bet Summary</h4>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-white/80">Total Bet Amount:</span>
+                              <span className="text-white font-bold">
+                                ${selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-white/80">Potential Win:</span>
+                              <span className="text-green-400 font-bold text-lg">
+                                ${calculatePotentialWin().toFixed(2)}
+                              </span>
+                            </div>
+                            <hr className="border-white/10 my-2" />
+                            <div className="flex justify-between items-center">
+                              <span className="text-white/80">Current Balance:</span>
+                              <span className="text-blue-400 font-medium">${userFunds.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-white/80">After Bet:</span>
+                              <span className="text-orange-400 font-medium">
+                                ${(userFunds - selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0)).toFixed(2)}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-white font-medium">${odds.stake}</div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Fund Information */}
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Total Bet Amount:</span>
-                      <span className="text-white font-medium">
-                        ${selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Potential Win:</span>
-                      <span className="text-green-400 font-medium">
-                        ${calculatePotentialWin().toFixed(2)}
-                      </span>
-                    </div>
-                    <hr className="border-gray-700 my-2" />
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Current Balance:</span>
-                      <span className="text-blue-400 font-medium">${userFunds.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">After Bet Balance:</span>
-                      <span className="text-red-400 font-medium">
-                        ${(userFunds - selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0)).toFixed(2)}
-                      </span>
+                    {/* Action Buttons */}
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setShowBetConfirmation(false)}
+                        disabled={isConfirmingBet}
+                        className="flex-1 py-4 px-6 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold transition-all duration-300 backdrop-blur-sm border border-white/20 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <span>❌</span>
+                          <span>Cancel</span>
+                        </span>
+                      </button>
+                      <button
+                        onClick={confirmBet}
+                        disabled={isConfirmingBet}
+                        className="flex-1 py-4 px-6 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-yellow-500/25 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <span>🚀</span>
+                          <span>Place Bet!</span>
+                        </span>
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowBetConfirmation(false)}
-                  className="flex-1 py-3 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmBet}
-                  className="flex-1 py-3 px-4 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-medium transition-colors"
-                >
-                  Yes, Place Bet
-                </button>
               </div>
             </div>
           </div>
-         </div>
-       )}
+        </>
+      )}
 
              {/* Congratulations Alert */}
       <CongratulationsAlert
