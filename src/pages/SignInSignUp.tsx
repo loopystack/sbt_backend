@@ -70,6 +70,9 @@ export default function SignInSignUp() {
       ? 'http://localhost:5001' 
       : 'https://sportsbetting-seiw.onrender.com';
     
+    // TEMPORARY FIX: Force production backend URL for testing
+    // const backendUrl = 'https://sportsbetting-seiw.onrender.com';
+    
     // Direct redirect to Google OAuth - dynamic redirect URI
     const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=700550723594-eepho7l9d04n0im6qs04jb03gpqivk97.apps.googleusercontent.com&` +
