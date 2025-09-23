@@ -505,7 +505,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="text-3xl font-bold mb-2 drop-shadow-lg">
-                {(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}${(bettingStats?.total_profit || 0).toFixed(2)}
+                {(bettingStats?.total_profit || 0) >= 0 ? '+' : '-'}${Math.abs(bettingStats?.total_profit || 0).toFixed(2)}
               </div>
             )}
             <div className={`font-medium ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>

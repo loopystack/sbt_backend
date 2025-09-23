@@ -101,44 +101,72 @@ async def auto_settle_user_bets(db: AsyncSession, user_id: int):
                     new_balance = old_balance + winnings
                     user.funds_usd = new_balance
                     
-                    # Create winning transaction
-                    transaction = Transaction(
-                        user_id=user_id,
-                        transaction_type="bet_won",
-                        amount=winnings,
-                        balance_before=old_balance,
-                        balance_after=new_balance,
-                        description=f"🏆 Bet Won: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Profit: +${profit:.2f})",
-                        reference_id=str(bet.id),
-                        reference_type="betting_record",
-                        status="completed",
-                        payment_method="auto_settlement"
+                    # Check if transaction already exists to prevent duplicates
+                    existing_transaction_query = select(Transaction).where(
+                        and_(
+                            Transaction.user_id == user_id,
+                            Transaction.reference_id == str(bet.id),
+                            Transaction.reference_type == "betting_record",
+                            Transaction.transaction_type.in_(["bet_won", "bet_lost"])
+                        )
                     )
-                    db.add(transaction)
+                    existing_transaction_result = await db.execute(existing_transaction_query)
+                    existing_transaction = existing_transaction_result.scalar_one_or_none()
                     
-                    print(f"      ✅ WON! Profit: ${profit:.2f}")
+                    # Only create transaction if it doesn't already exist
+                    if not existing_transaction:
+                        transaction = Transaction(
+                            user_id=user_id,
+                            transaction_type="bet_won",
+                            amount=winnings,
+                            balance_before=old_balance,
+                            balance_after=new_balance,
+                            description=f"🏆 Bet Won: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Profit: +${profit:.2f})",
+                            reference_id=str(bet.id),
+                            reference_type="betting_record",
+                            status="completed",
+                            payment_method="auto_settlement"
+                        )
+                        db.add(transaction)
+                        print(f"      ✅ WON! Profit: ${profit:.2f} (Transaction created)")
+                    else:
+                        print(f"      ✅ WON! Profit: ${profit:.2f} (Transaction already exists, skipping)")
             else:
                 profit = -bet.bet_amount
                 
-                # Create losing transaction
-                user = await db.get(User, user_id)
-                if user:
-                    balance = float(user.funds_usd)
-                    transaction = Transaction(
-                        user_id=user_id,
-                        transaction_type="bet_lost",
-                        amount=0.0,
-                        balance_before=balance,
-                        balance_after=balance,
-                        description=f"❌ Bet Lost: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Loss: -${bet.bet_amount:.2f})",
-                        reference_id=str(bet.id),
-                        reference_type="betting_record",
-                        status="completed",
-                        payment_method="auto_settlement"
+                # Check if transaction already exists to prevent duplicates
+                existing_transaction_query = select(Transaction).where(
+                    and_(
+                        Transaction.user_id == user_id,
+                        Transaction.reference_id == str(bet.id),
+                        Transaction.reference_type == "betting_record",
+                        Transaction.transaction_type.in_(["bet_won", "bet_lost"])
                     )
-                    db.add(transaction)
-                    
-                    print(f"      ❌ LOST: ${bet.bet_amount:.2f}")
+                )
+                existing_transaction_result = await db.execute(existing_transaction_query)
+                existing_transaction = existing_transaction_result.scalar_one_or_none()
+                
+                # Only create transaction if it doesn't already exist
+                if not existing_transaction:
+                    user = await db.get(User, user_id)
+                    if user:
+                        balance = float(user.funds_usd)
+                        transaction = Transaction(
+                            user_id=user_id,
+                            transaction_type="bet_lost",
+                            amount=0.0,
+                            balance_before=balance,
+                            balance_after=balance,
+                            description=f"❌ Bet Lost: {match.home_team} vs {match.away_team} ({match.result}) - {bet.selected_outcome} (Loss: -${bet.bet_amount:.2f})",
+                            reference_id=str(bet.id),
+                            reference_type="betting_record",
+                            status="completed",
+                            payment_method="auto_settlement"
+                        )
+                        db.add(transaction)
+                        print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction created)")
+                else:
+                    print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction already exists, skipping)")
             
             # Update betting record
             bet.bet_status = "won" if bet_won else "lost"
