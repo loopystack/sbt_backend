@@ -418,7 +418,7 @@ export default function Navigation() {
               </div>
             ) : (
               <button
-                className="px-6 py-3 text-text hover:text-text/80 font-semibold hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
+                className="px-6 py-3 text-white hover:text-white/80 font-semibold hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
                 onClick={() => navigate("/signin")}
               >
                 Sign In

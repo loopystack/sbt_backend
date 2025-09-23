@@ -858,6 +858,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       }
       
       console.log(`🚀 Fetching page ${currentPage} with backend search/filtering:`, params);
+      console.log(`🔍 Debug - selectedYear: ${selectedYear}, params.season: ${params.season}`);
       const result = await dispatch(getMatchingInfoAction(params)).unwrap();
       
       setMatchingInfo(result.odds);
@@ -865,6 +866,12 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setApiTotalMatches(result.total);
       
       console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages}) with backend filtering`);
+      console.log(`📊 Sample match data:`, result.odds[0] ? {
+        season: result.odds[0].season,
+        date: result.odds[0].date,
+        home_team: result.odds[0].home_team,
+        away_team: result.odds[0].away_team
+      } : 'No matches');
     } catch (error) {
       console.error("Error fetching matching info:", error);
     } finally {
