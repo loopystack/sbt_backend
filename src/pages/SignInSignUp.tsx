@@ -64,16 +64,26 @@ export default function SignInSignUp() {
     setIsLoading(true);
     setError("");
     
-    // Direct redirect to Google OAuth - simple and clean
+    // Get current domain dynamically
+    const currentOrigin = window.location.origin;
+    const backendUrl = currentOrigin.includes('localhost') 
+      ? 'http://localhost:5001' 
+      : 'https://sportsbetting-seiw.onrender.com';
+    
+    // Direct redirect to Google OAuth - dynamic redirect URI
     const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=700550723594-eepho7l9d04n0im6qs04jb03gpqivk97.apps.googleusercontent.com&` +
-      `redirect_uri=${encodeURIComponent('http://localhost:5001/api/auth/google/callback')}&` +
+      `redirect_uri=${encodeURIComponent(`${backendUrl}/api/auth/google/callback`)}&` +
       `response_type=code&` +
       `scope=${encodeURIComponent('openid email profile')}&` +
       `access_type=offline&` +
       `prompt=select_account`; // This allows users to select email
     
-    console.log('✅ Redirecting to Google OAuth with email selection');
+    console.log('🔍 Frontend OAuth Debug:');
+    console.log('   Current Origin:', currentOrigin);
+    console.log('   Backend URL:', backendUrl);
+    console.log('   Redirect URI:', `${backendUrl}/api/auth/google/callback`);
+    console.log('✅ Redirecting to Google OAuth with dynamic redirect:', `${backendUrl}/api/auth/google/callback`);
     window.location.href = googleOAuthUrl;
   };
 

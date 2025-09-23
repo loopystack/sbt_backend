@@ -50,6 +50,36 @@ export interface PaymentMethodsResponse {
   payment_methods: PaymentMethodInfo[];
 }
 
+export interface WithdrawalRequest {
+  amount: number;
+  method: 'crypto' | 'cash';
+  // Crypto fields
+  crypto_address?: string;
+  crypto_currency?: string;
+  crypto_network?: string;
+  // Cash fields
+  card_number?: string;
+  cardholder_name?: string;
+  expiry_month?: number;
+  expiry_year?: number;
+  cvv?: string;
+  bank_account?: string;
+  routing_number?: string;
+  account_holder_name?: string;
+  paypal_email?: string;
+}
+
+export interface WithdrawalResponse {
+  transaction_id: string;
+  status: 'success' | 'failed' | 'pending' | 'processing';
+  amount: number;
+  currency: string;
+  message: string;
+  new_balance: number;
+  processing_time?: string;
+  estimated_arrival?: string;
+}
+
 // Payment service
 export const paymentService = {
   // Process Visa payment
@@ -258,6 +288,58 @@ export const paymentService = {
       } else {
         throw new Error('Deposit confirmation failed');
       }
+    }
+
+    return response.json();
+  },
+
+  // Process withdrawal
+  processWithdrawal: async (withdrawalData: WithdrawalRequest): Promise<WithdrawalResponse> => {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001'}${BASE_URL}/withdraw`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('access_token')}`,
+      },
+      body: JSON.stringify(withdrawalData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Withdrawal API error response:', errorData);
+      
+      // Handle different error formats
+      if (errorData.detail) {
+        if (Array.isArray(errorData.detail)) {
+          // Validation errors - show first error
+          const firstError = errorData.detail[0];
+          throw new Error(firstError.msg || firstError.message || 'Validation error');
+        } else {
+          // Single error message
+          throw new Error(errorData.detail);
+        }
+      } else if (errorData.message) {
+        throw new Error(errorData.message);
+      } else {
+        throw new Error('Withdrawal failed');
+      }
+    }
+
+    return response.json();
+  },
+
+  // Get withdrawal methods
+  getWithdrawalMethods: async (): Promise<PaymentMethodsResponse> => {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001'}${BASE_URL}/withdrawal-methods`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('access_token')}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to get withdrawal methods');
     }
 
     return response.json();

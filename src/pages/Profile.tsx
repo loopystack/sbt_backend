@@ -58,6 +58,29 @@ export default function Profile() {
   const [fundSuccess, setFundSuccess] = useState("");
   const [userFunds, setUserFunds] = useState(0.00); // Real funds from backend
   
+  // Withdrawal states
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
+  const [withdrawSuccess, setWithdrawSuccess] = useState("");
+  const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState("crypto");
+  const [selectedWithdrawCurrency, setSelectedWithdrawCurrency] = useState("USDT");
+  const [selectedWithdrawNetwork, setSelectedWithdrawNetwork] = useState("Ethereum");
+  const [withdrawAddress, setWithdrawAddress] = useState("");
+  const [withdrawMemo, setWithdrawMemo] = useState("");
+  const [selectedCashWithdrawMethod, setSelectedCashWithdrawMethod] = useState("VISA");
+  
+  // Cash withdrawal form states
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardholderName, setCardholderName] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [routingNumber, setRoutingNumber] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [paypalEmail, setPaypalEmail] = useState("");
+  
   // Payment method states
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("crypto");
   const [selectedCurrency, setSelectedCurrency] = useState("USDT");
@@ -80,14 +103,9 @@ export default function Profile() {
   
   // Cash payment states
   const [selectedCashMethod, setSelectedCashMethod] = useState("VISA");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [cardholderName, setCardholderName] = useState("");
   const [amount, setAmount] = useState("");
   const [email, setEmail] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [routingNumber, setRoutingNumber] = useState("");
   
   // Payment validation states
   const [paymentErrors, setPaymentErrors] = useState<any>({});
@@ -997,6 +1015,171 @@ export default function Profile() {
     return username.charAt(0).toUpperCase();
   };
 
+  // Withdrawal functions
+  const handleWithdrawAmountClick = (amount: string) => {
+    setWithdrawAmount(amount);
+    setWithdrawError("");
+  };
+
+  const processWithdrawal = async () => {
+    try {
+      setWithdrawLoading(true);
+      setWithdrawError("");
+      setWithdrawSuccess("");
+      
+      const amount = parseFloat(withdrawAmount);
+      
+      // Validate amount
+      if (!amount || amount <= 0) {
+        setWithdrawError("Please enter a valid withdrawal amount");
+        return;
+      }
+      
+      if (amount > userFunds) {
+        setWithdrawError("Insufficient funds. You cannot withdraw more than your available balance.");
+        return;
+      }
+      
+      if (amount < 10) {
+        setWithdrawError("Minimum withdrawal amount is $10");
+        return;
+      }
+      
+      // Prepare withdrawal data based on method
+      let withdrawalData: any = {
+        amount: amount,
+        method: selectedWithdrawMethod
+      };
+      
+      if (selectedWithdrawMethod === "crypto") {
+        if (!withdrawAddress) {
+          setWithdrawError("Please enter a valid crypto address");
+          return;
+        }
+        
+        withdrawalData = {
+          ...withdrawalData,
+          crypto_address: withdrawAddress,
+          crypto_currency: selectedWithdrawCurrency,
+          crypto_network: selectedWithdrawNetwork,
+          memo: withdrawMemo || undefined
+        };
+      } else {
+        // Cash withdrawal - validate based on selected method
+        if (selectedCashWithdrawMethod === "VISA" || selectedCashWithdrawMethod === "Mastercard") {
+          // Card withdrawal validation
+          if (!cardNumber || !cardholderName || !expiryDate || !cvv) {
+            setWithdrawError("Please fill in all card details");
+            return;
+          }
+          
+          if (!validateCardNumber(cardNumber)) {
+            setWithdrawError("Invalid card number");
+            return;
+          }
+          
+          if (!validateExpiryDate(expiryDate)) {
+            setWithdrawError("Invalid expiry date");
+            return;
+          }
+          
+          if (!validateCVV(cvv)) {
+            setWithdrawError("Invalid CVV");
+            return;
+          }
+          
+          const [month, year] = expiryDate.split('/');
+          withdrawalData = {
+            ...withdrawalData,
+            card_number: cardNumber.replace(/\s/g, ''),
+            cardholder_name: cardholderName,
+            expiry_month: parseInt(month),
+            expiry_year: parseInt('20' + year),
+            cvv: cvv
+          };
+        } else if (selectedCashWithdrawMethod === "Bank Transfer") {
+          // Bank transfer validation
+          if (!bankAccount || !routingNumber || !accountHolderName) {
+            setWithdrawError("Please fill in all bank details");
+            return;
+          }
+          
+          if (!validateBankAccount(bankAccount, routingNumber)) {
+            setWithdrawError("Invalid bank account or routing number");
+            return;
+          }
+          
+          withdrawalData = {
+            ...withdrawalData,
+            bank_account: bankAccount,
+            routing_number: routingNumber,
+            account_holder_name: accountHolderName
+          };
+        } else if (selectedCashWithdrawMethod === "PayPal") {
+          // PayPal withdrawal validation
+          if (!paypalEmail) {
+            setWithdrawError("Please enter your PayPal email");
+            return;
+          }
+          
+          if (!validateEmail(paypalEmail)) {
+            setWithdrawError("Invalid email address");
+            return;
+          }
+          
+          withdrawalData = {
+            ...withdrawalData,
+            paypal_email: paypalEmail
+          };
+        }
+      }
+      
+      // Call withdrawal API
+      const response = await paymentService.processWithdrawal(withdrawalData);
+      
+      if (response.status === 'success') {
+        // Update user funds
+        setUserFunds(response.new_balance);
+        setWithdrawSuccess(response.message);
+        
+        // Also update the user object if it exists
+        if (user) {
+          setUser({
+            ...user,
+            funds_usd: response.new_balance
+          });
+        }
+        
+        // Reset form
+        setWithdrawAmount("");
+        setWithdrawAddress("");
+        setWithdrawMemo("");
+        setCardNumber("");
+        setCardholderName("");
+        setExpiryDate("");
+        setCvv("");
+        setBankAccount("");
+        setRoutingNumber("");
+        setAccountHolderName("");
+        setPaypalEmail("");
+        
+        // Close modal after 3 seconds
+        setTimeout(() => {
+          setShowWithdrawModal(false);
+          setWithdrawSuccess("");
+        }, 3000);
+      } else {
+        setWithdrawError(response.message || "Withdrawal failed");
+      }
+      
+    } catch (err) {
+      console.error('Withdrawal error:', err);
+      setWithdrawError(err instanceof Error ? err.message : "Failed to process withdrawal. Please try again.");
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-bg text-text">
@@ -1462,7 +1645,10 @@ export default function Profile() {
                     </svg>
                     Add Funds
                   </button>
-                  <button className="px-4 py-2 bg-surface border border-border text-text rounded-lg font-medium hover:bg-white/5 transition-colors text-sm flex items-center gap-2">
+                  <button 
+                    onClick={() => setShowWithdrawModal(true)}
+                    className="px-4 py-2 bg-surface border border-border text-text rounded-lg font-medium hover:bg-white/5 transition-colors text-sm flex items-center gap-2"
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
@@ -2351,6 +2537,427 @@ export default function Profile() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawal Modal */}
+      {showWithdrawModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowWithdrawModal(false);
+              setWithdrawError("");
+              setWithdrawSuccess("");
+              setWithdrawAmount("");
+              setWithdrawAddress("");
+              setWithdrawMemo("");
+              setCardNumber("");
+              setCardholderName("");
+              setExpiryDate("");
+              setCvv("");
+              setBankAccount("");
+              setRoutingNumber("");
+              setAccountHolderName("");
+              setPaypalEmail("");
+            }
+          }}
+        >
+          <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="text-lg font-semibold text-white">Withdraw Funds</h3>
+              <button
+                onClick={() => {
+                  setShowWithdrawModal(false);
+                  setWithdrawError("");
+                  setWithdrawSuccess("");
+                  setWithdrawAmount("");
+                  setWithdrawAddress("");
+                  setWithdrawMemo("");
+                  setCardNumber("");
+                  setCardholderName("");
+                  setExpiryDate("");
+                  setCvv("");
+                  setBankAccount("");
+                  setRoutingNumber("");
+                  setAccountHolderName("");
+                  setPaypalEmail("");
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Withdrawal Method Tabs */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setSelectedWithdrawMethod("crypto")}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    selectedWithdrawMethod === "crypto"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                  <span>Crypto</span>
+                </button>
+                <button
+                  onClick={() => setSelectedWithdrawMethod("cash")}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    selectedWithdrawMethod === "cash"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  <span>Cash</span>
+                </button>
+              </div>
+
+              {/* Amount Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Withdrawal Amount (USD)</label>
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={(e) => {
+                      setWithdrawAmount(e.target.value);
+                      setWithdrawError("");
+                    }}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter amount"
+                    min="10"
+                    max={userFunds}
+                    step="0.01"
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    {["50", "100", "250", "500"].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => handleWithdrawAmountClick(amount)}
+                        className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                          withdrawAmount === amount
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                        }`}
+                      >
+                        ${amount}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400">Available: ${userFunds.toFixed(2)} | Min: $10</p>
+                </div>
+              </div>
+
+              {/* Crypto Withdrawal */}
+              {selectedWithdrawMethod === "crypto" && (
+                <>
+                  {/* Currency Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Currency</label>
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {supportedAssets.slice(0, 6).map((asset) => (
+                        <button
+                          key={asset.asset}
+                          onClick={() => {
+                            setSelectedWithdrawCurrency(asset.asset);
+                            setWithdrawError("");
+                          }}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selectedWithdrawCurrency === asset.asset
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          }`}
+                        >
+                          <span className="text-lg">{getCurrencyLogo(asset.asset)}</span>
+                          <span>{asset.asset}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Network Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Network</label>
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {getNetworksForAsset(selectedWithdrawCurrency).map((network: string) => (
+                        <button
+                          key={network}
+                          onClick={() => {
+                            setSelectedWithdrawNetwork(network);
+                            setWithdrawError("");
+                          }}
+                          className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selectedWithdrawNetwork === network
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          }`}
+                        >
+                          {network}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Address Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Withdrawal Address</label>
+                    <input
+                      type="text"
+                      value={withdrawAddress}
+                      onChange={(e) => {
+                        setWithdrawAddress(e.target.value);
+                        setWithdrawError("");
+                      }}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={`Enter ${selectedWithdrawCurrency} address`}
+                    />
+                  </div>
+
+                  {/* Memo Input (if required) */}
+                  {isMemoRequired(selectedWithdrawCurrency) && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Memo/Tag (Required)</label>
+                      <input
+                        type="text"
+                        value={withdrawMemo}
+                        onChange={(e) => {
+                          setWithdrawMemo(e.target.value);
+                          setWithdrawError("");
+                        }}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter memo/tag"
+                        required
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Cash Withdrawal */}
+              {selectedWithdrawMethod === "cash" && (
+                <>
+                  {/* Payment Method Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Withdrawal Method</label>
+                    <div className="flex gap-2 mb-3">
+                      {["VISA", "Mastercard", "PayPal", "Bank Transfer"].map((method) => (
+                        <button
+                          key={method}
+                          onClick={() => setSelectedCashWithdrawMethod(method)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            selectedCashWithdrawMethod === method
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                          }`}
+                        >
+                          <span>{method}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Card Details */}
+                  {(selectedCashWithdrawMethod === "VISA" || selectedCashWithdrawMethod === "Mastercard") && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Card Number</label>
+                        <input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => {
+                            const formatted = formatCardNumber(e.target.value);
+                            setCardNumber(formatted);
+                            setWithdrawError("");
+                          }}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="1234 5678 9012 3456"
+                          maxLength={19}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Cardholder Name</label>
+                        <input
+                          type="text"
+                          value={cardholderName}
+                          onChange={(e) => {
+                            setCardholderName(e.target.value);
+                            setWithdrawError("");
+                          }}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Expiry Date</label>
+                          <input
+                            type="text"
+                            value={expiryDate}
+                            onChange={(e) => {
+                              const formatted = formatExpiryDate(e.target.value);
+                              setExpiryDate(formatted);
+                              setWithdrawError("");
+                            }}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="MM/YY"
+                            maxLength={5}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">CVV</label>
+                          <input
+                            type="text"
+                            value={cvv}
+                            onChange={(e) => {
+                              setCvv(e.target.value.replace(/\D/g, ''));
+                              setWithdrawError("");
+                            }}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="123"
+                            maxLength={4}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bank Transfer Details */}
+                  {selectedCashWithdrawMethod === "Bank Transfer" && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Account Holder Name</label>
+                        <input
+                          type="text"
+                          value={accountHolderName}
+                          onChange={(e) => {
+                            setAccountHolderName(e.target.value);
+                            setWithdrawError("");
+                          }}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Account Number</label>
+                        <input
+                          type="text"
+                          value={bankAccount}
+                          onChange={(e) => {
+                            setBankAccount(e.target.value.replace(/\D/g, ''));
+                            setWithdrawError("");
+                          }}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="1234567890"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">Routing Number</label>
+                        <input
+                          type="text"
+                          value={routingNumber}
+                          onChange={(e) => {
+                            setRoutingNumber(e.target.value.replace(/\D/g, ''));
+                            setWithdrawError("");
+                          }}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="123456789"
+                          maxLength={9}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PayPal Details */}
+                  {selectedCashWithdrawMethod === "PayPal" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">PayPal Email</label>
+                      <input
+                        type="email"
+                        value={paypalEmail}
+                        onChange={(e) => {
+                          setPaypalEmail(e.target.value);
+                          setWithdrawError("");
+                        }}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="your.email@example.com"
+                      />
+                    </div>
+                  )}
+
+                  {/* Method-specific info */}
+                  <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-blue-400 text-sm font-medium">Withdrawal Info</p>
+                    </div>
+                    <p className="text-blue-400/70 text-xs">
+                      {selectedCashWithdrawMethod === "VISA" || selectedCashWithdrawMethod === "Mastercard" 
+                        ? "Funds will be sent to your card within 1-3 business days."
+                        : selectedCashWithdrawMethod === "PayPal"
+                        ? "Funds will be sent to your PayPal account within 24 hours."
+                        : "Bank transfer will be processed within 2-5 business days."
+                      }
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Error Message */}
+              {withdrawError && (
+                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-red-400 text-sm">{withdrawError}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {withdrawSuccess && (
+                <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-green-400 text-sm">{withdrawSuccess}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Button */}
+              <button
+                onClick={processWithdrawal}
+                disabled={withdrawLoading || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
+                className={`w-full px-4 py-3 rounded-lg font-medium transition-colors text-sm ${
+                  withdrawLoading || !withdrawAmount || parseFloat(withdrawAmount) <= 0
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-400 text-white"
+                }`}
+              >
+                {withdrawLoading ? "Processing..." : `Withdraw $${withdrawAmount || "0"}`}
+              </button>
+            </div>
           </div>
         </div>
       )}
