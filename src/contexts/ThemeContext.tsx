@@ -41,6 +41,12 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const root = document.documentElement;
     root.setAttribute('data-theme', theme);
     
+    // Also set the dark class for Tailwind's dark mode
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
     
     if (theme === 'light') {
       root.style.setProperty('--bg', '0 0% 98%');

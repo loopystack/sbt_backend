@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNotifications } from "../../contexts/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import { useOddsFormat } from "../../hooks/useOddsFormat";
 import { OddsConverter } from "../../utils/oddsConverter";
@@ -49,6 +50,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const { selectedCountry, selectedLeague, setSelectedLeague, countries } = useCountry();
   const { theme } = useTheme();
   const { user, isAuthenticated } = useAuth();
+  const { addNewBetNotification } = useNotifications();
   const navigate = useNavigate();
   
 
@@ -236,6 +238,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   }>({ betAmount: "10", potentialWin: "102.60", teams: "Team A vs Team B" });
   const [searchQuery, setSearchQuery] = useState(initialSearchTerm || "");
   
+  // State to track if search should be triggered
+  const [shouldTriggerSearch, setShouldTriggerSearch] = useState(false);
+  
   // Betting states
   const [isPlacingBet, setIsPlacingBet] = useState(false);
   const [bettingError, setBettingError] = useState<string>("");
@@ -379,6 +384,17 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           try {
             const savedRecord = await bettingService.createBettingRecord(bettingRecord);
             console.log('✅ Betting record saved successfully:', savedRecord);
+            
+            // Add notification immediately after successful bet placement
+            if (savedRecord && savedRecord.id) {
+              addNewBetNotification(
+                savedRecord.id,
+                bettingRecord.match_teams,
+                bettingRecord.bet_amount,
+                bettingRecord.potential_win
+              );
+              console.log('🔔 Notification added for new bet:', savedRecord.id);
+            }
           } catch (saveError: any) {
             console.error('❌ Failed to save individual betting record:', saveError);
             throw saveError; // Re-throw to be caught by outer catch block
@@ -537,47 +553,15 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   };
 
   const getMatches = (): Match[] => {
-    // If we have API data, use it
+    // If we have API data, use it directly (backend already handles all filtering)
     if (matchingInfo && matchingInfo.length > 0) {
-      let filteredMatches = matchingInfo;
-      
-      // Apply search filter if search query exists
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        filteredMatches = matchingInfo.filter(match => {
-          const homeTeam = match.home_team.toLowerCase();
-          const awayTeam = match.away_team.toLowerCase();
-          return homeTeam.includes(query) || awayTeam.includes(query);
-        });
-      }
-      
-      if (selectedMarket === "Results") {
-        filteredMatches = filteredMatches.filter(match => {
-          // Use the full date and time, not just date at midnight
-          const matchDateTime = new Date(match.date + 'T' + match.time); 
-          const now = new Date();
-          const isPastMatch = matchDateTime.getTime() < now.getTime();
-          return isPastMatch;
-        });
-      } else if (selectedMarket === "Next Matches") {
-        filteredMatches = filteredMatches.filter(match => {
-          // Use the full date and time, not just date at midnight
-          const matchDateTime = new Date(match.date + 'T' + match.time); 
-          const now = new Date();
-          const isFutureMatch = matchDateTime.getTime() >= now.getTime();
-          return isFutureMatch;
-        });
-      } else if (selectedCountry) {
-        filteredMatches = filteredMatches.filter(match => 
-          match.country.toLowerCase() === selectedCountry.name.toLowerCase()
-        );
-      }
-      
-      if (filteredMatches.length === 0 && selectedMarket !== "Results" && selectedMarket !== "Next Matches" && !selectedYear && !searchQuery.trim()) {
-        filteredMatches = matchingInfo;
-      }
-      
-      return transformMatchingInfoToMatch(filteredMatches);
+      // Backend already handles:
+      // - Search filtering (home_team)
+      // - Year filtering (season)
+      // - Country/league filtering
+      // - Date filtering (Next Matches vs Results)
+      // - Pagination
+      return transformMatchingInfoToMatch(matchingInfo);
     }
     
     if (selectedLeague && selectedLeague.matches.length > 0) {
@@ -836,89 +820,57 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const fetchCurrentPageMatches = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching with selectedYear:", selectedYear);
+      console.log("Fetching with selectedYear:", selectedYear, "searchQuery:", searchQuery);
       
+      // Build base parameters
+      const params: any = { 
+        page: currentPage,
+        size: MATCHES_PER_PAGE
+      };
+      
+      // Add year filter (season)
       if (selectedYear) {
-        // ⚡ SINGLE PAGE FETCH - Much faster!
-        const params: any = { 
-          page: currentPage,
-          size: MATCHES_PER_PAGE,
-          season: selectedYear
-        };
-        
-        if (selectedLeague && selectedCountry) {
-          params.league = selectedLeague.name;
-          params.country = selectedCountry?.name; // IMPORTANT: Filter by country too!
-        }
-        
-        // Add date filtering for "Next Matches"
-        if (selectedMarket === "Next Matches") {
-          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          params.date_from = today; // Only future matches
-        }
-        
-        console.log(`🚀 Fetching page ${currentPage} for year ${selectedYear}, market: ${selectedMarket}`, params);
-        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-        
-        setMatchingInfo(result.odds);
-        setApiTotalPages(result.pages);
-        setApiTotalMatches(result.total);
-        
-        console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages})`);
-      } else if (selectedLeague) {
-        // ⚡ SINGLE PAGE FETCH for league - Much faster!
-        const params: any = { 
-          page: currentPage,
-          size: MATCHES_PER_PAGE,
-          league: selectedLeague.name,
-          country: selectedCountry?.name // IMPORTANT: Filter by country too!
-        };
-        
-        // Add date filtering for "Next Matches"
-        if (selectedMarket === "Next Matches") {
-          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          params.date_from = today; // Only future matches
-        }
-        
-        console.log(`🚀 Fetching page ${currentPage} for league ${selectedLeague.name}, market: ${selectedMarket}`, params);
-        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-        
-        setMatchingInfo(result.odds);
-        setApiTotalPages(result.pages);
-        setApiTotalMatches(result.total);
-        
-        console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages})`);
-      } else {
-        const params: any = { 
-          page: currentPage, 
-          size: MATCHES_PER_PAGE
-        };
-        
-        if (selectedCountry && selectedCountry.name === "Brazil") {
-          params.country = "Brazil";
-          console.log("Sending country parameter:", params.country);
-        }
-        
-        // Add date filtering for "Next Matches"
-        if (selectedMarket === "Next Matches") {
-          const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          params.date_from = today; // Only future matches
-        }
-        
-        console.log(`🚀 Fetching page ${currentPage}, market: ${selectedMarket}`, params);
-        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
-        console.log("✅ API result:", result);
-        setMatchingInfo(result.odds);
-        setApiTotalPages(result.pages);
-        setApiTotalMatches(result.total);
-        setCurrentPage(result.page);
+        params.season = selectedYear;
       }
+      
+      // Add league and country filters
+      if (selectedLeague && selectedCountry) {
+        params.league = selectedLeague.name;
+        params.country = selectedCountry.name;
+      } else if (selectedCountry) {
+        params.country = selectedCountry.name;
+      }
+      
+      // Add search query to backend - this is the key fix!
+      if (searchQuery.trim()) {
+        // Use home_team parameter to search for teams
+        // The backend will search in home_team field using ILIKE
+        params.home_team = searchQuery.trim();
+      }
+      
+      // Add date filtering for "Next Matches" vs "Results"
+      if (selectedMarket === "Next Matches") {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        params.date_from = today; // Only future matches
+      } else if (selectedMarket === "Results") {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        params.date_to = today; // Only past matches
+      }
+      
+      console.log(`🚀 Fetching page ${currentPage} with backend search/filtering:`, params);
+      const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+      
+      setMatchingInfo(result.odds);
+      setApiTotalPages(result.pages);
+      setApiTotalMatches(result.total);
+      
+      console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages}) with backend filtering`);
     } catch (error) {
       console.error("Error fetching matching info:", error);
     } finally {
       setLoading(false);
     }
-  }, [dispatch, currentPage, selectedYear, selectedCountry, selectedLeague, selectedMarket]);
+  }, [dispatch, currentPage, selectedYear, selectedCountry, selectedLeague, selectedMarket, shouldTriggerSearch]);
     
   
   useEffect(() => {
@@ -930,6 +882,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     setSearchQuery("");
     setCurrentPage(1);
   }, [selectedLeague, selectedYear, selectedCountry, selectedMarket]);
+
+  // Only trigger search when shouldTriggerSearch is true
+  useEffect(() => {
+    if (shouldTriggerSearch) {
+      setCurrentPage(1); // Reset to first page when searching
+      setShouldTriggerSearch(false); // Reset the trigger
+    }
+  }, [shouldTriggerSearch]);
 
   // Update search query when initialSearchTerm prop changes
   useEffect(() => {
@@ -978,19 +938,19 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                   ? `${selectedLeague.name} ${selectedYear} Results`
                   : `${selectedYear} Results Only` 
                 : selectedLeague && selectedCountry
-                  ? `${selectedCountry.name} ${selectedLeague.name} Matches & Odds`
+                  ? `${selectedCountry.name} ${selectedLeague.name} Matches`
                   : selectedMarket === "Results"
                     ? "Match Results"
                     : selectedMarket === "Next Matches"
-                      ? "Upcoming Matches & Odds"
+                      ? "Upcoming Matches"
                       : selectedCountry 
                         ? `${selectedCountry.name} - Football` 
-                        : 'Live Matches & Odds'
+                        : 'Live Matches'
             }
           </h2>
                      <p className="text-sm text-muted mt-1">
              {searchQuery.trim() 
-               ? `${matches.length} matches found for "${searchQuery}"`
+               ? `${totalMatches} matches found for "${searchQuery}"`
                : selectedYear && selectedLeague
                  ? `${totalMatches} ${selectedCountry?.name} ${selectedLeague.name} matches from ${selectedYear}`
                  : selectedYear && !selectedLeague
@@ -1008,24 +968,39 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {/* Search Box */}
-          <div className="relative min-w-[200px] sm:min-w-[250px]">
+          <div className="relative min-w-[200px] sm:min-w-[250px] flex">
             <input
               type="text"
-              placeholder="Search teams..."
+              placeholder="Search teams... (Press Enter to search)"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1);
+                // Don't trigger search on every keystroke
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setShouldTriggerSearch(true);
+                }
               }}
               className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm"
             />
+            <button
+              onClick={() => setShouldTriggerSearch(true)}
+              className="ml-2 px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+              title="Search teams"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
             {searchQuery && (
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setCurrentPage(1);
+                  setShouldTriggerSearch(true); // Trigger search to clear results
                 }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted hover:text-text"
+                className="ml-1 px-2 py-2 text-muted hover:text-text"
+                title="Clear search"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

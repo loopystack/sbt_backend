@@ -7,9 +7,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { CountryProvider } from "./contexts/CountryContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PreferencesProvider } from "./contexts/PreferencesContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 import ReduxProvider from "./contexts/ReduxContext";
 import CookieConsent from "./components/CookieConsent";
 import { CookieManager, CookiePreferences } from "./utils/cookieManager";
+import "./utils/testNotificationSystem"; // Load test utilities
 
 const router = createBrowserRouter(routes);
 
@@ -57,13 +59,15 @@ const App: React.FC = () => {
         <ThemeProvider>
           <CountryProvider>
             <AuthProvider>
-              <PreferencesProvider>
-                <RouterProvider router={router} />
-                <CookieConsent 
-                  onAccept={handleCookieAccept}
-                  onDecline={handleCookieDecline}
-                />
-              </PreferencesProvider>
+              <NotificationProvider>
+                <PreferencesProvider>
+                  <RouterProvider router={router} />
+                  <CookieConsent 
+                    onAccept={handleCookieAccept}
+                    onDecline={handleCookieDecline}
+                  />
+                </PreferencesProvider>
+              </NotificationProvider>
             </AuthProvider>
           </CountryProvider>
         </ThemeProvider>

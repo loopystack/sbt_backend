@@ -4,6 +4,7 @@ import newlogo from "../images/newlogo.png";
 import { useTheme } from "../contexts/ThemeContext";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 import { authService, tokenManager } from "../services/authService";
 import OddsFormatSelector from "./OddsFormatSelector";
 
@@ -57,6 +58,7 @@ export default function Navigation() {
   const { theme, toggleTheme } = useTheme();
   const { selectedLeague, setSelectedLeague } = useCountry();
   const { user, isAuthenticated, logout } = useAuth();
+  const { betNotificationsCount, clearNotifications } = useNotifications();
   
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -319,10 +321,20 @@ export default function Navigation() {
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                   className="flex items-center gap-2 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
+                  <div className="relative">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                    </div>
+                    {/* Notification Badge */}
+                    {betNotificationsCount > 0 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                        <span className="text-xs font-bold text-white">
+                          {betNotificationsCount > 9 ? '9+' : betNotificationsCount}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-sm font-medium text-black dark:text-white hidden sm:block">{user?.username || 'User'}</span>
                   <svg 
@@ -373,9 +385,19 @@ export default function Navigation() {
                         }}
                         className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/5 rounded-lg transition-colors"
                       >
-                        <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
+                        <div className="relative">
+                          <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          {/* Notification Badge on Dashboard Icon */}
+                          {betNotificationsCount > 0 && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center shadow-lg border border-white">
+                              <span className="text-xs font-bold text-white">
+                                {betNotificationsCount > 9 ? '9+' : betNotificationsCount}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                         <span className="text-text">Dashboard</span>
                       </button>
                       
@@ -396,7 +418,7 @@ export default function Navigation() {
               </div>
             ) : (
               <button
-                className="px-6 py-3 text-black dark:text-white hover:text-black/80 dark:hover:text-white/80 font-semibold hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
+                className="px-6 py-3 text-text hover:text-text/80 font-semibold hover:bg-white/10 rounded-xl transition-all duration-300 hover:scale-105"
                 onClick={() => navigate("/signin")}
               >
                 Sign In

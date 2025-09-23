@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNotifications } from "../contexts/NotificationContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService, tokenManager } from "../services/authService";
 import { bettingService, BettingRecord, BettingStats } from "../services/bettingService";
@@ -10,6 +11,7 @@ import { OddsConverter } from "../utils/oddsConverter";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
+  const { clearNotifications } = useNotifications();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [userFunds, setUserFunds] = useState(0);
@@ -69,6 +71,7 @@ export default function Dashboard() {
   const [transactionTotalPages, setTransactionTotalPages] = useState(1);
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [sortField, setSortField] = useState<string>('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -112,6 +115,7 @@ export default function Dashboard() {
     
     try {
       setRecordsLoading(true);
+      setStatsLoading(true);
       
       // First, fix any missing match dates
       try {
@@ -134,6 +138,7 @@ export default function Dashboard() {
       setBettingStats(null);
     } finally {
       setRecordsLoading(false);
+      setStatsLoading(false);
     }
   };
 
@@ -163,6 +168,12 @@ export default function Dashboard() {
       setTransactionsLoading(false);
     }
   };
+
+  // Clear notifications when user visits Dashboard
+  useEffect(() => {
+    console.log('🏠 Dashboard visited - clearing notifications');
+    clearNotifications();
+  }, [clearNotifications]);
 
   // Handle Google OAuth success redirect
   useEffect(() => {
@@ -209,6 +220,7 @@ export default function Dashboard() {
       try {
         setFundsLoading(true);
         setTransactionsLoading(true);
+        setStatsLoading(true);
         
         // Fetch fresh balance
         const fundsData = await authService.getUserFunds();
@@ -217,12 +229,16 @@ export default function Dashboard() {
         // Refresh transaction data to get latest balance_after values
         await fetchTransactionData();
         
+        // Refresh betting data to get latest stats
+        await fetchBettingData();
+        
         console.log('✅ All data refreshed successfully');
       } catch (error) {
         console.error('❌ Error refreshing data:', error);
       } finally {
         setFundsLoading(false);
         setTransactionsLoading(false);
+        setStatsLoading(false);
       }
     }
   };
@@ -309,20 +325,30 @@ export default function Dashboard() {
           <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-white/5 rounded-full blur-xl" style={{animationDelay: '2s'}}></div>
         </div>
         
-        {/* Floating Particles */}
+        {/* Animated Geometric Shapes - Enhanced Visibility */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${3 + Math.random() * 2}s`
-              }}
-            />
-          ))}
+          {/* Floating Circles with staggered delays - MUCH MORE VISIBLE */}
+          <div className="absolute top-8 left-8 w-20 h-20 bg-gradient-to-r from-cyan-400/50 to-blue-400/50 rounded-full animate-pulse-visible blur-sm" style={{animationDelay: '0s'}}></div>
+          <div className="absolute top-16 right-12 w-16 h-16 bg-gradient-to-r from-purple-400/50 to-pink-400/50 rounded-full animate-bounce-visible blur-sm" style={{animationDelay: '1s'}}></div>
+          <div className="absolute bottom-20 left-16 w-24 h-24 bg-gradient-to-r from-emerald-400/50 to-teal-400/50 rounded-full animate-pulse-visible blur-sm" style={{animationDelay: '2s'}}></div>
+          <div className="absolute bottom-8 right-8 w-18 h-18 bg-gradient-to-r from-yellow-400/50 to-orange-400/50 rounded-full animate-bounce-visible blur-sm" style={{animationDelay: '3s'}}></div>
+          
+          {/* Floating Squares with different rotations - MORE VISIBLE */}
+          <div className="absolute top-1/4 left-1/3 w-12 h-12 bg-gradient-to-r from-indigo-400/40 to-purple-400/40 rotate-45 animate-spin-visible blur-sm" style={{animationDelay: '0.5s'}}></div>
+          <div className="absolute top-1/3 right-1/4 w-10 h-10 bg-gradient-to-r from-rose-400/40 to-pink-400/40 rotate-12 animate-spin-reverse-visible blur-sm" style={{animationDelay: '1.5s'}}></div>
+          <div className="absolute bottom-1/3 left-1/4 w-14 h-14 bg-gradient-to-r from-green-400/40 to-emerald-400/40 rotate-45 animate-spin-visible blur-sm" style={{animationDelay: '2.5s'}}></div>
+          
+          {/* Large Animated Gradient Orbs - MUCH MORE VISIBLE */}
+          <div className="absolute top-1/2 left-1/2 w-40 h-40 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-purple-500/30 rounded-full animate-float-visible blur-xl" style={{animationDelay: '0s'}}></div>
+          <div className="absolute top-1/4 right-1/3 w-32 h-32 bg-gradient-to-r from-pink-500/30 via-rose-500/30 to-orange-500/30 rounded-full animate-float-reverse-visible blur-xl" style={{animationDelay: '5s'}}></div>
+          
+          {/* Additional floating elements - MORE VISIBLE */}
+          <div className="absolute top-3/4 left-1/2 w-22 h-22 bg-gradient-to-r from-violet-400/40 to-fuchsia-400/40 rounded-full animate-pulse-visible blur-lg" style={{animationDelay: '4s'}}></div>
+          <div className="absolute top-1/6 left-1/6 w-18 h-18 bg-gradient-to-r from-amber-400/40 to-yellow-400/40 rounded-full animate-bounce-visible blur-lg" style={{animationDelay: '6s'}}></div>
+          
+          {/* Extra visible elements */}
+          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-gradient-to-r from-red-400/45 to-pink-400/45 rounded-full animate-float-visible blur-md" style={{animationDelay: '7s'}}></div>
+          <div className="absolute bottom-1/4 right-1/6 w-14 h-14 bg-gradient-to-r from-lime-400/45 to-green-400/45 rounded-full animate-bounce-visible blur-md" style={{animationDelay: '8s'}}></div>
         </div>
 
         <div className="relative z-10 flex items-center justify-between">
@@ -423,7 +449,13 @@ export default function Dashboard() {
               </div>
               <span className="text-3xl">📊</span>
             </div>
-            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.total_bets || 0}</div>
+            {statsLoading ? (
+              <div className="text-3xl font-bold mb-2">
+                <div className="bg-white/20 h-8 w-16 rounded-lg shimmer"></div>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.total_bets || 0}</div>
+            )}
             <div className="text-blue-100 font-medium">Total Bets Placed</div>
           </div>
         </div>
@@ -442,7 +474,13 @@ export default function Dashboard() {
               </div>
               <span className="text-3xl">🏆</span>
             </div>
-            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.win_rate || 0}%</div>
+            {statsLoading ? (
+              <div className="text-3xl font-bold mb-2">
+                <div className="bg-white/20 h-8 w-12 rounded-lg shimmer"></div>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.win_rate || 0}%</div>
+            )}
             <div className="text-emerald-100 font-medium">Success Rate</div>
           </div>
         </div>
@@ -461,9 +499,15 @@ export default function Dashboard() {
               </div>
               <span className="text-3xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
             </div>
-            <div className="text-3xl font-bold mb-2 drop-shadow-lg">
-              {(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}${(bettingStats?.total_profit || 0).toFixed(2)}
-            </div>
+            {statsLoading ? (
+              <div className="text-3xl font-bold mb-2">
+                <div className="bg-white/20 h-8 w-20 rounded-lg shimmer"></div>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold mb-2 drop-shadow-lg">
+                {(bettingStats?.total_profit || 0) >= 0 ? '+' : ''}${(bettingStats?.total_profit || 0).toFixed(2)}
+              </div>
+            )}
             <div className={`font-medium ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
               {(bettingStats?.total_profit || 0) >= 0 ? 'Total Profit' : 'Total Loss'}
             </div>
@@ -484,7 +528,13 @@ export default function Dashboard() {
               </div>
               <span className="text-3xl">⚡</span>
             </div>
-            <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.pending_bets || 0}</div>
+            {statsLoading ? (
+              <div className="text-3xl font-bold mb-2">
+                <div className="bg-white/20 h-8 w-12 rounded-lg shimmer"></div>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.pending_bets || 0}</div>
+            )}
             <div className="text-purple-100 font-medium">Active Bets</div>
           </div>
         </div>

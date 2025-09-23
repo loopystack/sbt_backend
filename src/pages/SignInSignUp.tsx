@@ -66,12 +66,19 @@ export default function SignInSignUp() {
     
     // Get current domain dynamically
     const currentOrigin = window.location.origin;
-    const backendUrl = currentOrigin.includes('localhost') 
-      ? 'http://localhost:5001' 
-      : 'https://sportsbetting-seiw.onrender.com';
     
-    // TEMPORARY FIX: Force production backend URL for testing
-    // const backendUrl = 'https://sportsbetting-seiw.onrender.com';
+    // Determine backend URL based on current domain
+    let backendUrl;
+    if (currentOrigin.includes('localhost')) {
+      backendUrl = 'http://localhost:5001';
+    } else {
+      // For production and any other domain, use production backend
+      backendUrl = 'https://sportsbetting-seiw.onrender.com';
+    }
+    
+    // TEMPORARY WORKAROUND: Force production backend for testing
+    // Uncomment the line below to test with production backend
+    // backendUrl = 'https://sportsbetting-seiw.onrender.com';
     
     // Direct redirect to Google OAuth - dynamic redirect URI
     const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +

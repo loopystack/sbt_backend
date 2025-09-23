@@ -113,38 +113,40 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
         } catch (apiError) {
           console.warn('Failed to fetch leagues from API, using fallback data:', apiError);
           
-          // Fallback data when API is not available
+          // Fallback data when API is not available - includes all countries available in the database
           const fallbackCountries: Country[] = [
+            {
+              name: 'Austria',
+              flag: 'at',
+              leagues: [
+                { name: 'Bundesliga', matchCount: 0, matches: [] },
+                { name: '2. Liga', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Belgium',
+              flag: 'be',
+              leagues: [
+                { name: 'Jupiler Pro League', matchCount: 0, matches: [] },
+                { name: 'Challenger Pro League', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Brazil',
+              flag: 'br',
+              leagues: [
+                { name: 'Serie A', matchCount: 0, matches: [] },
+                { name: 'Serie B', matchCount: 0, matches: [] }
+              ]
+            },
             {
               name: 'England',
               flag: 'gb',
               leagues: [
                 { name: 'Premier League', matchCount: 0, matches: [] },
-                { name: 'Championship', matchCount: 0, matches: [] }
-              ]
-            },
-            {
-              name: 'Spain',
-              flag: 'es',
-              leagues: [
-                { name: 'La Liga', matchCount: 0, matches: [] },
-                { name: 'Segunda División', matchCount: 0, matches: [] }
-              ]
-            },
-            {
-              name: 'Germany',
-              flag: 'de',
-              leagues: [
-                { name: 'Bundesliga', matchCount: 0, matches: [] },
-                { name: '2. Bundesliga', matchCount: 0, matches: [] }
-              ]
-            },
-            {
-              name: 'Italy',
-              flag: 'it',
-              leagues: [
-                { name: 'Serie A', matchCount: 0, matches: [] },
-                { name: 'Serie B', matchCount: 0, matches: [] }
+                { name: 'Championship', matchCount: 0, matches: [] },
+                { name: 'League One', matchCount: 0, matches: [] },
+                { name: 'League Two', matchCount: 0, matches: [] }
               ]
             },
             {
@@ -152,7 +154,91 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
               flag: 'fr',
               leagues: [
                 { name: 'Ligue 1', matchCount: 0, matches: [] },
-                { name: 'Ligue 2', matchCount: 0, matches: [] }
+                { name: 'Ligue 2', matchCount: 0, matches: [] },
+                { name: 'National', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Germany',
+              flag: 'de',
+              leagues: [
+                { name: 'Bundesliga', matchCount: 0, matches: [] },
+                { name: '2. Bundesliga', matchCount: 0, matches: [] },
+                { name: '3. Liga', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Italy',
+              flag: 'it',
+              leagues: [
+                { name: 'Serie A', matchCount: 0, matches: [] },
+                { name: 'Serie B', matchCount: 0, matches: [] },
+                { name: 'Serie C', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Netherlands',
+              flag: 'nl',
+              leagues: [
+                { name: 'Eredivisie', matchCount: 0, matches: [] },
+                { name: 'Eerste Divisie', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Poland',
+              flag: 'pl',
+              leagues: [
+                { name: 'Ekstraklasa', matchCount: 0, matches: [] },
+                { name: 'I Liga', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Portugal',
+              flag: 'pt',
+              leagues: [
+                { name: 'Primeira Liga', matchCount: 0, matches: [] },
+                { name: 'Segunda Liga', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Russia',
+              flag: 'ru',
+              leagues: [
+                { name: 'Premier League', matchCount: 0, matches: [] },
+                { name: 'First League', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Spain',
+              flag: 'es',
+              leagues: [
+                { name: 'La Liga', matchCount: 0, matches: [] },
+                { name: 'Segunda División', matchCount: 0, matches: [] },
+                { name: 'Primera División RFEF', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Turkey',
+              flag: 'tr',
+              leagues: [
+                { name: 'Süper Lig', matchCount: 0, matches: [] },
+                { name: '1. Lig', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'Ukraine',
+              flag: 'ua',
+              leagues: [
+                { name: 'Premier League', matchCount: 0, matches: [] },
+                { name: 'First League', matchCount: 0, matches: [] }
+              ]
+            },
+            {
+              name: 'USA',
+              flag: 'us',
+              leagues: [
+                { name: 'MLS', matchCount: 0, matches: [] },
+                { name: 'USL Championship', matchCount: 0, matches: [] }
               ]
             }
           ];

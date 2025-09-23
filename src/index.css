@@ -128,24 +128,25 @@ body {
 @keyframes float {
   0%, 100% { 
     transform: translateY(0px) translateX(0px);
-    opacity: 0.3;
+    opacity: 0.15;
   }
   25% { 
-    transform: translateY(-10px) translateX(5px);
-    opacity: 0.6;
+    transform: translateY(-4px) translateX(2px);
+    opacity: 0.25;
   }
   50% { 
-    transform: translateY(-20px) translateX(-5px);
-    opacity: 0.9;
+    transform: translateY(-8px) translateX(-2px);
+    opacity: 0.4;
   }
   75% { 
-    transform: translateY(-10px) translateX(10px);
-    opacity: 0.6;
+    transform: translateY(-4px) translateX(3px);
+    opacity: 0.25;
   }
 }
 
 .animate-float {
   animation: float ease-in-out infinite;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Ensure proper spacing on very small screens */

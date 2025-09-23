@@ -8,6 +8,7 @@ export interface BettingRecord {
   bet_amount: number;
   potential_win: number;
   actual_profit?: number;
+  match_id?: number;
   match_teams: string;
   match_date?: string;
   match_league?: string;
