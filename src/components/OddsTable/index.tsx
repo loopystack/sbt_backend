@@ -789,14 +789,37 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       button.className.includes('hover:bg-bg/50')
     );
     
+    // Check if the click is on a navigation button
+    const isNavigationButton = button && (
+      button.className.includes('hover:bg-white/10') ||
+      button.className.includes('hover:bg-white/5') ||
+      button.className.includes('bg-gradient-to-r') ||
+      button.className.includes('hover:text-white') ||
+      button.className.includes('text-gray-400') ||
+      button.closest('nav') !== null
+    );
+    
     // Check if the click is inside the betslip modal content area (not header)
     const isInsideBetSlipContent = target.closest('.betslip-content');
     
     // Check if the click is specifically on the betslip header
     const isBetSlipHeader = target.closest('.betslip-header');
     
-    // Only collapse if clicking outside both the betslip content and header
-    if (showBetSlip && !isOddButton && !isInsideBetSlipContent && !isBetSlipHeader) {
+    // Debug logging
+    if (button) {
+      console.log('OddsTable handleOutsideClick - Button clicked:', {
+        className: button.className,
+        isOddButton,
+        isNavigationButton,
+        isInsideBetSlipContent,
+        isBetSlipHeader,
+        showBetSlip
+      });
+    }
+    
+    // Only collapse if clicking outside both the betslip content, header, odd buttons, and navigation buttons
+    if (showBetSlip && !isOddButton && !isNavigationButton && !isInsideBetSlipContent && !isBetSlipHeader) {
+      console.log('OddsTable: Collapsing betslip due to outside click');
       setIsBetSlipCollapsed(true);
     }
   };

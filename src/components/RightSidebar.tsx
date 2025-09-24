@@ -27,7 +27,11 @@ interface ValueBet {
   bookmaker_margin: number;
 }
 
-export default function RightSidebar() {
+interface RightSidebarProps {
+  onClose?: () => void;
+}
+
+export default function RightSidebar({ onClose }: RightSidebarProps) {
   const navigate = useNavigate();
   const { setSelectedLeague, setSelectedCountry, countries } = useCountry();
   const [valueBets, setValueBets] = useState<ValueBet[]>([]);
@@ -260,6 +264,11 @@ export default function RightSidebar() {
         
         // Navigate to home page with highlighted match
         navigate(`/?highlight=${highlightParam}`);
+        
+        // Close the sidebar if onClose function is provided
+        if (onClose) {
+          onClose();
+        }
         
         // Clear the clicked state after a delay
         setTimeout(() => setClickedMatchId(null), 3000);

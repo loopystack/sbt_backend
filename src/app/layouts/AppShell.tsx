@@ -35,10 +35,8 @@ export default function AppShell() {
   }, []);
 
   const handleNavigation = (path: string) => {
-    // Clear selected league when navigating to home
-    if (path === "/") {
-      setSelectedLeague(null);
-    }
+    // Clear selected league when navigating to any page
+    setSelectedLeague(null);
     navigate(path);
     setIsMobileMenuOpen(false);
   };
@@ -184,14 +182,35 @@ export default function AppShell() {
       </div>
 
       <div className="flex">
-        <div className={`${
-          isLeftSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
+        {/* Left Sidebar */}
+        <div className={`fixed top-16 left-0 w-72 sm:w-80 h-[calc(100vh-8rem)] bg-surface z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isLeftSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsLeftSidebarOpen(false)} />
-          <div className="fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50">
-            <LeftSidebar />
+          {/* Sidebar Header */}
+          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">⚽</span>
+              <span className="font-bold text-white">Sports</span>
+            </div>
+            <button
+              onClick={() => setIsLeftSidebarOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
+            <LeftSidebar onClose={() => setIsLeftSidebarOpen(false)} />
           </div>
         </div>
+        
+        {/* Left Sidebar Overlay */}
+        {isLeftSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
+        )}
         
         <div className="hidden lg:block">
           <LeftSidebar />
@@ -211,14 +230,35 @@ export default function AppShell() {
           </div>
         </main>
         
-        <div className={`${
-          isRightSidebarOpen ? 'fixed inset-0 z-40 lg:hidden' : 'hidden'
+        {/* Right Sidebar */}
+        <div className={`fixed top-16 right-0 w-72 sm:w-80 h-[calc(100vh-8rem)] bg-surface z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'
         }`}>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsRightSidebarOpen(false)} />
-          <div className="fixed top-16 right-0 w-72 sm:w-80 h-full bg-surface border-l border-border z-50">
-            <RightSidebar />
+          {/* Sidebar Header */}
+          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">📋</span>
+              <span className="font-bold text-white">Value Bets</span>
+            </div>
+            <button
+              onClick={() => setIsRightSidebarOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
+            <RightSidebar onClose={() => setIsRightSidebarOpen(false)} />
           </div>
         </div>
+        
+        {/* Right Sidebar Overlay */}
+        {isRightSidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsRightSidebarOpen(false)} />
+        )}
         
         <div className="hidden lg:block">
           <RightSidebar />
@@ -229,8 +269,11 @@ export default function AppShell() {
       
       <ScrollToFooter />
       
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav 
+          onLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+          onRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+        />
 
     </div>
   );

@@ -9,6 +9,7 @@ export default function OddsFormatSelector({ className = '' }: OddsFormatSelecto
   const { oddsFormat, setOddsFormat } = usePreferences();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,15 +33,30 @@ export default function OddsFormatSelector({ className = '' }: OddsFormatSelecto
     setIsOpen(false);
   };
 
+  // Calculate dropdown position
+  const getDropdownStyle = () => {
+    if (!buttonRef.current) return {};
+    
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    return {
+      position: 'fixed' as const,
+      top: `${buttonRect.bottom + 8}px`,
+      left: `${buttonRect.left + (buttonRect.width / 2)}px`,
+      transform: 'translateX(-50%)',
+      zIndex: 100000
+    };
+  };
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div className="flex flex-col">
         <button
+          ref={buttonRef}
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-muted hover:text-text hover:bg-white/5 rounded transition-all duration-300 border border-transparent hover:border-border/50 group"
           title="Odds Format"
         >
-          <span className="text-xs opacity-75">Odds formats:</span>
+          <span className="text-xs lg:text-xs opacity-75">Odds formats:</span>
           <svg 
             className={`w-3 h-3 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
             fill="none" 
@@ -50,17 +66,13 @@ export default function OddsFormatSelector({ className = '' }: OddsFormatSelecto
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-        <div className="text-xs text-text font-semibold px-2 py-1">
+        <div className="text-xs lg:text-xs text-text font-semibold px-2 py-1">
           {ODDS_FORMAT_NAMES[oddsFormat]} {ODDS_EXAMPLES[oddsFormat]}
         </div>
       </div>
 
       {isOpen && (
-        <div className="fixed z-[99999] w-80 bg-surface border border-border rounded-lg shadow-xl backdrop-blur-sm" style={{
-          top: '100%',
-          transform: 'translateX(0%)',
-          marginTop: '8px'
-        }}>
+        <div className="w-48 lg:w-64 bg-surface border border-border rounded-lg shadow-xl backdrop-blur-sm" style={getDropdownStyle()}>
           <div className="p-2">
             {formats.map((format) => (
               <button
@@ -73,10 +85,10 @@ export default function OddsFormatSelector({ className = '' }: OddsFormatSelecto
                 }`}
               >
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-text">
+                  <span className="text-xs lg:text-sm font-medium text-text">
                     {ODDS_FORMAT_NAMES[format]}
                   </span>
-                  <span className="text-xs text-muted">
+                  <span className="text-xs lg:text-xs text-muted">
                     {ODDS_EXAMPLES[format]}
                   </span>
                 </div>

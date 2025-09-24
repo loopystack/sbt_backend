@@ -73,7 +73,7 @@ export default function LatestBonuses() {
         {bonuses.map((bonus) => (
           <div
             key={bonus.id}
-            className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
+            className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group min-h-[280px] sm:min-h-[320px] flex flex-col"
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <span className="px-2 sm:px-3 py-1 bg-accent/20 text-accent text-xs font-semibold rounded-full border border-accent/30">
@@ -99,6 +99,34 @@ export default function LatestBonuses() {
             <p className="text-xs sm:text-sm text-muted mb-3 sm:mb-4 leading-relaxed line-clamp-2">
               {bonus.description}
             </p>
+
+            {/* Additional Content Section */}
+            <div className="flex-1 flex flex-col justify-center mb-3 sm:mb-4">
+              <div className="bg-gradient-to-r from-accent/10 to-accent/5 rounded-lg p-3 sm:p-4 mb-3">
+                <div className="text-center">
+                  <div className="text-xs text-muted mb-2">WHY CHOOSE THIS BONUS?</div>
+                  <div className="text-sm text-text leading-relaxed">
+                    {bonus.id === 1 && "Perfect for new players looking to maximize their first deposit with industry-leading odds and live betting features."}
+                    {bonus.id === 2 && "Risk-free betting means you can explore new markets without worrying about losses. Great for trying different strategies."}
+                    {bonus.id === 3 && "Weekly free bets keep the excitement going. Use them on any sport or market with no restrictions."}
+                    {bonus.id === 4 && "Parlay insurance protects your multi-leg bets. Get your stake back if one leg fails on 4+ selections."}
+                    {bonus.id === 5 && "Live betting bonus rewards your in-play success. Get 20% extra on all your live betting wins."}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-xs text-muted mb-1">BONUS RATING</div>
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className={`text-sm ${i < Math.floor(bonus.rating) ? 'text-yellow-500' : 'text-gray-300'}`}>
+                      ⭐
+                    </span>
+                  ))}
+                  <span className="text-xs text-muted ml-1">({bonus.rating}/5)</span>
+                </div>
+              </div>
+            </div>
 
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="text-center">

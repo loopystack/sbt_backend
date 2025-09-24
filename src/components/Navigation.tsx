@@ -91,6 +91,20 @@ export default function Navigation() {
   
   const { visibleCount, showText, containerRef } = useVisibleSports();
 
+  // Calculate dropdown position for More Sports
+  const getMoreSportsDropdownStyle = () => {
+    if (!moreButtonRef.current) return {};
+    
+    const buttonRect = moreButtonRef.current.getBoundingClientRect();
+    return {
+      position: 'fixed' as const,
+      top: `${buttonRect.bottom + 8}px`,
+      left: `${buttonRect.left + (buttonRect.width / 2)}px`,
+      transform: 'translateX(-50%)',
+      zIndex: 100000
+    };
+  };
+
   // Click outside handler for more sports panel
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -146,51 +160,64 @@ export default function Navigation() {
   }, [selectedLeague, location.pathname]);
 
   const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-
+    console.log('Desktop Navigation clicked:', tabId, '- clearing selectedLeague and navigating');
+    
     switch (tabId) {
       case "home":
+        console.log('Navigation Home clicked - clearing selectedLeague and navigating to home');
+        // Use the same logic as logo - clear selectedLeague first, then navigate
         setSelectedLeague(null); 
         navigate("/");
+        setActiveTab(tabId);
         break;
       case "next-matches":
         setSelectedLeague(null); // Clear league selection
         navigate("/matches");
+        setActiveTab(tabId);
         break;
       case "dropping-odds":
         setSelectedLeague(null); // Clear league selection
         navigate("/dropping-odds");
+        setActiveTab(tabId);
         break;
       case "sure-bets":
         setSelectedLeague(null); // Clear league selection
         navigate("/sure-bets");
+        setActiveTab(tabId);
         break;
       case "in-play-odds":
         setSelectedLeague(null); // Clear league selection
         navigate("/in-play-odds");
+        setActiveTab(tabId);
         break;
       case "all-events":
         setSelectedLeague(null); // Clear league selection
         navigate("/all-events");
+        setActiveTab(tabId);
         break;
       case "betting":
         setSelectedLeague(null); // Clear league selection
         navigate("/betting");
+        setActiveTab(tabId);
         break;
       case "bookmakers":
         setSelectedLeague(null); // Clear league selection
         navigate("/bookmakers");
+        setActiveTab(tabId);
         break;
       case "bonuses":
         setSelectedLeague(null); // Clear league selection
         navigate("/bonuses");
+        setActiveTab(tabId);
         break;
       case "dashboard":
         setSelectedLeague(null); // Clear league selection
         navigate("/dashboard");
+        setActiveTab(tabId);
         break;
       default:
         navigate("/");
+        setActiveTab(tabId);
     }
   };
 
@@ -491,11 +518,7 @@ export default function Navigation() {
               </button>
 
               {showMoreSports && (
-                <div ref={moreSportsRef} className="fixed z-[99999]" style={{
-                  top: '100%',
-                  transform: 'translateX(-50%)',
-                  marginTop: '8px'
-                }}>
+                <div ref={moreSportsRef} style={getMoreSportsDropdownStyle()}>
                   <div className="bg-gradient-to-br from-surface to-bg border border-border/50 rounded-2xl shadow-2xl min-w-96 max-h-96 overflow-y-auto backdrop-blur-sm">
                     <div className="p-1">
                       {visibleCount < sports.length && (

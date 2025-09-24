@@ -90,7 +90,7 @@ export default function HotPicks() {
         {hotPicks.map((pick) => (
           <div
             key={pick.id}
-            className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
+            className="bg-surface border border-border rounded-xl p-4 sm:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group min-h-[280px] sm:min-h-[320px] flex flex-col"
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
@@ -129,12 +129,42 @@ export default function HotPicks() {
                 Compare Odds
               </button>
             </div>
+
+            {/* Additional Content Section */}
+            <div className="flex-1 flex flex-col justify-center mb-3 sm:mb-4">
+              <div className="bg-gradient-to-r from-accent/10 to-accent/5 rounded-lg p-3 sm:p-4 mb-3">
+                <div className="text-center">
+                  <div className="text-xs text-muted mb-2">EXPERT TIP</div>
+                  <div className="text-sm text-text leading-relaxed">
+                    {pick.tip}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-xs text-muted mb-1">MATCH ANALYSIS</div>
+                <div className="text-sm text-text">
+                  {pick.id === 1 && "Strong home advantage with excellent recent form. Recommended for accumulator bets."}
+                  {pick.id === 2 && "Both teams in good form. Consider draw or over 2.5 goals for better value."}
+                  {pick.id === 3 && "Head-to-head record favors home team. Low risk pick with solid odds."}
+                  {pick.id === 4 && "Pitching matchup suggests low scoring game. Under 8.5 runs recommended."}
+                  {pick.id === 5 && "City's home record is exceptional. Arsenal's away form concerns suggest home win."}
+                </div>
+              </div>
+            </div>
             
-            <div className="pt-3 border-t border-border/50">
-              <p className="text-xs sm:text-sm text-muted italic flex items-start gap-2">
-                <span className="text-accent text-base sm:text-lg flex-shrink-0">💡</span>
-                <span className="line-clamp-2">{pick.tip}</span>
-              </p>
+            <div className="bg-bg rounded-lg p-2 sm:p-3">
+              <span className="text-xs text-muted block mb-1">Confidence Level</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-muted/20 rounded-full h-2">
+                  <div className={`h-2 rounded-full ${
+                    pick.confidence === 'High' ? 'bg-green-500 w-full' :
+                    pick.confidence === 'Medium' ? 'bg-yellow-500 w-2/3' :
+                    'bg-red-500 w-1/3'
+                  }`}></div>
+                </div>
+                <span className="text-xs font-medium text-text">{pick.confidence}</span>
+              </div>
             </div>
           </div>
         ))}

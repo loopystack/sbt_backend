@@ -6,9 +6,14 @@ import { useAppDispatch } from "../store/hooks";
 import { getMatchingInfoAction } from "../store/matchinginfo/actions";
 import { MatchingInfo } from "../store/matchinginfo/types";
 
-export default function LeftSidebar() {
+interface LeftSidebarProps {
+  onClose?: () => void;
+}
+
+export default function LeftSidebar({ onClose }: LeftSidebarProps) {
   const { selectedCountry, setSelectedCountry, selectedLeague, setSelectedLeague, countries, loading } = useCountry();
   const [expandedCountries, setExpandedCountries] = useState<string[]>([]);
+  const [expandedSports, setExpandedSports] = useState<string[]>(["Football"]);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [matchingInfo, setMatchingInfo] = useState<MatchingInfo[]>([]);
@@ -64,8 +69,20 @@ export default function LeftSidebar() {
     );
   };
 
+  const toggleSportExpansion = (sportName: string) => {
+    setExpandedSports(prev => 
+      prev.includes(sportName) 
+        ? prev.filter(name => name !== sportName)
+        : [...prev, sportName]
+    );
+  };
+
   const handleCountryClick = (country: any) => {
     toggleCountryExpansion(country.name);
+  };
+
+  const handleSportClick = (sportName: string) => {
+    toggleSportExpansion(sportName);
   };
 
   const handleLeagueClick = (league: any, country: any) => {
@@ -75,11 +92,16 @@ export default function LeftSidebar() {
     
     // Navigate to homepage to show the league matches
     navigate('/');
+    
+    // Close the sidebar if onClose function is provided
+    if (onClose) {
+      onClose();
+    }
   };
 
   if (loading) {
     return (
-      <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">
+      <aside className="w-64 xl:w-72 bg-surface px-2 py-4 space-y-4">
         <div>
           <div className="h-4 bg-muted/20 rounded w-20 mb-3 animate-pulse"></div>
           
@@ -102,62 +124,122 @@ export default function LeftSidebar() {
   }
 
   return (
-    <aside className="w-64 xl:w-72 bg-surface border-r border-border p-4 space-y-6">
+    <aside className="w-64 xl:w-72 bg-surface px-2 py-4 space-y-4">
       
+      {/* Football Section */}
       <div>
-        <h3 className="text-sm font-semibold text-muted mb-3">FOOTBALL</h3>
+        <button
+          onClick={() => handleSportClick("Football")}
+          className="w-full text-left px-2 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 text-text hover:text-text mb-3 pr-1"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-lg">⚽</span>
+            <span className="font-semibold">FOOTBALL</span>
+          </div>
+          <span 
+            className={`text-[10px] transition-transform duration-200 ${
+              expandedSports.includes("Football") ? 'rotate-90' : ''
+            }`}
+          >
+            ▶
+          </span>
+        </button>
         
-        <div className="space-y-1 max-h-100 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-          {countries.map((country) => (
-            <div key={country.name} className="space-y-1">
-              <button
-                onClick={() => handleCountryClick(country)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 text-text hover:text-text`}
-              >
-                <div className="flex items-center gap-3">
-                  <img 
-                    src={getFlagUrl(country.flag)}
-                    alt={`${country.name} flag`}
-                    className="w-5 h-4 object-contain flex-shrink-0"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      const fallback = document.createElement('span');
-                      fallback.textContent = '🏳️';
-                      fallback.className = 'text-lg';
-                      e.currentTarget.parentNode?.insertBefore(fallback, e.currentTarget);
-                    }}
-                  />
-                  <span className="truncate">{country.name}</span>
-                </div>
-                <span 
-                  className={`text-[10px] transition-transform duration-200 ${
-                    expandedCountries.includes(country.name) ? 'rotate-90' : ''
-                  }`}
+        {expandedSports.includes("Football") && (
+          <div className="space-y-1 max-h-100 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            {countries.map((country) => (
+              <div key={country.name} className="space-y-1">
+                <button
+                  onClick={() => handleCountryClick(country)}
+                  className={`w-full text-left px-2 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 text-text hover:text-text pr-1`}
                 >
-                  ▶
-                </span>
-              </button>
-              
-              {expandedCountries.includes(country.name) && (
-                <div className="ml-6 space-y-1">
-                  {country.leagues.map((league) => (
-                    <button
-                      key={league.name}
-                      onClick={() => handleLeagueClick(league, country)} 
-                      className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 ${
-                        selectedLeague?.name === league.name && selectedCountry?.name === country.name
-                          ? "bg-green-500/20 text-green-600 border border-green-500/30"
-                          : "text-muted hover:text-text"
-                      }`}
-                    >
-                      <span className="truncate">{league.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={getFlagUrl(country.flag)}
+                      alt={`${country.name} flag`}
+                      className="w-5 h-4 object-contain flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = document.createElement('span');
+                        fallback.textContent = '🏳️';
+                        fallback.className = 'text-lg';
+                        e.currentTarget.parentNode?.insertBefore(fallback, e.currentTarget);
+                      }}
+                    />
+                    <span className="truncate">{country.name}</span>
+                  </div>
+                  <span 
+                    className={`text-[10px] transition-transform duration-200 ${
+                      expandedCountries.includes(country.name) ? 'rotate-90' : ''
+                    }`}
+                  >
+                    ▶
+                  </span>
+                </button>
+                
+                {expandedCountries.includes(country.name) && (
+                  <div className="ml-6 space-y-1">
+                    {country.leagues.map((league) => (
+                      <button
+                        key={league.name}
+                        onClick={() => handleLeagueClick(league, country)} 
+                        className={`w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 ${
+                          selectedLeague?.name === league.name && selectedCountry?.name === country.name
+                            ? "bg-green-500/20 text-green-600 border border-green-500/30"
+                            : "text-muted hover:text-text"
+                        }`}
+                      >
+                        <span className="truncate">{league.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Other Sports Sections */}
+      <div className="space-y-2">
+        {[
+          { name: "Tennis", icon: "🎾", leagues: ["ATP Tour", "WTA Tour", "Grand Slams", "Challenger"] },
+          { name: "Basketball", icon: "🏀", leagues: ["NBA", "EuroLeague", "NCAA", "WNBA"] },
+          { name: "Hockey", icon: "🏒", leagues: ["NHL", "KHL", "AHL", "SHL"] },
+          { name: "Golf", icon: "⛳", leagues: ["PGA Tour", "European Tour", "Masters", "US Open"] }
+        ].map((sport) => (
+          <div key={sport.name}>
+            <button
+              onClick={() => handleSportClick(sport.name)}
+              className="w-full text-left px-2 py-2 rounded-lg text-sm transition-colors flex items-center justify-between hover:bg-white/5 text-text hover:text-text pr-1"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{sport.icon}</span>
+                <span className="font-semibold">{sport.name.toUpperCase()}</span>
+              </div>
+              <span 
+                className={`text-[10px] transition-transform duration-200 ${
+                  expandedSports.includes(sport.name) ? 'rotate-90' : ''
+                }`}
+              >
+                ▶
+              </span>
+            </button>
+            
+            {expandedSports.includes(sport.name) && (
+              <div className="ml-6 space-y-1">
+                {sport.leagues.map((league) => (
+                  <button
+                    key={league}
+                    className="w-full text-left px-3 py-1.5 rounded text-xs transition-colors hover:bg-white/5 text-muted hover:text-text"
+                  >
+                    <span className="truncate">{league}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </aside>
   );

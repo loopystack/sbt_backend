@@ -227,7 +227,7 @@ export default function HeroSection() {
                <button 
                  onClick={handleSearch}
                  disabled={!searchTerm.trim()}
-                 className="absolute right-1 top-1 sm:top-1.5 lg:top-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors text-xs sm:text-sm"
+                 className="absolute right-0 top-0 h-full px-3 sm:px-4 lg:px-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-r-xl transition-colors text-xs sm:text-sm flex items-center justify-center"
                >
                  Search
                </button>

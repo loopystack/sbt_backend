@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import newlogo from "../images/newlogo.png";
 import Navigation from "./Navigation";
+import OddsFormatSelector from "./OddsFormatSelector";
 import { useCountry } from "../contexts/CountryContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -44,8 +45,15 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
   };
 
   const handleLogoClick = () => {
+    console.log('Logo clicked - clearing selectedLeague and navigating to home');
     setSelectedLeague(null);
     navigate("/");
+  };
+
+  const handleMobileNavClick = (path: string) => {
+    console.log(`Mobile nav clicked - clearing selectedLeague and navigating to ${path}`);
+    setSelectedLeague(null);
+    navigate(path);
   };
 
   return (
@@ -68,6 +76,11 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
                 />
               </div>
             </button>
+            
+            {/* Center - Odds Format Selector */}
+            <div className="flex-1 flex justify-center">
+              <OddsFormatSelector />
+            </div>
             
             {/* Right - User Profile Only */}
             <div className="flex items-center">
@@ -103,8 +116,8 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
                       />
                       
                       {/* Dropdown */}
-                      <div className="fixed top-16 right-3 w-72 max-w-[calc(100vw-24px)] bg-surface/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
-                        <div className="p-4 border-b border-border/30">
+                      <div className="fixed top-16 right-3 w-56 max-w-[calc(100vw-24px)] bg-surface/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
+                        <div className="p-3 border-b border-border/30">
                           <div className="flex items-center gap-3">
                             <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20">
                               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -124,7 +137,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
                               setShowUserDropdown(false);
                               navigate("/profile");
                             }}
-                            className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-white/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                            className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-white/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
                           >
                             <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                               <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +155,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
                               setShowUserDropdown(false);
                               navigate("/dashboard");
                             }}
-                            className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-white/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                            className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-white/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
                           >
                             <div className="relative w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
                               <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +180,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
                           
                           <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-red-500/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+                            className="w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-red-500/10 rounded-xl transition-all duration-200 hover:scale-[1.02]"
                           >
                             <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
                               <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +213,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
             <div className="flex items-center gap-1">
               {/* Home */}
               <button
-                onClick={() => navigate("/")}
+                onClick={handleLogoClick}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Home"
               >
@@ -211,7 +224,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* Next Matches */}
               <button
-                onClick={() => navigate("/matches")}
+                onClick={() => handleMobileNavClick("/matches")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Next Matches"
               >
@@ -222,7 +235,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* Dropping Odds */}
               <button
-                onClick={() => navigate("/dropping-odds")}
+                onClick={() => handleMobileNavClick("/dropping-odds")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Dropping Odds"
               >
@@ -233,7 +246,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* Sure Bets */}
               <button
-                onClick={() => navigate("/sure-bets")}
+                onClick={() => handleMobileNavClick("/sure-bets")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Sure Bets"
               >
@@ -244,7 +257,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* In Play Odds */}
               <button
-                onClick={() => navigate("/in-play-odds")}
+                onClick={() => handleMobileNavClick("/in-play-odds")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="In Play Odds"
               >
@@ -258,7 +271,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* All Events */}
               <button
-                onClick={() => navigate("/all-events")}
+                onClick={() => handleMobileNavClick("/all-events")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="All Events"
               >
@@ -269,7 +282,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* Betting */}
               <button
-                onClick={() => navigate("/betting")}
+                onClick={() => handleMobileNavClick("/betting")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Betting"
               >
@@ -280,7 +293,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               
               {/* Bookmakers */}
               <button
-                onClick={() => navigate("/bookmakers")}
+                onClick={() => handleMobileNavClick("/bookmakers")}
                 className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
                 title="Bookmakers"
               >
