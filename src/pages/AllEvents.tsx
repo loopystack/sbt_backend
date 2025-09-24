@@ -205,12 +205,15 @@ export default function AllEvents() {
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-4 sm:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
                 <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">BC.GAME</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Crypto Casino</p>
                 <p className="text-xs sm:text-sm opacity-95">100% + Free Bet</p>
               </div>
               <button 
@@ -222,12 +225,15 @@ export default function AllEvents() {
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-4 sm:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
                 <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">bet-at-home</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">European Leader</p>
                 <p className="text-xs sm:text-sm opacity-95">300€ Bonus</p>
               </div>
               <button 
@@ -239,12 +245,15 @@ export default function AllEvents() {
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-4 sm:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
                 <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">BETINASIA</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Premium Sportsbook</p>
                 <p className="text-xs sm:text-sm opacity-95">100% Bonus</p>
               </div>
               <button 

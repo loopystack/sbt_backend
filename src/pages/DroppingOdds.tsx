@@ -125,13 +125,16 @@ export default function DroppingOdds() {
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       {/* Promotional Banners */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+        <div className="bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 rounded-lg p-4 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm mb-1">BETINASIA</h3>
-                <p className="text-xs opacity-95">100% Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">BETINASIA</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Premium Sportsbook</p>
+                <p className="text-xs sm:text-sm opacity-95">100% Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETINASIA")}
@@ -143,13 +146,16 @@ export default function DroppingOdds() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-bl from-amber-500 via-orange-500 to-red-500 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+        <div className="bg-gradient-to-bl from-amber-500 via-orange-500 to-red-500 rounded-lg p-4 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm mb-1">bet-at-home</h3>
-                <p className="text-xs opacity-95">300€ Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">bet-at-home</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">European Leader</p>
+                <p className="text-xs sm:text-sm opacity-95">300€ Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bet-at-home")}
@@ -161,13 +167,16 @@ export default function DroppingOdds() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-tl from-violet-600 via-purple-600 to-indigo-600 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+        <div className="bg-gradient-to-tl from-violet-600 via-purple-600 to-indigo-600 rounded-lg p-4 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm mb-1">bets.io</h3>
-                <p className="text-xs opacity-95">Sport Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">bets.io</h3>
+                <p className="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">Crypto Sportsbook</p>
+                <p className="text-xs sm:text-sm opacity-95">Sport Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bets.io")}

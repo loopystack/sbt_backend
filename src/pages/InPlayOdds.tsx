@@ -160,13 +160,16 @@ export default function InPlayOdds() {
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-slate-900 border border-cyan-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 relative overflow-hidden">
+        <div className="bg-slate-900 border border-cyan-400/50 rounded-lg p-4 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm text-cyan-100 mb-1">BETINASIA</h3>
-                <p className="text-xs text-cyan-200/80">100% Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg text-cyan-100 mb-1 sm:mb-2">BETINASIA</h3>
+                <p className="text-xs sm:text-sm text-cyan-200/60 mb-1 sm:mb-2">Premium Sportsbook</p>
+                <p className="text-xs sm:text-sm text-cyan-200/80">100% Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETINASIA")}
@@ -178,13 +181,16 @@ export default function InPlayOdds() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-emerald-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 relative overflow-hidden">
+        <div className="bg-slate-900 border border-emerald-400/50 rounded-lg p-4 text-white shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm text-emerald-100 mb-1">bets.io</h3>
-                <p className="text-xs text-emerald-200/80">Sport Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg text-emerald-100 mb-1 sm:mb-2">bets.io</h3>
+                <p className="text-xs sm:text-sm text-emerald-200/60 mb-1 sm:mb-2">Crypto Sportsbook</p>
+                <p className="text-xs sm:text-sm text-emerald-200/80">Sport Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bets.io")}
@@ -196,13 +202,16 @@ export default function InPlayOdds() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-blue-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 relative overflow-hidden">
+        <div className="bg-slate-900 border border-blue-400/50 rounded-lg p-4 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
+          {/* Shimmer Effect */}
+          <div className="absolute inset-0 -top-2 -left-2 w-[calc(100%+16px)] h-[calc(100%+16px)] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer opacity-80"></div>
           <div className="relative z-10">
             <div className="flex flex-col gap-2">
               <div className="flex-1">
-                <h3 className="font-bold text-sm text-blue-100 mb-1">bet-at-home</h3>
-                <p className="text-xs text-blue-200/80">300€ Bonus</p>
+                <h3 className="font-bold text-sm sm:text-lg text-blue-100 mb-1 sm:mb-2">bet-at-home</h3>
+                <p className="text-xs sm:text-sm text-blue-200/60 mb-1 sm:mb-2">European Leader</p>
+                <p className="text-xs sm:text-sm text-blue-200/80">300€ Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bet-at-home")}
