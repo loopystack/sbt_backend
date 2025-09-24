@@ -159,19 +159,18 @@ export default function InPlayOdds() {
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-900 border border-cyan-400/50 rounded-xl p-5 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-400 relative overflow-hidden group">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-slate-900 border border-cyan-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent"></div>
-          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg text-cyan-100 mb-1">BETINASIA</h3>
-                <p className="text-sm text-cyan-200/80">Get 100% First Deposit Bonus!</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm text-cyan-100 mb-1">BETINASIA</h3>
+                <p className="text-xs text-cyan-200/80">100% Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETINASIA")}
-                className="bg-cyan-500 text-slate-900 px-5 py-2.5 rounded-lg font-semibold hover:bg-cyan-400 transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 transform hover:scale-105"
+                className="w-full bg-cyan-500 text-slate-900 px-3 py-1.5 rounded-lg font-semibold hover:bg-cyan-400 transition-all duration-300 text-xs"
               >
                 CLAIM
               </button>
@@ -179,18 +178,17 @@ export default function InPlayOdds() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-emerald-400/50 rounded-xl p-5 text-white shadow-lg hover:shadow-emerald-500/25 transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-slate-900 border border-emerald-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-green-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg text-emerald-100 mb-1">bets.io</h3>
-                <p className="text-sm text-emerald-200/80">First Deposit Sport Bonus</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm text-emerald-100 mb-1">bets.io</h3>
+                <p className="text-xs text-emerald-200/80">Sport Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bets.io")}
-                className="bg-emerald-500 text-slate-900 px-5 py-2.5 rounded-lg font-semibold hover:bg-emerald-400 transition-all duration-300 shadow-lg hover:shadow-emerald-500/50 transform hover:scale-105"
+                className="w-full bg-emerald-500 text-slate-900 px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-400 transition-all duration-300 text-xs"
               >
                 CLAIM
               </button>
@@ -198,18 +196,17 @@ export default function InPlayOdds() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-blue-400/50 rounded-xl p-5 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-slate-900 border border-blue-400/50 rounded-lg p-3 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg text-blue-100 mb-1">bet-at-home</h3>
-                <p className="text-sm text-blue-200/80">Get a 300€ Welcome bonus!</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm text-blue-100 mb-1">bet-at-home</h3>
+                <p className="text-xs text-blue-200/80">300€ Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bet-at-home")}
-                className="bg-blue-500 text-slate-900 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-400 transition-all duration-300 shadow-lg hover:shadow-blue-500/50 transform hover:scale-105"
+                className="w-full bg-blue-500 text-slate-900 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-400 transition-all duration-300 text-xs"
               >
                 CLAIM
               </button>

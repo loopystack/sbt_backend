@@ -222,33 +222,33 @@ export default function HeroSection() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Search for teams, leagues, or matches..."
-                className="w-full px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 bg-bg border border-border rounded-xl text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm sm:text-base"
+                className="w-full px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 pr-16 sm:pr-20 lg:pr-24 bg-bg border border-border rounded-xl text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm sm:text-base"
               />
                <button 
                  onClick={handleSearch}
                  disabled={!searchTerm.trim()}
-                 className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 px-3 sm:px-4 lg:px-6 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-xs sm:text-sm"
+                 className="absolute right-1 top-1 sm:top-1.5 lg:top-2 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors text-xs sm:text-sm"
                >
                  Search
                </button>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 max-w-4xl mx-auto px-2">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 max-w-4xl mx-auto px-2">
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
                 {bookmakersCount}+
               </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Bookmakers</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
                 {sportsCount}+
               </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Sports</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-text mb-1 sm:mb-2">
                 {matchesCount}+
               </div>
               <div className="text-xs sm:text-sm lg:text-base text-muted">Daily Matches</div>

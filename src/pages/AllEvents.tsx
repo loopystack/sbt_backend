@@ -204,57 +204,52 @@ export default function AllEvents() {
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <div className="bg-gradient-to-br from-lime-500 via-green-500 to-emerald-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-0 h-0 border-l-[50px] border-l-transparent border-t-[50px] border-t-white/20"></div>
+          <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30 transform rotate-45">
-                  <span className="text-white font-bold text-xs sm:text-sm transform -rotate-45">BC</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-base sm:text-lg">BC.GAME</h3>
-                  <p className="text-xs sm:text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">BC.GAME</h3>
+                <p className="text-xs sm:text-sm opacity-95">100% + Free Bet</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BC.GAME")}
-                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs sm:text-sm"
               >
                 CLAIM
               </button>
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
-          <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-b-[50px] border-b-white/20"></div>
+        <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
-                <h3 className="font-bold text-base sm:text-lg">bet365</h3>
-                <p className="text-xs sm:text-sm opacity-95">First Bet Safety Net or Bet $5 & Get $150</p>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">bet-at-home</h3>
+                <p className="text-xs sm:text-sm opacity-95">300€ Bonus</p>
               </div>
               <button 
-                onClick={() => openBettingSiteByName("bet365")}
-                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+                onClick={() => openBettingSiteByName("bet-at-home")}
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs sm:text-sm"
               >
                 CLAIM
               </button>
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group md:col-span-2 lg:col-span-1">
-          <div className="absolute top-0 left-0 w-0 h-0 border-r-[50px] border-r-transparent border-t-[50px] border-t-white/20"></div>
+        <div className="bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
-                <h3 className="font-bold text-base sm:text-lg">BETINASIA</h3>
-                <p className="text-xs sm:text-sm opacity-95">100% First Deposit Bonus!</p>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">BETINASIA</h3>
+                <p className="text-xs sm:text-sm opacity-95">100% Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETINASIA")}
-                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 text-sm"
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs sm:text-sm"
               >
                 CLAIM
               </button>

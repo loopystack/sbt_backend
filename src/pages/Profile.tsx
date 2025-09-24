@@ -1369,17 +1369,17 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-text mb-2">My Profile</h1>
-              <p className="text-muted">Manage your account settings and view your betting statistics</p>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-text mb-2">My Profile</h1>
+              <p className="text-sm sm:text-base text-muted">Manage your account settings and view your betting statistics</p>
             </div>
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-lg hover:bg-white/5 transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-surface border border-border rounded-lg hover:bg-white/5 transition-colors text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1390,27 +1390,27 @@ export default function Profile() {
         </div>
 
         {/* Profile Overview Card */}
-        <div className="bg-surface border border-border rounded-xl p-6 mb-6">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center text-button-text text-2xl font-bold shadow-lg">
+        <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full lg:w-auto">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-accent to-accent/70 rounded-full flex items-center justify-center text-button-text text-xl sm:text-2xl font-bold shadow-lg flex-shrink-0">
                 {getInitials(user.full_name || "", user.username)}
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-text mb-1">
+              <div className="text-center sm:text-left flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-text mb-1">
                   {user.full_name || user.username}
                 </h2>
                 <p className="text-muted mb-2">@{user.username}</p>
-                <p className="text-muted mb-3">{user.email}</p>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                <p className="text-muted mb-3 text-sm sm:text-base break-all">{user.email}</p>
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
                     user.is_verified 
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                       : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                   }`}>
                     {user.is_verified ? '✓ Verified' : '⚠ Unverified'}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
                     user.is_active 
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -1422,7 +1422,7 @@ export default function Profile() {
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="px-6 py-3 bg-accent text-button-text rounded-lg font-medium hover:bg-accent/90 transition-colors shadow-lg"
+              className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-accent text-button-text rounded-lg font-medium hover:bg-accent/90 transition-colors shadow-lg text-sm sm:text-base"
             >
               {isEditing ? "Cancel Editing" : "Edit Profile"}
             </button>
@@ -1452,14 +1452,14 @@ export default function Profile() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Profile Information */}
           <div className="lg:col-span-2">
-            <div className="bg-surface border border-border rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-text mb-6">Profile Information</h3>
+            <div className="bg-surface border border-border rounded-xl p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-text mb-4 sm:mb-6">Profile Information</h3>
               
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-text mb-2">Full Name</label>
                     <input
@@ -1498,11 +1498,11 @@ export default function Profile() {
                 </div>
 
                 {isEditing && (
-                  <div className="flex gap-4 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
                     <button
                       onClick={handleSave}
                       disabled={saveLoading}
-                      className="px-6 py-3 bg-green-500 hover:bg-green-400 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="flex-1 px-4 sm:px-6 py-3 bg-green-500 hover:bg-green-400 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
                       {saveLoading && (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1511,7 +1511,7 @@ export default function Profile() {
                     </button>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-6 py-3 bg-surface border border-border text-text rounded-lg font-medium hover:bg-white/5 transition-colors"
+                      className="flex-1 px-4 sm:px-6 py-3 bg-surface border border-border text-text rounded-lg font-medium hover:bg-white/5 transition-colors text-sm sm:text-base"
                     >
                       Cancel
                     </button>
@@ -1522,10 +1522,10 @@ export default function Profile() {
 
 
             {/* Security Settings */}
-            <div className="bg-surface border border-border rounded-xl p-6 mt-6">
-              <h3 className="text-xl font-semibold text-text mb-6">Security Settings</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-bg/50 rounded-lg border border-border/50">
+            <div className="bg-surface border border-border rounded-xl p-4 sm:p-6 mt-4 sm:mt-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-text mb-4 sm:mb-6">Security Settings</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 sm:p-4 bg-bg/50 rounded-lg border border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1537,12 +1537,12 @@ export default function Profile() {
                       <p className="text-sm text-muted">Add an extra layer of security</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-lg text-sm font-medium transition-colors">
+                  <button className="w-full sm:w-auto px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-lg text-sm font-medium transition-colors">
                     Enable
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-bg/50 rounded-lg border border-border/50">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 sm:p-4 bg-bg/50 rounded-lg border border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1554,12 +1554,12 @@ export default function Profile() {
                       <p className="text-sm text-muted">Get notified of new logins</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-medium transition-colors">
+                  <button className="w-full sm:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-medium transition-colors">
                     Enable
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-bg/50 rounded-lg border border-border/50">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 sm:p-4 bg-bg/50 rounded-lg border border-border/50">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1568,10 +1568,10 @@ export default function Profile() {
                     </div>
                     <div>
                       <p className="text-text font-medium">Session Management</p>
-                      <p className="text-sm .text-muted">Manage active sessions</p>
+                      <p className="text-sm text-muted">Manage active sessions</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg text-sm font-medium transition-colors">
+                  <button className="w-full sm:w-auto px-4 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg text-sm font-medium transition-colors">
                     Manage
                   </button>
                 </div>

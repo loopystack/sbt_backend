@@ -5,6 +5,9 @@ import LeftSidebar from "../../components/LeftSidebar";
 import RightSidebar from "../../components/RightSidebar";
 import Footer from "../../components/Footer";
 import ScrollToFooter from "../../components/ScrollToFooter";
+import MobileBottomNav from "../../components/MobileBottomNav";
+import MobileSportsCategories from "../../components/MobileSportsCategories";
+import MobilePromoBanner from "../../components/MobilePromoBanner";
 import { useTheme } from "../../contexts/ThemeContext";
 
 
@@ -41,7 +44,7 @@ export default function AppShell() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden pb-16 lg:pb-0">
       <div className="fixed inset-0 pointer-events-none">
         {theme === 'dark' && (
           <>
@@ -194,10 +197,18 @@ export default function AppShell() {
           <LeftSidebar />
         </div>
         
-        <main className={`flex-1 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 transition-all duration-300 ${
+        <main className={`flex-1 transition-all duration-300 ${
           isLeftSidebarOpen || isRightSidebarOpen ? 'lg:ml-0' : ''
         }`}>
-          <Outlet />
+          {/* Mobile Components - Only show on mobile */}
+          <div className="lg:hidden">
+            <MobileSportsCategories />
+          </div>
+          
+          {/* Main Content */}
+          <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+            <Outlet />
+          </div>
         </main>
         
         <div className={`${
@@ -218,6 +229,8 @@ export default function AppShell() {
       
       <ScrollToFooter />
       
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
     </div>
   );

@@ -141,65 +141,52 @@ export default function Bookmakers() {
   ];
   return (
     <section className="space-y-4 sm:space-y-8 max-w-full overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-          <div className="absolute top-2 right-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
-                  <span className="text-white font-bold text-sm">BC</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">BC.GAME</h3>
-                  <p className="text-sm opacity-95">Up to 100% bonus + 20 Free Bet</p>
-                </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm mb-1">BC.GAME</h3>
+                <p className="text-xs opacity-95">100% + Free Bet</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BC.GAME")}
-                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+                className="w-full bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs"
               >
                 CLAIM
               </button>
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-          <div className="absolute bottom-2 left-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
-                  <span className="text-white font-bold text-sm">🦁</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">BETMGM</h3>
-                  <p className="text-sm opacity-95">Get up to $1,500 paid back in bonus bets, if you don't win!</p>
-                </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm mb-1">BETMGM</h3>
+                <p className="text-xs opacity-95">$1,500 Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETMGM")}
-                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+                className="w-full bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs"
               >
                 CLAIM
               </button>
             </div>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-teal-600 via-cyan-600 to-blue-600 rounded-2xl p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-teal-600 via-cyan-600 to-blue-600 rounded-lg p-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-          <div className="absolute top-2 left-2 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">bet-at-home</h3>
-                <p className="text-sm opacity-95">Get a 300€ Welcome bonus!</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex-1">
+                <h3 className="font-bold text-sm mb-1">bet-at-home</h3>
+                <p className="text-xs opacity-95">300€ Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bet-at-home")}
-                className="bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 hover:border-white/50 transform hover:scale-105 shadow-lg"
+                className="w-full bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-white/30 transition-all duration-300 border border-white/30 text-xs"
               >
                 CLAIM
               </button>

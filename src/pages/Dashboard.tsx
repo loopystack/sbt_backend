@@ -314,9 +314,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 p-4 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
       {/* Welcome Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 rounded-2xl p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 rounded-2xl p-4 sm:p-6 lg:p-8 text-white shadow-2xl">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
         <div className="absolute top-0 left-0 w-full h-full">
@@ -352,33 +352,33 @@ export default function Dashboard() {
         </div>
 
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
             {/* User Avatar */}
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-2xl font-bold text-white">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-2xl sm:text-3xl font-bold text-white">
                   {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
+              <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-green-400 rounded-full flex items-center justify-center shadow-lg">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
             </div>
             
-            <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
+            <div className="text-center sm:text-left flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
                 Welcome back, {user?.username}! 👋
               </h1>
-              <p className="text-lg text-white/90 font-medium">Ready to make some winning bets today?</p>
-              <div className="flex items-center gap-2 mt-2">
+              <p className="text-sm sm:text-base lg:text-lg text-white/90 font-medium">Ready to make some winning bets today?</p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm text-white/80">Online • Active Session</span>
+                <span className="text-xs sm:text-sm text-white/80">Online • Active Session</span>
               </div>
             </div>
           </div>
           
-          <div className="text-right">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl">
+          <div className="w-full sm:w-auto mt-4 sm:mt-0">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/20 shadow-xl">
               <div className="text-sm text-white/80 mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -397,11 +397,11 @@ export default function Dashboard() {
                 </button>
               </div>
               {fundsLoading ? (
-                <div className="text-4xl font-bold">
-                  <div className="bg-white/20 h-10 w-32 rounded-lg shimmer"></div>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+                  <div className="bg-white/20 h-8 sm:h-10 w-24 sm:w-32 rounded-lg shimmer"></div>
                 </div>
               ) : (
-                <div className="text-4xl font-bold text-yellow-300 drop-shadow-lg">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-yellow-300 drop-shadow-lg">
                   ${userFunds.toFixed(2)}
                 </div>
               )}
@@ -434,123 +434,123 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Total Bets Card */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+        <div className="group relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-2xl p-3 sm:p-4 lg:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full"></div>
+          <div className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white/10 rounded-full"></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
                 </svg>
               </div>
-              <span className="text-3xl">📊</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl">📊</span>
             </div>
             {statsLoading ? (
-              <div className="text-3xl font-bold mb-2">
-                <div className="bg-white/20 h-8 w-16 rounded-lg shimmer"></div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
+                <div className="bg-white/20 h-6 sm:h-8 w-12 sm:w-16 rounded-lg shimmer"></div>
               </div>
             ) : (
-              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.total_bets || 0}</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 drop-shadow-lg">{bettingStats?.total_bets || 0}</div>
             )}
-            <div className="text-blue-100 font-medium">Total Bets Placed</div>
+            <div className="text-blue-100 font-medium text-xs sm:text-sm">Total Bets Placed</div>
           </div>
         </div>
 
         {/* Win Rate Card */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+        <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 via-green-600 to-teal-700 rounded-2xl p-3 sm:p-4 lg:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+          <div className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span className="text-3xl">🏆</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl">🏆</span>
             </div>
             {statsLoading ? (
-              <div className="text-3xl font-bold mb-2">
-                <div className="bg-white/20 h-8 w-12 rounded-lg shimmer"></div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
+                <div className="bg-white/20 h-6 sm:h-8 w-10 sm:w-12 rounded-lg shimmer"></div>
               </div>
             ) : (
-              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.win_rate || 0}%</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 drop-shadow-lg">{bettingStats?.win_rate || 0}%</div>
             )}
-            <div className="text-emerald-100 font-medium">Success Rate</div>
+            <div className="text-emerald-100 font-medium text-xs sm:text-sm">Success Rate</div>
           </div>
         </div>
 
         {/* Total Profit Card */}
-        <div className={`group relative overflow-hidden ${(bettingStats?.total_profit || 0) >= 0 ? 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700' : 'bg-gradient-to-br from-red-500 via-rose-600 to-pink-700'} rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105`}>
+        <div className={`group relative overflow-hidden ${(bettingStats?.total_profit || 0) >= 0 ? 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700' : 'bg-gradient-to-br from-red-500 via-rose-600 to-pink-700'} rounded-2xl p-3 sm:p-4 lg:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105`}>
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <span className="text-3xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl">{(bettingStats?.total_profit || 0) >= 0 ? '💰' : '📉'}</span>
             </div>
             {statsLoading ? (
-              <div className="text-3xl font-bold mb-2">
-                <div className="bg-white/20 h-8 w-20 rounded-lg shimmer"></div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
+                <div className="bg-white/20 h-6 sm:h-8 w-16 sm:w-20 rounded-lg shimmer"></div>
               </div>
             ) : (
-              <div className="text-3xl font-bold mb-2 drop-shadow-lg">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 drop-shadow-lg">
                 {(bettingStats?.total_profit || 0) >= 0 ? '+' : '-'}${Math.abs(bettingStats?.total_profit || 0).toFixed(2)}
               </div>
             )}
-            <div className={`font-medium ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
+            <div className={`font-medium text-xs sm:text-sm ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
               {(bettingStats?.total_profit || 0) >= 0 ? 'Total Profit' : 'Total Loss'}
             </div>
           </div>
         </div>
 
         {/* Active Bets Card */}
-        <div className="group relative overflow-hidden bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
+        <div className="group relative overflow-hidden bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 rounded-2xl p-3 sm:p-4 lg:p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105">
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1.5s'}}></div>
+          <div className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-white/10 rounded-full animate-pulse" style={{animationDelay: '1.5s'}}></div>
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span className="text-3xl">⚡</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl">⚡</span>
             </div>
             {statsLoading ? (
-              <div className="text-3xl font-bold mb-2">
-                <div className="bg-white/20 h-8 w-12 rounded-lg shimmer"></div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
+                <div className="bg-white/20 h-6 sm:h-8 w-10 sm:w-12 rounded-lg shimmer"></div>
               </div>
             ) : (
-              <div className="text-3xl font-bold mb-2 drop-shadow-lg">{bettingStats?.pending_bets || 0}</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 drop-shadow-lg">{bettingStats?.pending_bets || 0}</div>
             )}
-            <div className="text-purple-100 font-medium">Active Bets</div>
+            <div className="text-purple-100 font-medium text-xs sm:text-sm">Active Bets</div>
           </div>
         </div>
       </div>
 
       {/* Betting Records */}
-      <div className="bg-surface border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-text flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-surface border border-border rounded-xl p-3 sm:p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <h3 className="text-base sm:text-lg font-semibold text-text flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Your Betting History
             <button
               onClick={fetchBettingData}
-              className="ml-2 px-3 py-1 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-lg transition-colors"
+              className="ml-2 px-2 sm:px-3 py-1 bg-blue-500 hover:bg-blue-400 text-white text-xs rounded-lg transition-colors"
               title="Refresh betting history"
             >
               🔄 Refresh
@@ -627,8 +627,10 @@ export default function Dashboard() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
               <thead>
                 <tr className="border-b border-border/30">
                   <th className="text-left py-3 px-2 text-sm font-medium text-muted">
@@ -834,21 +836,68 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {sortedBettingRecords.map((record) => (
+                <div key={record.id} className="bg-bg border border-border rounded-lg p-4 hover:bg-surface/50 transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        record.bet_status === 'won' ? 'bg-green-500/20 text-green-500' :
+                        record.bet_status === 'lost' ? 'bg-red-500/20 text-red-500' :
+                        'bg-yellow-500/20 text-yellow-500'
+                      }`}>
+                        {record.bet_status === 'won' ? '🎉' : record.bet_status === 'lost' ? '😞' : '⏳'}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-text">{record.match_teams}</div>
+                        <div className="text-xs text-muted">{record.selected_outcome}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-text">${record.bet_amount}</div>
+                      <div className="text-xs text-muted">Bet Amount</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-muted">Odds:</span>
+                      <span className="ml-1 font-medium text-text">{record.odds_value}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Potential:</span>
+                      <span className="ml-1 font-medium text-green-400">${record.potential_win}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Match Date:</span>
+                      <span className="ml-1 text-text">{record.match_date ? new Date(record.match_date).toLocaleDateString() : 'TBD'}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Bet Date:</span>
+                      <span className="ml-1 text-text">{new Date(record.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* Transaction History */}
-      <div className="bg-surface border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-text flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-surface border border-border rounded-xl p-3 sm:p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <h3 className="text-base sm:text-lg font-semibold text-text flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Transaction History
             <button
               onClick={fetchTransactionData}
-              className="ml-2 px-3 py-1 bg-purple-500 hover:bg-purple-400 text-white text-xs rounded-lg transition-colors"
+              className="ml-2 px-2 sm:px-3 py-1 bg-purple-500 hover:bg-purple-400 text-white text-xs rounded-lg transition-colors"
               title="Refresh transaction history"
             >
               🔄 Refresh

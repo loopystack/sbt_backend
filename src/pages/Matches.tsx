@@ -131,20 +131,19 @@ export default function Matches() {
 
   return (
     <section className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 hover:-translate-y-1 relative overflow-hidden group">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
-                <h3 className="font-bold text-base sm:text-lg text-blue-100 mb-2">BETINASIA</h3>
-                <p className="text-xs sm:text-sm text-blue-200/80 mb-2">Get 100% First Deposit Bonus!</p>
-                <div className="text-xs text-blue-300 font-medium">🎯 Best Value</div>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2 text-blue-100">BETINASIA</h3>
+                <p className="text-xs sm:text-sm text-blue-200/80">100% Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("BETINASIA")}
-                className="w-full sm:w-auto bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-blue-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+                className="w-full sm:w-auto bg-blue-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-blue-500 transition-all duration-300 text-xs sm:text-sm"
               >
                 CLAIM
               </button>
@@ -152,19 +151,18 @@ export default function Matches() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 hover:-translate-y-1 relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
-                <h3 className="font-bold text-base sm:text-lg text-emerald-100 mb-2">bet-at-home</h3>
-                <p className="text-xs sm:text-sm text-emerald-200/80 mb-2">Get a 300€ Welcome bonus!</p>
-                <div className="text-xs text-emerald-300 font-medium">🔥 Hot Deal</div>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2 text-emerald-100">bet-at-home</h3>
+                <p className="text-xs sm:text-sm text-emerald-200/80">300€ Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bet-at-home")}
-                className="w-full sm:w-auto bg-emerald-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-emerald-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+                className="w-full sm:w-auto bg-emerald-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-emerald-500 transition-all duration-300 text-xs sm:text-sm"
               >
                 CLAIM
               </button>
@@ -172,19 +170,18 @@ export default function Matches() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 hover:-translate-y-1 relative overflow-hidden group md:col-span-2 lg:col-span-1">
+        <div className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 rounded-2xl p-3 sm:p-5 text-white shadow-xl hover:shadow-2xl transition-all duration-400 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
           <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div className="flex-1">
-                <h3 className="font-bold text-base sm:text-lg text-purple-100 mb-2">bets.io</h3>
-                <p className="text-xs sm:text-sm text-purple-200/80 mb-2">First Deposit Sport Bonus</p>
-                <div className="text-xs text-purple-300 font-medium">⭐ Premium</div>
+                <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2 text-purple-100">bets.io</h3>
+                <p className="text-xs sm:text-sm text-purple-200/80">Sport Bonus</p>
               </div>
               <button 
                 onClick={() => openBettingSiteByName("bets.io")}
-                className="w-full sm:w-auto bg-purple-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 text-sm"
+                className="w-full sm:w-auto bg-purple-600 text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 text-xs sm:text-sm"
               >
                 CLAIM
               </button>
