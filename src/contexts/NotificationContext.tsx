@@ -150,7 +150,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         const wasSettledBefore = previousState && (previousState.bet_status === 'won' || previousState.bet_status === 'lost');
         
         const statusChanged = previousState && previousState.bet_status !== record.bet_status;
-        const newlySettled = !wasSettledBefore && isSettled; // Just got settled
+        const isNewlySettled = !wasSettledBefore && isSettled; // Just got settled
         const settlementDateChanged = !previousState?.settlement_date && record.settlement_date; // Settlement date appeared
         
         // Detect settlement if:
@@ -163,7 +163,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         
         const isNewSettlement = wasUserBet && (
           (statusChanged && isSettled) || // Status changed to won/lost
-          newlySettled || // Bet was newly settled
+          isNewlySettled || // Bet was newly settled
           settlementDateChanged || // Settlement date appeared for first time
           (isRecentlyUpdated && isSettled) // Recently updated and now settled
         );
@@ -181,7 +181,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             actual_profit: record.actual_profit,
             updatedAt: record.updated_at,
             statusChanged: statusChanged && isSettled,
-            newlySettled: newlySettled,
+            isNewlySettled: isNewlySettled,
             settlementDateChanged: settlementDateChanged,
             isRecentlyUpdated: isRecentlyUpdated,
             // Special check for Sevilla vs Real Betis

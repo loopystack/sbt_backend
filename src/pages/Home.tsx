@@ -14,24 +14,6 @@ export default function Home() {
   const { selectedLeague } = useCountry();
   const highlightParam = searchParams.get('highlight');
   
-  // Search state
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  
-  // Handle search results from HeroSection
-  const handleSearchResults = (results: any[], term: string) => {
-    setSearchResults(results);
-    setSearchTerm(term);
-    setShowSearchResults(true);
-  };
-  
-  // Clear search and return to normal home page
-  const clearSearch = () => {
-    setSearchResults([]);
-    setSearchTerm("");
-    setShowSearchResults(false);
-  };
 
   // Handle both old format (just number) and new format (id_team1_team2_date)
   let highlightMatchId: number | undefined;
@@ -56,41 +38,6 @@ export default function Home() {
     );
   }
   
-  // If showing search results, show them instead of normal home content
-  if (showSearchResults) {
-    return (
-      <div className="space-y-6 sm:space-y-8">
-        {/* Search Results Header */}
-        {/* <div className="bg-surface border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-text flex items-center gap-2">
-              🔍 Search Results for "{searchTerm}"
-            </h2>
-            <button
-              onClick={clearSearch}
-              className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white rounded-lg transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Back to Home
-            </button>
-          </div>
-          
-          {searchResults.length > 0 ? (
-            <p className="text-muted">Found {searchResults.length} match(es) featuring "{searchTerm}"</p>
-          ) : (
-            <p className="text-muted">No matches found for "{searchTerm}". Try searching for different team names.</p>
-          )}
-        </div> */}
-        
-        {/* Search Results Table */}
-        {searchResults.length > 0 && (
-          <OddsTable />
-        )}
-      </div>
-    );
-  }
   
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -156,7 +103,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <HeroSection onSearchResults={handleSearchResults} />
+      <HeroSection />
       <OddsDemo />
       <PopularSports />
       <HotPicks />

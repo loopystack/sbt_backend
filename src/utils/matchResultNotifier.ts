@@ -28,6 +28,7 @@ export const notifyMatchResultUpdated = (matchId: number, matchTeams: string, ne
 declare global {
   interface Window {
     triggerSettlementCheck: () => void;
+    debugNotificationSystem: () => Promise<void>;
   }
 }
 
