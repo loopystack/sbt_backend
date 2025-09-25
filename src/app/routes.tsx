@@ -16,6 +16,7 @@ import ResetPassword from "../pages/ResetPassword";
 import VerifyEmail from "../pages/VerifyEmail";
 import Profile from "../pages/Profile";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
+import AdminPanel from "../pages/AdminPanel";
 
 export const routes: RouteObject[] = [
   {
@@ -49,7 +50,7 @@ export const routes: RouteObject[] = [
     element: <ResetPassword />
   },
   {
-    path: "/verify-email",
-    element: <VerifyEmail />
+    path: "/admin",
+    element: <AdminPanel />
   }
 ];

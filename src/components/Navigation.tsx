@@ -441,6 +441,23 @@ export default function Navigation() {
                         <span className="text-text">Dashboard</span>
                       </button>
                       
+                      {/* Admin Panel Link - Only show for admin users */}
+                      {(user?.email === "hitech.proton@gmail.com" || user?.is_superuser) && (
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            navigate("/admin");
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-blue-500/10 rounded-lg transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          <span className="text-text font-medium">Admin Panel</span>
+                          <span className="ml-auto text-xs bg-gradient-to-r from-purple-500 to-blue-500 text-white px-2 py-1 rounded-full font-bold">ADMIN</span>
+                        </button>
+                      )}
+                      
                       <div className="border-t border-border my-2"></div>
                       
                       <button
