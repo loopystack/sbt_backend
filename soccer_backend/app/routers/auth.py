@@ -134,6 +134,12 @@ async def login(
             detail="Inactive user"
         )
     
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email not verified. Please check your email and click the verification link."
+        )
+    
     # Update last login
     user.last_login = datetime.now(timezone.utc)
     await db.commit()

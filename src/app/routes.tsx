@@ -13,6 +13,7 @@ import Dashboard from "../pages/Dashboard";
 import SignInSignUp from "../pages/SignInSignUp";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import VerifyEmail from "../pages/VerifyEmail";
 import Profile from "../pages/Profile";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 
@@ -46,5 +47,9 @@ export const routes: RouteObject[] = [
   {
     path: "/reset-password",
     element: <ResetPassword />
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmail />
   }
 ];

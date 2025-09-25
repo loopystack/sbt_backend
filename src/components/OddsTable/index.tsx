@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { flushSync } from "react-dom";
 import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -464,6 +465,13 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     }
     
     const totalBetAmount = selectedOdds.reduce((total, odds) => total + parseFloat(odds.stake || '0'), 0);
+    
+    // Check if bet amount is greater than 0
+    if (totalBetAmount <= 0) {
+      setBettingError("Amount must be greater than 0");
+      return;
+    }
+    
     if (totalBetAmount > userFunds) {
       setBettingError("Balance is not enough, plz add fund");
       return;
@@ -608,18 +616,17 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         }
         console.log('🎉 All betting records saved successfully');
         
-        // IMMEDIATELY update local state to show "bet placed" effect
+        // IMMEDIATELY update local state to show "bet placed" effect - FORCE SYNC UPDATE
         const newBetMatchIds = new Set(userBetMatchIds);
         selectedOdds.forEach(odds => {
           newBetMatchIds.add(odds.matchId);
         });
-        setUserBetMatchIds(newBetMatchIds);
-        console.log('⚡ INSTANT UI update: Added match IDs to local state:', Array.from(newBetMatchIds));
         
-        // Refresh user's existing bets to sync with database (but don't wait for it)
-        fetchUserExistingBets().catch(error => {
-          console.error('⚠️ Background sync failed, but UI is already updated:', error);
+        // Force synchronous state update to ensure immediate UI update
+        flushSync(() => {
+          setUserBetMatchIds(newBetMatchIds);
         });
+        console.log('⚡ INSTANT UI update: Added match IDs to local state:', Array.from(newBetMatchIds));
         
       } catch (recordError: any) {
         console.error('❌ Error saving betting records - FULL ERROR DETAILS:', {
@@ -649,17 +656,11 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setShowBetConfirmation(false);
       setIsConfirmingBet(false);
       
-      // Clear selected odds and show congratulations
+      // Clear selected odds and show congratulations IMMEDIATELY
       setSelectedOdds([]);
-      setIsBetSlipHiding(true);
-      setTimeout(() => {
-        setShowBetSlip(false);
-        setIsBetSlipHiding(false);
-        // Show congratulations after betslip is fully hidden
-        setTimeout(() => {
-          setShowCongratulations(true);
-        }, 100);
-      }, 500);
+      setShowBetSlip(false);
+      setIsBetSlipHiding(false);
+      setShowCongratulations(true);
       
       // Update auth context with new user data
       window.dispatchEvent(new CustomEvent('authStateChanged', { 

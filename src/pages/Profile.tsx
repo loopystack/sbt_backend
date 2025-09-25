@@ -13,7 +13,7 @@ interface ProfileData extends User {
 }
 
 export default function Profile() {
-  const { user: authUser, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading, logout, refreshUser } = useAuth();
   const [user, setUser] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -673,6 +673,9 @@ export default function Profile() {
                     funds_usd: response.new_balance
                   });
                 }
+                
+                // Refresh the AuthContext user state to update balance in other components
+                await refreshUser();
               } catch (error) {
                 console.error('Funds API error:', error);
                 
@@ -690,6 +693,9 @@ export default function Profile() {
                       funds_usd: simulatedBalance
                     });
                   }
+                  
+                  // Refresh the AuthContext user state to update balance in other components
+                  await refreshUser();
                 } else {
                   setFundError(`Failed to credit account: ${error instanceof Error ? error.message : 'Unknown error'}`);
                   // Clear success message if there's an error
@@ -918,6 +924,9 @@ export default function Profile() {
               funds_usd: paymentResponse.new_balance
             });
           }
+          
+          // Refresh the AuthContext user state to update balance in other components
+          await refreshUser();
         } else {
           throw new Error(paymentResponse.message || 'Payment failed');
         }

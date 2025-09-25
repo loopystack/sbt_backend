@@ -32,11 +32,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [justLoggedOut, setJustLoggedOut] = useState(false);
 
   const checkAuth = async () => {
+    console.log('🔍 checkAuth called, justLoggedOut:', justLoggedOut);
+    
+    // Check if user just logged out (persistent across page reloads)
+    const userJustLoggedOut = localStorage.getItem('userJustLoggedOut') === 'true';
+    console.log('🔍 User just logged out (persistent):', userJustLoggedOut);
+    
+    // If user just logged out, don't try to authenticate
+    if (justLoggedOut || userJustLoggedOut) {
+      console.log('🔍 User just logged out, skipping authentication check');
+      setIsAuthenticated(false);
+      setUser(null);
+      setIsLoading(false);
+      // Clear the persistent flag
+      localStorage.removeItem('userJustLoggedOut');
+      setJustLoggedOut(false);
+      return;
+    }
+    
     const token = tokenManager.getAccessToken();
     const reduxToken = localStorage.getItem('token');
     const authToken = token || reduxToken;
+    
+    console.log('🔍 Token check:', { 
+      token: !!token, 
+      reduxToken: !!reduxToken, 
+      authToken: !!authToken 
+    });
     
     if (authToken) {
       try {
@@ -105,6 +130,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userData = await authService.getCurrentUser();
       setUser(userData);
       setIsAuthenticated(true);
+      setJustLoggedOut(false); // Reset logout flag on successful login
+      localStorage.removeItem('userJustLoggedOut'); // Clear persistent flag
       
       // Dispatch custom event
       window.dispatchEvent(new CustomEvent('authStateChanged', { 
@@ -118,11 +145,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('🚪 Logout called - clearing all tokens and state');
+    
+    // Set flags FIRST to prevent any authentication checks
+    setJustLoggedOut(true);
+    localStorage.setItem('userJustLoggedOut', 'true');
+    
+    // Clear ALL possible token locations aggressively
     authService.logout();
     tokenManager.clearTokens();
     localStorage.removeItem('token');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userJustLoggedOut'); // Clear this temporarily
+    
+    // Clear any other possible token locations
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('token');
+    
     setUser(null);
     setIsAuthenticated(false);
     
@@ -134,10 +175,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       detail: { isAuthenticated: false, user: null } 
     }));
     
-    // Refresh the page to ensure all components get the updated state
+    console.log('🚪 After logout - all tokens cleared, setting persistent flag');
+    
+    // Set the persistent flag AFTER clearing everything
     setTimeout(() => {
+      localStorage.setItem('userJustLoggedOut', 'true');
+      console.log('🚪 Persistent logout flag set, reloading page');
       window.location.reload();
-    }, 100);
+    }, 50);
   };
 
   const refreshUser = async () => {
@@ -152,14 +197,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'access_token' || e.key === 'refresh_token' || e.key === 'token') {
-        checkAuth();
+        // Don't check auth if user just logged out
+        const userJustLoggedOut = localStorage.getItem('userJustLoggedOut') === 'true';
+        if (!userJustLoggedOut && !justLoggedOut) {
+          checkAuth();
+        }
       }
     };
 
     // Listen for custom auth state changes
     const handleAuthStateChange = (event: CustomEvent) => {
       if (event.detail.isAuthenticated) {
-        setTimeout(checkAuth, 100);
+        // Don't check auth if user just logged out
+        const userJustLoggedOut = localStorage.getItem('userJustLoggedOut') === 'true';
+        if (!userJustLoggedOut && !justLoggedOut) {
+          setTimeout(checkAuth, 100);
+        }
       } else {
         setUser(null);
         setIsAuthenticated(false);

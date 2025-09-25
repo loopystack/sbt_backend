@@ -11,12 +11,31 @@ export default function SignInSignUp() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect authenticated users away from login page
+    if (!authLoading && isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard');
+      navigate('/dashboard');
+      return;
+    }
+    
+    // Debug logging
+    console.log('SignInSignUp auth state:', { 
+      authLoading, 
+      isAuthenticated, 
+      hasToken: !!localStorage.getItem('access_token'),
+      hasReduxToken: !!localStorage.getItem('token')
+    });
+  }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
     const message = searchParams.get('message');
@@ -29,6 +48,9 @@ export default function SignInSignUp() {
       setIsSignIn(true); // Switch to sign in mode
     } else if (message === 'session_expired') {
       setError('Your session has expired. Please sign in again.');
+      setIsSignIn(true); // Switch to sign in mode
+    } else if (message === 'email_verified') {
+      setSuccess('Email verified successfully! You can now sign in to your account.');
       setIsSignIn(true); // Switch to sign in mode
     }
     
@@ -101,6 +123,27 @@ export default function SignInSignUp() {
     setIsSignIn(signIn);
     clearForm();
   };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Please enter your email address first");
+      return;
+    }
+
+    setIsResendingVerification(true);
+    setError("");
+    setVerificationSent(false);
+
+    try {
+      await authService.resendVerification(email);
+      setVerificationSent(true);
+      setSuccess("Verification email sent! Please check your inbox.");
+    } catch (error: any) {
+      setError(error.message || "Failed to send verification email. Please try again.");
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -117,20 +160,67 @@ export default function SignInSignUp() {
           navigate("/");
         }, 1000);
       } else {
-        // Sign up
-        if (password !== confirmPassword) {
-          setError("Passwords do not match");
-          setIsLoading(false);
-          return;
-        }
-        
+        // Sign up - Frontend validation with specific error messages
         if (!username.trim()) {
           setError("Username is required");
           setIsLoading(false);
           return;
         }
+        
+        if (username.trim().length < 3) {
+          setError("Username must be at least 3 characters long");
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!fullName.trim()) {
+          setError("Full name is required");
+          setIsLoading(false);
+          return;
+        }
+        
+        if (fullName.trim().length < 5) {
+          setError("Full name must be at least 5 characters long");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Password strength validation
+        const passwordErrors = [];
+        
+        if (password.length < 8) {
+          passwordErrors.push("at least 8 characters");
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+          passwordErrors.push("one uppercase letter");
+        }
+        
+        if (!/[a-z]/.test(password)) {
+          passwordErrors.push("one lowercase letter");
+        }
+        
+        if (!/\d/.test(password)) {
+          passwordErrors.push("one number");
+        }
+        
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+          passwordErrors.push("one special character");
+        }
+        
+        if (passwordErrors.length > 0) {
+          setError(`Password must contain ${passwordErrors.join(", ")}`);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
 
-        await authService.register({ email, username, password, full_name: fullName || undefined });
+        await authService.register({ email, username, password, full_name: fullName });
         setSuccess("Account created successfully! Please check your email for verification.");
         setTimeout(() => {
           // Navigate to home page instead of reloading
@@ -138,11 +228,38 @@ export default function SignInSignUp() {
         }, 2000);
       }
     } catch (error: any) {
-      setError(error.message || "An error occurred. Please try again.");
+      // Handle backend validation errors with specific messages
+      const errorMessage = error.message || "An error occurred. Please try again.";
+      
+      // Map generic backend errors to specific field errors
+      if (errorMessage.includes("String should have at least 3 characters")) {
+        setError("Username must be at least 3 characters long");
+      } else if (errorMessage.includes("String should have at least 8 characters")) {
+        setError("Password must be at least 8 characters long");
+      } else if (errorMessage.includes("String should have at least 5 characters")) {
+        setError("Full name must be at least 5 characters long");
+      } else if (errorMessage.includes("password") && errorMessage.includes("weak")) {
+        setError("Password is too weak. Please include uppercase, lowercase, numbers, and special characters.");
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-white text-sm">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
@@ -194,6 +311,15 @@ export default function SignInSignUp() {
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
               <p className="text-red-400 text-xs font-medium">{error}</p>
+              {error.includes("Email not verified") && (
+                <button
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification}
+                  className="mt-2 text-blue-400 hover:text-blue-300 text-xs underline disabled:opacity-50"
+                >
+                  {isResendingVerification ? "Sending..." : "Resend verification email"}
+                </button>
+              )}
             </div>
           )}
           {success && (
@@ -251,7 +377,7 @@ export default function SignInSignUp() {
                 
                 <div>
                   <label htmlFor="fullName" className="block text-xs font-semibold text-text mb-2">
-                    Full Name (Optional)
+                    Full Name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -264,6 +390,7 @@ export default function SignInSignUp() {
                       id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      required
                       className="w-full pl-9 pr-3 py-3 bg-bg/50 border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all duration-300 text-sm"
                       placeholder="Enter your full name"
                     />
@@ -292,6 +419,28 @@ export default function SignInSignUp() {
                   placeholder="Enter your password"
                 />
               </div>
+              {password.length > 0 && (
+                <div className="mt-2 text-xs text-gray-400">
+                  <p className="mb-1">Password must contain:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li className={password.length >= 8 ? "text-green-400" : "text-gray-400"}>
+                      At least 8 characters
+                    </li>
+                    <li className={/[A-Z]/.test(password) ? "text-green-400" : "text-gray-400"}>
+                      One uppercase letter (A-Z)
+                    </li>
+                    <li className={/[a-z]/.test(password) ? "text-green-400" : "text-gray-400"}>
+                      One lowercase letter (a-z)
+                    </li>
+                    <li className={/\d/.test(password) ? "text-green-400" : "text-gray-400"}>
+                      One number (0-9)
+                    </li>
+                    <li className={/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? "text-green-400" : "text-gray-400"}>
+                      One special character (!@#$%^&*)
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
             {!isSignIn && (
               <div>
