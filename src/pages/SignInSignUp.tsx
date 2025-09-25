@@ -254,7 +254,7 @@ export default function SignInSignUp() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-white text-sm">Checking authentication...</p>
+          <p className="text-white text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -419,7 +419,7 @@ export default function SignInSignUp() {
                   placeholder="Enter your password"
                 />
               </div>
-              {password.length > 0 && (
+              {!isSignIn && password.length > 0 && (
                 <div className="mt-2 text-xs text-gray-400">
                   <p className="mb-1">Password must contain:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOddsFormat } from "../hooks/useOddsFormat";
 import { OddsConverter } from "../utils/oddsConverter";
+import { useAppDispatch } from "../store/hooks";
+import { getMatchingInfoAction } from "../store/matchinginfo/actions";
+import { MatchingInfo } from "../store/matchinginfo/types";
 
 // Custom hook for animated counting
 const useCountUp = (end: number, duration: number = 2000, delay: number = 0) => {
@@ -42,6 +45,9 @@ const useCountUp = (end: number, duration: number = 2000, delay: number = 0) => 
 export default function HeroSection() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useAppDispatch();
+  const [featuredMatches, setFeaturedMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Handle search - redirect to matches page with search term
   const handleSearch = () => {
@@ -70,25 +76,76 @@ export default function HeroSection() {
   // Odds format conversion
   const { getOddsInFormat, oddsFormat } = useOddsFormat();
   
-  // Debug: Log when odds format changes
+  // Fetch real upcoming matches for Featured Matches
   useEffect(() => {
-    console.log('HeroSection: Odds format changed to:', oddsFormat);
-  }, [oddsFormat]);
-  
-  // Helper function to convert and format odds
-  const formatOdds = (odds: string): string => {
-    if (!odds || odds.trim() === '') {
-      return odds || '';
-    }
-    
-    // Use the robust string parser with correct conversion formulas
-    const decimalOdds = OddsConverter.stringToDecimal(odds);
-    const formatted = getOddsInFormat(decimalOdds);
-    console.log(`HeroSection: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
-    return formatted;
-  };
+    const fetchFeaturedMatches = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 HeroSection: Starting to fetch featured matches...');
+        
+        const params = { 
+          page: 1, 
+          size: 50  // Get more matches to filter from
+        };
+        
+        const result = await dispatch(getMatchingInfoAction(params)).unwrap();
+        console.log('🔍 HeroSection: API result:', result);
+        console.log('🔍 HeroSection: Total matches received:', result.odds?.length || 0);
+        
+        if (!result.odds || result.odds.length === 0) {
+          console.log('⚠️ HeroSection: No matches received from API, using fallback');
+          setFeaturedMatches(getFallbackMatches());
+          return;
+        }
+        
+        // Filter for upcoming matches and transform data
+        const now = new Date();
+        console.log('🔍 HeroSection: Current time:', now.toISOString());
+        
+        const upcomingMatches = result.odds
+          .filter((match: MatchingInfo) => {
+            const matchDate = new Date(match.date + 'T' + match.time);
+            const isUpcoming = matchDate.getTime() >= now.getTime();
+            console.log(`🔍 HeroSection: Match ${match.home_team} vs ${match.away_team} - Date: ${match.date} ${match.time} - Is upcoming: ${isUpcoming}`);
+            return isUpcoming;
+          })
+          .slice(0, 6) // Take first 6 upcoming matches
+          .map((match: MatchingInfo) => ({
+            id: match.id,
+            teams: `${match.home_team} vs ${match.away_team}`,
+            league: `${match.country} ${match.league}`,
+            time: match.time,
+            date: formatMatchDate(match.date),
+            odds: {
+              home: match.odd_1 ? match.odd_1.toString() : null,
+              away: match.odd_2 ? match.odd_2.toString() : null,
+              draw: match.odd_X ? match.odd_X.toString() : null
+            },
+            status: "Upcoming"
+          }));
+        
+        console.log('🔍 HeroSection: Upcoming matches found:', upcomingMatches.length);
+        console.log('🔍 HeroSection: Featured matches:', upcomingMatches);
+        
+        if (upcomingMatches.length === 0) {
+          console.log('⚠️ HeroSection: No upcoming matches found, using fallback');
+          setFeaturedMatches(getFallbackMatches());
+        } else {
+          setFeaturedMatches(upcomingMatches);
+        }
+      } catch (error) {
+        console.error("❌ HeroSection: Error fetching featured matches:", error);
+        setFeaturedMatches(getFallbackMatches());
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const featuredMatches = [
+    fetchFeaturedMatches();
+  }, [dispatch]);
+
+  // Helper function for fallback matches
+  const getFallbackMatches = () => [
     {
       id: 1,
       teams: "Manchester City vs Arsenal",
@@ -129,6 +186,49 @@ export default function HeroSection() {
       status: "Upcoming"
     }
   ];
+
+  // Helper function to format match date
+  const formatMatchDate = (dateString: string): string => {
+    const matchDate = new Date(dateString + 'T00:00:00');
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (matchDate.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (matchDate.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
+    } else {
+      return matchDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  };
+
+  // Debug: Log when odds format changes
+  useEffect(() => {
+    console.log('HeroSection: Odds format changed to:', oddsFormat);
+  }, [oddsFormat]);
+  
+  // Debug: Log featured matches state
+  useEffect(() => {
+    console.log('🔍 HeroSection: Featured matches state updated:', featuredMatches);
+    console.log('🔍 HeroSection: Loading state:', loading);
+  }, [featuredMatches, loading]);
+  
+  // Helper function to convert and format odds
+  const formatOdds = (odds: string): string => {
+    if (!odds || odds.trim() === '') {
+      return odds || '';
+    }
+    
+    // Use the robust string parser with correct conversion formulas
+    const decimalOdds = OddsConverter.stringToDecimal(odds);
+    const formatted = getOddsInFormat(decimalOdds);
+    console.log(`HeroSection: Converting ${odds} -> ${decimalOdds} -> ${formatted} (format: ${oddsFormat})`);
+    return formatted;
+  };
 
   return (
     <section className="mb-6 sm:mb-8">
@@ -259,8 +359,36 @@ export default function HeroSection() {
       
       <div className="mb-4 sm:mb-6">
         <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-text mb-3 sm:mb-4 px-2">Featured Matches</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {featuredMatches.map((match) => (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-surface border border-border rounded-xl p-3 sm:p-4 lg:p-5 animate-pulse">
+                <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
+                  <div className="h-6 bg-muted/20 rounded-full w-20"></div>
+                  <div className="text-right">
+                    <div className="h-4 bg-muted/20 rounded w-16 mb-1"></div>
+                    <div className="h-5 bg-muted/20 rounded w-12"></div>
+                  </div>
+                </div>
+                <div className="h-5 bg-muted/20 rounded w-full mb-2 sm:mb-3"></div>
+                <div className="h-4 bg-muted/20 rounded w-24 mb-2 sm:mb-3 lg:mb-4"></div>
+                <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3 lg:mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 bg-muted/20 rounded w-12"></div>
+                    <div className="h-4 bg-muted/20 rounded w-16"></div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 bg-muted/20 rounded w-12"></div>
+                    <div className="h-4 bg-muted/20 rounded w-16"></div>
+                  </div>
+                </div>
+                <div className="h-8 bg-muted/20 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : featuredMatches.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {featuredMatches.map((match) => (
             <div
               key={match.id}
               className="bg-surface border border-border rounded-xl p-3 sm:p-4 lg:p-5 hover:border-accent/50 hover:shadow-lg transition-all duration-200 group"
@@ -319,7 +447,13 @@ export default function HeroSection() {
               </button>
             </div>
           ))}
-        </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-muted text-sm mb-2">No upcoming matches available</div>
+            <div className="text-xs text-muted/70">Check back later for new matches</div>
+          </div>
+        )}
       </div>
     </section>
   );
