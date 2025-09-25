@@ -83,46 +83,70 @@ export default function ScrollToFooter() {
     };
   }, []);
 
+  // Manual smooth scroll animation with easing (for mobile browsers)
+  const smoothScrollTo = (targetY: number, duration: number = 600) => {
+    const startY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const distance = targetY - startY;
+    let startTime: number | null = null;
+
+    function step(timestamp: number) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1); // clamp [0,1]
+
+      // easeInOutQuad easing for smooth animation
+      const ease = progress < 0.5
+        ? 2 * progress * progress
+        : -1 + (4 - 2 * progress) * progress;
+
+      const currentY = startY + distance * ease;
+      
+      // Use multiple scroll methods for maximum compatibility
+      window.scrollTo(0, currentY);
+      document.documentElement.scrollTop = currentY;
+      document.body.scrollTop = currentY;
+
+      if (elapsed < duration) {
+        requestAnimationFrame(step);
+      } else {
+        // Ensure exact final position
+        window.scrollTo(0, targetY);
+        document.documentElement.scrollTop = targetY;
+        document.body.scrollTop = targetY;
+        console.log('Manual smooth scroll completed');
+      }
+    }
+
+    requestAnimationFrame(step);
+  };
+
   const handleScroll = () => {
     if (isPastMiddle) {
-      // Smooth scroll to top with mobile compatibility
-      console.log('Smooth scrolling to top...');
+      // Hybrid approach: Try native smooth scroll first, fallback to manual animation
+      console.log('Scrolling to top...');
       
       // Check if smooth scrolling is supported
       if ('scrollBehavior' in document.documentElement.style) {
         // Use native smooth scrolling for modern browsers
+        console.log('Using native smooth scroll');
         window.scrollTo({
           top: 0,
           left: 0,
           behavior: 'smooth'
         });
-      } else {
-        // Custom smooth scroll animation for mobile/older browsers
-        const smoothScrollToTop = () => {
-          const currentPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-          
-          if (currentPosition > 0) {
-            // Calculate step size for smooth animation
-            const step = Math.max(currentPosition / 12, 1); // Adjust speed by changing divisor
-            const newPosition = Math.max(currentPosition - step, 0);
-            
-            // Scroll to new position
-            window.scrollTo(0, newPosition);
-            
-            // Continue animation if not at top
-            if (newPosition > 0) {
-              requestAnimationFrame(smoothScrollToTop);
-            } else {
-              // Ensure we're exactly at the top
-              window.scrollTo(0, 0);
-              document.documentElement.scrollTop = 0;
-              document.body.scrollTop = 0;
-            }
-          }
-        };
         
-        // Start the smooth scroll animation
-        smoothScrollToTop();
+        // Fallback check: if still not at top after a delay, use manual animation
+        setTimeout(() => {
+          const currentPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          if (currentPos > 10) {
+            console.log('Native smooth scroll failed, using manual animation');
+            smoothScrollTo(0, 600);
+          }
+        }, 200);
+      } else {
+        // Use manual animation for browsers without smooth scroll support
+        console.log('Using manual smooth scroll animation');
+        smoothScrollTo(0, 600);
       }
       
     } else {
@@ -136,27 +160,23 @@ export default function ScrollToFooter() {
             behavior: 'smooth',
             block: 'start'
           });
-        } else {
-          // Custom smooth scroll to footer for mobile
-          const smoothScrollToFooter = () => {
-            const footerRect = footer.getBoundingClientRect();
-            const currentPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-            const targetPosition = currentPosition + footerRect.top;
-            
-            const step = Math.max(Math.abs(footerRect.top) / 12, 1);
-            const newPosition = footerRect.top > 0 
-              ? Math.min(currentPosition + step, targetPosition)
-              : Math.max(currentPosition - step, targetPosition);
-            
-            window.scrollTo(0, newPosition);
-            
-            // Continue animation if not at target
-            if (Math.abs(footerRect.top) > 5) {
-              requestAnimationFrame(smoothScrollToFooter);
-            }
-          };
           
-          smoothScrollToFooter();
+          // Fallback check for footer
+          setTimeout(() => {
+            const footerRect = footer.getBoundingClientRect();
+            if (Math.abs(footerRect.top) > 50) {
+              console.log('Native footer scroll failed, using manual animation');
+              const targetY = window.pageYOffset + footerRect.top;
+              smoothScrollTo(targetY, 600);
+            }
+          }, 200);
+        } else {
+          // Manual smooth scroll to footer
+          const footerRect = footer.getBoundingClientRect();
+          const currentPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          const targetPosition = currentPosition + footerRect.top;
+          
+          smoothScrollTo(targetPosition, 600);
         }
       } else {
         // Fallback: scroll to bottom
@@ -165,25 +185,20 @@ export default function ScrollToFooter() {
             top: document.documentElement.scrollHeight,
             behavior: 'smooth'
           });
-        } else {
-          // Custom smooth scroll to bottom for mobile
-          const smoothScrollToBottom = () => {
-            const currentPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            
-            if (currentPosition < maxScroll) {
-              const step = Math.max((maxScroll - currentPosition) / 12, 1);
-              const newPosition = Math.min(currentPosition + step, maxScroll);
-              
-              window.scrollTo(0, newPosition);
-              
-              if (newPosition < maxScroll) {
-                requestAnimationFrame(smoothScrollToBottom);
-              }
-            }
-          };
           
-          smoothScrollToBottom();
+          // Fallback check for bottom scroll
+          setTimeout(() => {
+            const currentPos = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            if (currentPos < maxScroll - 50) {
+              console.log('Native bottom scroll failed, using manual animation');
+              smoothScrollTo(maxScroll, 600);
+            }
+          }, 200);
+        } else {
+          // Manual smooth scroll to bottom
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          smoothScrollTo(maxScroll, 600);
         }
       }
     }
