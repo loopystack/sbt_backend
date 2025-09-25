@@ -1588,6 +1588,20 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                   </>
                 )}
                 
+                {/* Blurred background and overlay for better text readability */}
+                <div 
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    backgroundImage: `url('/assets/card_background/soccer_background.png')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    filter: 'blur(3px)',
+                    transform: 'scale(1.1)'
+                  }}
+                ></div>
+                <div className="absolute inset-0 bg-black/30 rounded-xl"></div>
+                
                 {/* Content with relative positioning to stay above effects */}
                 <div className="relative z-10">
                 <div className="flex items-center justify-between mb-3">
@@ -1767,10 +1781,10 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                               </div>
                               
                               {/* Text with beautiful styling */}
-                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                              <div className="absolute bottom-7 left-1/2 transform -translate-x-1/2">
                                 <div className="text-center">
                                   <p className="text-emerald-700 font-bold text-sm tracking-wide bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
-                                    ✨ Bet Placed Successfully!
+                                    ❤️ Bet Placed Already!
                                   </p>
                                   <p className="text-emerald-600/80 text-xs mt-1 font-medium">
                                     Waiting for match result
