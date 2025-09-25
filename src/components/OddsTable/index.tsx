@@ -181,7 +181,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       console.log('🎯 OddsTable received highlightMatchId:', highlightMatchId);
     }
   }, [highlightMatchId]);
-  
+
   // Odds format conversion
   const { getOddsInFormat, oddsFormat } = useOddsFormat();
   
@@ -200,6 +200,108 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   
   // Debug authentication state
   console.log('🎯 OddsTable: Auth state - user:', user?.email || 'null', 'isAuthenticated:', isAuthenticated);
+
+  // Function to fetch user's existing bets and get match_ids
+  const fetchUserExistingBets = async () => {
+    console.log('🚀 fetchUserExistingBets called');
+    console.log('🔐 isAuthenticated:', isAuthenticated);
+    console.log('👤 user:', user);
+    console.log('🆔 user?.id:', user?.id);
+    
+    if (!isAuthenticated || !user?.id) {
+      console.log('🚫 Not authenticated or no user ID, clearing bets');
+      setUserBetMatchIds(new Set());
+      return;
+    }
+
+    try {
+      console.log('🔄 Fetching user existing bets for match_id comparison...');
+      console.log('👤 Current user ID:', user.id, 'type:', typeof user.id);
+      
+      const response = await bettingService.getBettingRecords(1, 50); // Get up to 50 records (API limit)
+      
+      console.log('📋 Raw betting records response:', response);
+      console.log('📋 Response type:', typeof response);
+      console.log('📋 Response.records:', response?.records);
+      console.log('📋 Response.records length:', response?.records?.length);
+      
+      if (response && response.records) {
+        console.log('📊 Total betting records found:', response.records.length);
+        
+        // Filter records for current user first
+        const userRecords = response.records.filter(record => {
+          const isUserRecord = record.user_id === user.id;
+          console.log(`👤 Record ${record.id} - user_id: ${record.user_id} (type: ${typeof record.user_id}), current user: ${user.id} (type: ${typeof user.id}), match: ${isUserRecord}`);
+          return isUserRecord;
+        });
+        
+        console.log(`👤 Records for current user (${user.id}):`, userRecords.length);
+        
+        // Log each record to see the data structure
+        userRecords.forEach((record, index) => {
+          console.log(`📝 User Record ${index + 1}:`, {
+            id: record.id,
+            user_id: record.user_id,
+            match_id: record.match_id,
+            match_teams: record.match_teams,
+            match_id_type: typeof record.match_id,
+            bet_status: record.bet_status
+          });
+        });
+        
+        // Extract match_ids from user's betting records
+        const matchIds = new Set(
+          userRecords
+            .filter(record => {
+              const hasMatchId = record.match_id !== null && record.match_id !== undefined;
+              console.log(`🔍 User Record ${record.id} has match_id: ${hasMatchId}, value: ${record.match_id}, type: ${typeof record.match_id}`);
+              return hasMatchId;
+            })
+            .map(record => {
+              const matchIdString = record.match_id!.toString();
+              console.log(`🔄 Converting match_id ${record.match_id} (${typeof record.match_id}) to string: "${matchIdString}"`);
+              return matchIdString;
+            })
+        );
+        
+        setUserBetMatchIds(matchIds);
+        console.log('✅ User existing bets loaded:', matchIds.size, 'matches');
+        console.log('📊 Match IDs user has bet on (as strings):', Array.from(matchIds));
+        console.log('📊 Match IDs user has bet on (types):', Array.from(matchIds).map(id => ({ value: id, type: typeof id })));
+      } else {
+        console.log('⚠️ No records found in response');
+        console.log('⚠️ Response structure:', {
+          hasResponse: !!response,
+          hasRecords: !!(response && response.records),
+          responseKeys: response ? Object.keys(response) : 'no response'
+        });
+      }
+    } catch (error) {
+    }
+  };
+
+  // Function to check if user has already bet on a specific match
+  const hasUserBetOnMatch = (matchId: string): boolean => {
+    const result = userBetMatchIds.has(matchId);
+    console.log(`🔍 Checking if user bet on match "${matchId}" (type: ${typeof matchId}): ${result}`);
+    console.log('📊 Available match IDs in set:', Array.from(userBetMatchIds));
+    console.log('📊 Match ID comparison:', {
+      input: matchId,
+      inputType: typeof matchId,
+      availableIds: Array.from(userBetMatchIds),
+      hasMatch: result
+    });
+    return result;
+  };
+
+  // Fetch user's existing bets when component loads or user changes
+  useEffect(() => {
+    console.log('🔄 useEffect triggered - fetchUserExistingBets will be called');
+    console.log('🔐 useEffect - isAuthenticated:', isAuthenticated);
+    console.log('👤 useEffect - user?.id:', user?.id);
+    fetchUserExistingBets();
+  }, [isAuthenticated, user?.id]);
+
   const [selectedMarket, setSelectedMarket] = useState("Next Matches");
   const [viewMode, setViewMode] = useState<"cards" | "rows">("cards");
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
@@ -214,6 +316,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     stake: string;
     matchDate?: string;
   }[]>([]);
+  
+  // State to track matches user has already bet on
+  const [userBetMatchIds, setUserBetMatchIds] = useState<Set<string>>(new Set());
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [isBetSlipCollapsed, setIsBetSlipCollapsed] = useState(false);
   const [isBetSlipHiding, setIsBetSlipHiding] = useState(false);
@@ -463,6 +568,10 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           }
         }
         console.log('🎉 All betting records saved successfully');
+        
+        // Refresh user's existing bets to update the UI
+        await fetchUserExistingBets();
+        
       } catch (recordError: any) {
         console.error('❌ Error saving betting records - FULL ERROR DETAILS:', {
           error: recordError,
@@ -731,6 +840,13 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   // Don't render matches when switching markets to prevent flash
   const groupedMatches = isSwitchingMarket ? [] : allGroupedMatches;
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
+    // Check if user has already bet on this match
+    if (hasUserBetOnMatch(match.id)) {
+      console.log('🚫 User has already bet on match:', match.id);
+      event.preventDefault();
+      return;
+    }
+
     const selectedBet = {
       matchId: match.id,
       type,
@@ -1590,47 +1706,127 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                       </button>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="text-center">
-                        <div className="text-xs text-muted mb-1">1</div>
-                        <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'home') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
-                        >
-                          {formatOdds(match.bookmakers[0]?.home || '-')}
-                        </button>
+                    {(() => {
+                      console.log(`🎯 Checking match ${match.id} (type: ${typeof match.id}) for user bets`);
+                      return hasUserBetOnMatch(match.id);
+                    })() ? (
+                      <div className="relative">
+                        {/* Keep the same grid structure but make it invisible */}
+                        <div className="grid grid-cols-3 gap-2 opacity-0">
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">1</div>
+                            <div className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-h-[32px] flex items-center justify-center">
+                              --
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">X</div>
+                            <div className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-h-[32px] flex items-center justify-center">
+                              --
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xs text-muted mb-1">2</div>
+                            <div className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-h-[32px] flex items-center justify-center">
+                              --
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Beautiful bet placed overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="relative w-full h-full">
+                            {/* Main overlay with glass effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-500/15 to-cyan-500/10 backdrop-blur-sm rounded-lg border border-emerald-400/30 shadow-xl">
+                              {/* Animated background pattern */}
+                              <div className="absolute inset-0 opacity-20">
+                                <div className="absolute top-2 left-2 w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
+                                <div className="absolute top-4 right-3 w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse"></div>
+                                <div className="absolute bottom-3 left-4 w-1 h-1 bg-cyan-400 rounded-full animate-bounce"></div>
+                                <div className="absolute bottom-2 right-2 w-2 h-2 bg-emerald-300 rounded-full animate-ping"></div>
+                              </div>
+                              
+                              {/* Success icon with animation */}
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className="relative">
+                                  {/* Outer ring */}
+                                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                                    {/* Inner circle */}
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-inner">
+                                      {/* Checkmark */}
+                                      <svg className="w-8 h-8 text-emerald-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Floating particles */}
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
+                                </div>
+                              </div>
+                              
+                              {/* Text with beautiful styling */}
+                              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                                <div className="text-center">
+                                  <p className="text-emerald-700 font-bold text-sm tracking-wide bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
+                                    ✨ Bet Placed Successfully!
+                                  </p>
+                                  <p className="text-emerald-600/80 text-xs mt-1 font-medium">
+                                    Waiting for match result
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Subtle glow effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-lg blur-sm -z-10 animate-pulse"></div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted mb-1">X</div>
-                        <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'draw') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
-                        >
-                          {formatOdds(match.bookmakers[0]?.draw || '-')}
-                        </button>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center">
+                          <div className="text-xs text-muted mb-1">1</div>
+                          <button 
+                            className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                              isOddsSelected(match.id, 'home') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                            }`}
+                            onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                          >
+                            {formatOdds(match.bookmakers[0]?.home || '-')}
+                          </button>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted mb-1">X</div>
+                          <button 
+                            className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                              isOddsSelected(match.id, 'draw') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                            }`}
+                            onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                          >
+                            {formatOdds(match.bookmakers[0]?.draw || '-')}
+                          </button>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-muted mb-1">2</div>
+                          <button 
+                            className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
+                              isOddsSelected(match.id, 'away') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                            }`}
+                            onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                          >
+                            {formatOdds(match.bookmakers[0]?.away || '-')}
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted mb-1">2</div>
-                        <button 
-                          className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                            isOddsSelected(match.id, 'away') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
-                          }`}
-                          onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
-                        >
-                          {formatOdds(match.bookmakers[0]?.away || '-')}
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
                 </div>
@@ -1767,6 +1963,59 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                             </div>
                           ));
                         })()}
+                      </div>
+                    ) : (() => {
+                      console.log(`🎯 Table view - Checking match ${match.id} (type: ${typeof match.id}) for user bets`);
+                      return hasUserBetOnMatch(match.id);
+                    })() ? (
+                      <div className="flex items-center justify-center relative">
+                        {/* Invisible placeholder to maintain space */}
+                        <div className="opacity-0">
+                          <div className="flex items-center gap-1">
+                            <button className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-w-[40px]">
+                              --
+                            </button>
+                            <button className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-w-[40px]">
+                              --
+                            </button>
+                            <button className="bg-muted/20 text-muted border border-muted/30 rounded px-2 py-1 text-xs font-semibold min-w-[40px]">
+                              --
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Beautiful compact bet placed overlay for table */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="relative w-full h-full">
+                            {/* Main overlay with glass effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/15 to-teal-500/15 backdrop-blur-sm rounded-md border border-emerald-400/40 shadow-lg">
+                              {/* Animated background dots */}
+                              <div className="absolute inset-0 opacity-30">
+                                <div className="absolute top-1 left-1 w-1 h-1 bg-emerald-400 rounded-full animate-ping"></div>
+                                <div className="absolute bottom-1 right-1 w-1 h-1 bg-teal-400 rounded-full animate-pulse"></div>
+                              </div>
+                              
+                              {/* Success icon */}
+                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className="w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center animate-pulse shadow-md">
+                                  <svg className="w-4 h-4 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              </div>
+                              
+                              {/* Text */}
+                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                                <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
+                                  <span className="text-emerald-700 font-bold text-xs tracking-wide">✨ Bet Placed</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Subtle glow */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-md blur-sm -z-10 animate-pulse"></div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1">
