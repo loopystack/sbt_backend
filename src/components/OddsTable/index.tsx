@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -251,6 +251,57 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   
   // State to track if we're switching markets (to prevent flash of old data)
   const [isSwitchingMarket, setIsSwitchingMarket] = useState(false);
+  const [switchingToMarket, setSwitchingToMarket] = useState<string>("");
+  
+  // Ref to track the current switching timeout to prevent race conditions
+  const switchingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Ref to track last click time for debouncing
+  const lastClickTimeRef = useRef<number>(0);
+  
+  // Robust market switching function that handles rapid clicks
+  const handleMarketSwitch = useCallback((market: string) => {
+    const now = Date.now();
+    console.log("Market switch requested:", market, "Current market:", selectedMarket, "Time since last click:", now - lastClickTimeRef.current);
+    
+    // Debounce rapid clicks (ignore clicks within 300ms)
+    if (now - lastClickTimeRef.current < 300) {
+      console.log("Ignoring rapid click - debouncing");
+      return;
+    }
+    
+    // If already switching or clicking the same market, ignore
+    if (isSwitchingMarket || market === selectedMarket) {
+      console.log("Ignoring market switch - already switching or same market");
+      return;
+    }
+    
+    // Update last click time
+    lastClickTimeRef.current = now;
+    
+    // Clear any existing timeout
+    if (switchingTimeoutRef.current) {
+      clearTimeout(switchingTimeoutRef.current);
+      switchingTimeoutRef.current = null;
+    }
+    
+    // Set switching state immediately
+    setIsSwitchingMarket(true);
+    setSwitchingToMarket(market);
+    setMatchingInfo([]);
+    setLoading(true);
+    
+    // Use a longer timeout for more stable switching
+    switchingTimeoutRef.current = setTimeout(() => {
+      console.log("Executing market switch to:", market);
+      setSelectedMarket(market);
+      setCurrentPage(1);
+      if (market === "Next Matches") {
+        setSelectedYear(undefined);
+      }
+      switchingTimeoutRef.current = null;
+    }, 150);
+  }, [isSwitchingMarket, selectedMarket]);
   
   // Betting states
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -677,7 +728,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const endIndex = startIndex + matchesPerPage;
   
   // No slicing needed - API already returns the correct page data
-  const groupedMatches = allGroupedMatches;
+  // Don't render matches when switching markets to prevent flash
+  const groupedMatches = isSwitchingMarket ? [] : allGroupedMatches;
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
     const selectedBet = {
       matchId: match.id,
@@ -858,7 +910,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const fetchCurrentPageMatches = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching with selectedYear:", selectedYear, "searchQuery:", searchQuery);
+      console.log("Fetching with selectedYear:", selectedYear, "searchQuery:", searchQuery, "selectedMarket:", selectedMarket);
       
       // Build base parameters
       const params: any = { 
@@ -908,8 +960,12 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setApiTotalPages(result.pages);
       setApiTotalMatches(result.total);
       
-      // Reset switching state when data is loaded
-      setIsSwitchingMarket(false);
+      // Reset switching state when data is loaded with a small delay
+      setTimeout(() => {
+        console.log("Resetting switching state after successful data load");
+        setIsSwitchingMarket(false);
+        setSwitchingToMarket("");
+      }, 200);
       
       console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages}) with backend filtering`);
       console.log(`📊 Sample match data:`, result.odds[0] ? {
@@ -920,8 +976,12 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       } : 'No matches');
     } catch (error) {
       console.error("Error fetching matching info:", error);
-      // Reset switching state even on error
-      setIsSwitchingMarket(false);
+      // Reset switching state even on error with a small delay
+      setTimeout(() => {
+        console.log("Resetting switching state after error");
+        setIsSwitchingMarket(false);
+        setSwitchingToMarket("");
+      }, 200);
     } finally {
       setLoading(false);
     }
@@ -1040,12 +1100,21 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setSelectedBetAmount("10");
     }
   }, [showBetSlip]);
-  if (loading) {
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (switchingTimeoutRef.current) {
+        clearTimeout(switchingTimeoutRef.current);
+      }
+    };
+  }, []);
+  if (loading || isSwitchingMarket) {
     return (
       <div className="flex justify-center items-center h-screen bg-gradient-to-br from-bg via-surface to-bg">
         <FantasticLoader 
           size="large" 
-          text="Loading odds for you..." 
+          text={isSwitchingMarket ? `Switching to ${switchingToMarket}...` : "Loading odds for you..."} 
         />
       </div>
     );
@@ -1201,21 +1270,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           {markets.map((market) => (
             <button
               key={market}
-              onClick={() => {
-                console.log("Market button clicked:", market);
-                
-                // Set switching state and clear data immediately to prevent flash
-                setIsSwitchingMarket(true);
-                setMatchingInfo([]);
-                setLoading(true);
-                
-                setSelectedMarket(market);
-                setCurrentPage(1);
-                setCurrentPage(1); // Reset API page
-                if (market === "Next Matches") {
-                  setSelectedYear(undefined);
-                }
-              }}
+              onClick={() => handleMarketSwitch(market)}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 selectedMarket === market
                   ? "bg-accent text-white shadow-lg"
@@ -1293,12 +1348,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                       setMatchingInfo([]);
                       setLoading(true);
                       
-                      setSelectedMarket(market);
-                      setCurrentPage(1);
-                      setCurrentPage(1); // Reset API page
-                      if (market === "Next Matches") {
-                        setSelectedYear(undefined);
-                      }
+                      // Use setTimeout to ensure state updates are processed
+                      setTimeout(() => {
+                        setSelectedMarket(market);
+                        setCurrentPage(1);
+                        if (market === "Next Matches") {
+                          setSelectedYear(undefined);
+                        }
+                      }, 100);
                     }}
                     className={`px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                       selectedMarket === market
@@ -1329,12 +1386,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                       setMatchingInfo([]);
                       setLoading(true);
                       
-                      setSelectedMarket(market);
-                      setCurrentPage(1);
-                      setCurrentPage(1); // Reset API page
-                      if (market === "Next Matches") {
-                        setSelectedYear(undefined);
-                      }
+                      // Use setTimeout to ensure state updates are processed
+                      setTimeout(() => {
+                        setSelectedMarket(market);
+                        setCurrentPage(1);
+                        if (market === "Next Matches") {
+                          setSelectedYear(undefined);
+                        }
+                      }, 100);
                     }}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       selectedMarket === market
