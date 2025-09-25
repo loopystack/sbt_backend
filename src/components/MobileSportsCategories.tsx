@@ -15,14 +15,14 @@ export default function MobileSportsCategories() {
   ];
 
   return (
-    <div className="lg:hidden bg-black border-b border-gray-800 px-0.5 py-2">
+    <div className="lg:hidden bg-black border-b border-gray-800 px-1 py-2">
       {/* Sports Categories - 8 Icons Only */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex gap-0.5 pb-1">
         {sports.map((sport) => (
           <button
             key={sport.name}
             onClick={() => setSelectedSport(sport.name)}
-            className={`p-1 rounded-lg transition-colors ${
+            className={`flex-1 min-w-0 p-0.5 sm:p-1 rounded-lg transition-colors ${
               selectedSport === sport.name
                 ? "bg-yellow-400"
                 : "bg-gray-800 hover:bg-gray-700"
@@ -32,7 +32,7 @@ export default function MobileSportsCategories() {
             <img 
               src={sport.icon} 
               alt={sport.name}
-              className="w-9 h-6 object-contain"
+              className="w-full h-5 sm:h-6 object-contain"
             />
           </button>
         ))}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import LeftSidebar from "../../components/LeftSidebar";
 import RightSidebar from "../../components/RightSidebar";
@@ -18,6 +18,7 @@ export default function AppShell() {
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const { setSelectedLeague } = useCountry();
 
@@ -34,11 +35,31 @@ export default function AppShell() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Scroll to top when route changes (especially important for mobile)
+  useEffect(() => {
+    // Scroll to top immediately when route changes
+    window.scrollTo(0, 0);
+    
+    // Also ensure document body scroll position is reset (for mobile compatibility)
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    console.log('🔄 Route changed, scrolling to top:', location.pathname);
+  }, [location.pathname]);
+
   const handleNavigation = (path: string) => {
     // Clear selected league when navigating to any page
     setSelectedLeague(null);
+    
+    // Scroll to top immediately before navigation (especially important for mobile)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
     navigate(path);
     setIsMobileMenuOpen(false);
+    
+    console.log('🔄 Navigating to:', path, '- scrolled to top');
   };
 
   return (
@@ -183,11 +204,11 @@ export default function AppShell() {
 
       <div className="flex">
         {/* Left Sidebar */}
-        <div className={`fixed top-16 left-0 w-72 sm:w-80 h-[calc(100vh-8rem)] bg-surface z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        <div className={`fixed top-0 left-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out lg:hidden ${
           isLeftSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
           {/* Sidebar Header */}
-          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
+          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-8 flex items-center justify-between h-20">
             <div className="flex items-center gap-3">
               <span className="text-lg">⚽</span>
               <span className="font-bold text-white">Sports</span>
@@ -202,14 +223,14 @@ export default function AppShell() {
             </button>
           </div>
           
-          <div className="h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
+          <div className="h-[calc(100vh-5rem)] overflow-y-auto scrollbar-hide">
             <LeftSidebar onClose={() => setIsLeftSidebarOpen(false)} />
           </div>
         </div>
         
         {/* Left Sidebar Overlay */}
         {isLeftSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-[9999] lg:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
         )}
         
         <div className="hidden lg:block">
@@ -231,11 +252,11 @@ export default function AppShell() {
         </main>
         
         {/* Right Sidebar */}
-        <div className={`fixed top-16 right-0 w-72 sm:w-80 h-[calc(100vh-8rem)] bg-surface z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        <div className={`fixed top-0 right-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out lg:hidden ${
           isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'
         }`}>
           {/* Sidebar Header */}
-          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
+          <div className="bg-black/90 backdrop-blur-sm border-b border-border/50 px-4 py-8 flex items-center justify-between h-20">
             <div className="flex items-center gap-3">
               <span className="text-lg">📋</span>
               <span className="font-bold text-white">Value Bets</span>
@@ -250,14 +271,14 @@ export default function AppShell() {
             </button>
           </div>
           
-          <div className="h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hide">
+          <div className="h-[calc(100vh-5rem)] overflow-y-auto scrollbar-hide">
             <RightSidebar onClose={() => setIsRightSidebarOpen(false)} />
           </div>
         </div>
         
         {/* Right Sidebar Overlay */}
         {isRightSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsRightSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-[9999] lg:hidden" onClick={() => setIsRightSidebarOpen(false)} />
         )}
         
         <div className="hidden lg:block">

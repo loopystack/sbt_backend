@@ -47,12 +47,24 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
   const handleLogoClick = () => {
     console.log('Logo clicked - clearing selectedLeague and navigating to home');
     setSelectedLeague(null);
+    
+    // Scroll to top immediately (especially important for mobile)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
     navigate("/");
   };
 
   const handleMobileNavClick = (path: string) => {
     console.log(`Mobile nav clicked - clearing selectedLeague and navigating to ${path}`);
     setSelectedLeague(null);
+    
+    // Scroll to top immediately (especially important for mobile)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
     navigate(path);
   };
 
@@ -209,12 +221,12 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
           </div>
           
           {/* Secondary Navigation Bar - 8 Icons Only */}
-          <div className="flex items-center justify-between px-2 py-3 bg-gray-900 border-b border-gray-800">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between px-1 sm:px-2 py-3 bg-gray-900 border-b border-gray-800">
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-1 justify-between">
               {/* Home */}
               <button
                 onClick={handleLogoClick}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Home"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,7 +237,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* Next Matches */}
               <button
                 onClick={() => handleMobileNavClick("/matches")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Next Matches"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +248,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* Dropping Odds */}
               <button
                 onClick={() => handleMobileNavClick("/dropping-odds")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Dropping Odds"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,7 +259,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* Sure Bets */}
               <button
                 onClick={() => handleMobileNavClick("/sure-bets")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Sure Bets"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,7 +270,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* In Play Odds */}
               <button
                 onClick={() => handleMobileNavClick("/in-play-odds")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="In Play Odds"
               >
                 <div className="relative">
@@ -272,7 +284,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* All Events */}
               <button
                 onClick={() => handleMobileNavClick("/all-events")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="All Events"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +295,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* Betting */}
               <button
                 onClick={() => handleMobileNavClick("/betting")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Betting"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +306,7 @@ export default function Header({ onMobileMenuToggle, onLeftSidebarToggle, onRigh
               {/* Bookmakers */}
               <button
                 onClick={() => handleMobileNavClick("/bookmakers")}
-                className="p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10"
+                className="flex-1 p-1 sm:p-1.5 text-white hover:text-yellow-400 transition-colors rounded-lg hover:bg-white/10 min-w-0"
                 title="Bookmakers"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

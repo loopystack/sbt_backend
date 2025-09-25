@@ -3,7 +3,7 @@ import { useCountry } from "../../contexts/CountryContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOddsFormat } from "../../hooks/useOddsFormat";
 import { OddsConverter } from "../../utils/oddsConverter";
 import { useAppDispatch } from "../../store/hooks";
@@ -53,6 +53,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const { user, isAuthenticated } = useAuth();
   const { addNewBetNotification } = useNotifications();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
 
   // Helper function to check if a match should be highlighted
@@ -237,10 +238,19 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     potentialWin: string;
     teams: string;
   }>({ betAmount: "10", potentialWin: "102.60", teams: "Team A vs Team B" });
-  const [searchQuery, setSearchQuery] = useState(initialSearchTerm || "");
+  // Get search term from URL parameters (this will be updated when URL changes)
+  const urlSearchTerm = searchParams.get('search') || "";
+  
+  const [searchQuery, setSearchQuery] = useState(urlSearchTerm || initialSearchTerm || "");
   
   // State to track if search should be triggered
   const [shouldTriggerSearch, setShouldTriggerSearch] = useState(false);
+  
+  // State to track if user is actively editing the search input
+  const [isEditingSearch, setIsEditingSearch] = useState(false);
+  
+  // State to track if we're switching markets (to prevent flash of old data)
+  const [isSwitchingMarket, setIsSwitchingMarket] = useState(false);
   
   // Betting states
   const [isPlacingBet, setIsPlacingBet] = useState(false);
@@ -861,19 +871,24 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         params.season = selectedYear;
       }
       
-      // Add league and country filters
-      if (selectedLeague && selectedCountry) {
-        params.league = selectedLeague.name;
-        params.country = selectedCountry.name;
-      } else if (selectedCountry) {
-        params.country = selectedCountry.name;
-      }
-      
       // Add search query to backend - this is the key fix!
       if (searchQuery.trim()) {
         // Use home_team parameter to search for teams
         // The backend will search in home_team field using ILIKE
         params.home_team = searchQuery.trim();
+        
+        // When searching, don't apply country/league filters to allow global search
+        // This allows users to search across all countries and leagues
+        console.log('🔍 Global search mode - skipping country/league filters');
+      } else {
+        // Only apply country/league filters when not searching
+        // This maintains the normal filtering behavior when browsing
+        if (selectedLeague && selectedCountry) {
+          params.league = selectedLeague.name;
+          params.country = selectedCountry.name;
+        } else if (selectedCountry) {
+          params.country = selectedCountry.name;
+        }
       }
       
       // Add date filtering for "Next Matches" vs "Results"
@@ -893,6 +908,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setApiTotalPages(result.pages);
       setApiTotalMatches(result.total);
       
+      // Reset switching state when data is loaded
+      setIsSwitchingMarket(false);
+      
       console.log(`✅ Loaded ${result.odds.length} matches (Page ${currentPage}/${result.pages}) with backend filtering`);
       console.log(`📊 Sample match data:`, result.odds[0] ? {
         season: result.odds[0].season,
@@ -902,6 +920,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       } : 'No matches');
     } catch (error) {
       console.error("Error fetching matching info:", error);
+      // Reset switching state even on error
+      setIsSwitchingMarket(false);
     } finally {
       setLoading(false);
     }
@@ -926,12 +946,82 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     }
   }, [shouldTriggerSearch]);
 
-  // Update search query when initialSearchTerm prop changes
+  // Update search query when URL search parameter changes (only if user is not editing)
   useEffect(() => {
-    if (initialSearchTerm) {
+    const urlSearchTerm = searchParams.get('search') || "";
+    
+    // Only update from URL if user is not actively editing the input
+    if (!isEditingSearch && urlSearchTerm !== searchQuery) {
+      setSearchQuery(urlSearchTerm);
+      // Trigger search if there's a search term in URL
+      if (urlSearchTerm.trim()) {
+        setShouldTriggerSearch(true);
+      }
+    }
+  }, [searchParams, searchQuery, isEditingSearch]);
+  
+  // Update search query when initialSearchTerm prop changes (for backward compatibility)
+  useEffect(() => {
+    if (initialSearchTerm && !urlSearchTerm) {
       setSearchQuery(initialSearchTerm);
     }
-  }, [initialSearchTerm]);
+  }, [initialSearchTerm, urlSearchTerm]);
+
+  // Helper function to handle search and update URL parameters
+  const handleSearch = useCallback(() => {
+    const trimmedQuery = searchQuery.trim();
+    
+    // Update URL parameters to persist search across navigation
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (trimmedQuery) {
+      newSearchParams.set('search', trimmedQuery);
+    } else {
+      newSearchParams.delete('search');
+    }
+    
+    // Update URL without triggering navigation
+    setSearchParams(newSearchParams, { replace: true });
+    
+    // Reset editing state since search is being performed
+    setIsEditingSearch(false);
+    
+    // Trigger the actual search
+    setShouldTriggerSearch(true);
+  }, [searchQuery, searchParams, setSearchParams]);
+
+  // Helper function to handle pagination with scroll-to-top
+  const handlePageChange = useCallback((newPage: number) => {
+    // Scroll to top immediately when changing pages (especially important for mobile)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    // Update the current page
+    setCurrentPage(newPage);
+    
+    console.log('🔄 Page changed to:', newPage, '- scrolled to top');
+  }, []);
+
+  // Helper function to highlight search terms in text
+  const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      return text;
+    }
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="bg-yellow-300 text-black font-semibold px-1 rounded">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  }, []);
   
 
   // Add global click listener for betslip collapse
@@ -972,7 +1062,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         <div>
                                <h2 className="text-xl sm:text-2xl font-bold text-text">
             {searchQuery.trim() 
-              ? `Search Results for "${searchQuery}"`
+              ? `Global Search Results for "${searchQuery}"`
               : selectedYear 
                 ? selectedLeague
                   ? `${selectedLeague.name} ${selectedYear} Results`
@@ -990,7 +1080,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           </h2>
                      <p className="text-sm text-muted mt-1">
              {searchQuery.trim() 
-               ? `${totalMatches} matches found for "${searchQuery}"`
+               ? `${totalMatches} matches found across all leagues and countries`
                : selectedYear && selectedLeague
                  ? `${totalMatches} ${selectedCountry?.name} ${selectedLeague.name} matches from ${selectedYear}`
                  : selectedYear && !selectedLeague
@@ -1006,7 +1096,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
            </p>
         </div>
         
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        {/* Desktop: Original single row layout */}
+        <div className="hidden lg:flex gap-2 overflow-x-auto scrollbar-hide">
           {/* Search Box */}
           <div className="relative min-w-[200px] sm:min-w-[250px] flex">
             <input
@@ -1015,17 +1106,18 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
+                setIsEditingSearch(true); // Mark that user is actively editing
                 // Don't trigger search on every keystroke
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  setShouldTriggerSearch(true);
+                  handleSearch();
                 }
               }}
               className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm"
             />
             <button
-              onClick={() => setShouldTriggerSearch(true)}
+              onClick={handleSearch}
               className="ml-2 px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
               title="Search teams"
             >
@@ -1037,7 +1129,12 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setShouldTriggerSearch(true); // Trigger search to clear results
+                  setIsEditingSearch(false); // Reset editing state
+                  // Clear search from URL and trigger search to clear results
+                  const newSearchParams = new URLSearchParams(searchParams);
+                  newSearchParams.delete('search');
+                  setSearchParams(newSearchParams, { replace: true });
+                  setShouldTriggerSearch(true);
                 }}
                 className="ml-1 px-2 py-2 text-muted hover:text-text"
                 title="Clear search"
@@ -1054,13 +1151,13 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
               {[2021, 2022, 2023, 2024, 2025].map(year => (
                 <button
                   key={year}
-                                     onClick={() => {
-                     const newYear = selectedYear === year ? undefined : year;
-                     console.log("Year button clicked:", year, "new selectedYear:", newYear);
-                     setSelectedYear(newYear);
-                     setCurrentPage(1); 
-                     setCurrentPage(1); 
-                   }}
+                  onClick={() => {
+                    const newYear = selectedYear === year ? undefined : year;
+                    console.log("Year button clicked:", year, "new selectedYear:", newYear);
+                    setSelectedYear(newYear);
+                    setCurrentPage(1); 
+                    setCurrentPage(1); 
+                  }}
                   className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
                     selectedYear === year
                       ? "bg-blue-600 text-white shadow-sm"
@@ -1073,6 +1170,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
             </div>
           )}
           
+          {/* Show mode toggle */}
           <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
             <button
               onClick={() => setViewMode("cards")}
@@ -1103,15 +1201,21 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           {markets.map((market) => (
             <button
               key={market}
-                             onClick={() => {
-                 console.log("Market button clicked:", market);
-                 setSelectedMarket(market);
-                 setCurrentPage(1);
-                 setCurrentPage(1); // Reset API page
-                 if (market === "Next Matches") {
-                   setSelectedYear(undefined);
-                 }
-               }}
+              onClick={() => {
+                console.log("Market button clicked:", market);
+                
+                // Set switching state and clear data immediately to prevent flash
+                setIsSwitchingMarket(true);
+                setMatchingInfo([]);
+                setLoading(true);
+                
+                setSelectedMarket(market);
+                setCurrentPage(1);
+                setCurrentPage(1); // Reset API page
+                if (market === "Next Matches") {
+                  setSelectedYear(undefined);
+                }
+              }}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 selectedMarket === market
                   ? "bg-accent text-white shadow-lg"
@@ -1121,6 +1225,152 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
               {market}
             </button>
           ))}
+        </div>
+
+        {/* Mobile: Two-row layout */}
+        <div className="lg:hidden space-y-2">
+          {/* Row 1: Search + Market buttons (Results) OR Search only (Next Matches) */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {/* Search Box */}
+            <div className="relative min-w-[200px] sm:min-w-[250px] flex">
+              <input
+                type="text"
+                placeholder="Search teams... (Press Enter to search)"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsEditingSearch(true); // Mark that user is actively editing
+                  // Don't trigger search on every keystroke
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+                className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-text placeholder-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-sm"
+              />
+              <button
+                onClick={handleSearch}
+                className="ml-2 px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+                title="Search teams"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setIsEditingSearch(false); // Reset editing state
+                    // Clear search from URL and trigger search to clear results
+                    const newSearchParams = new URLSearchParams(searchParams);
+                    newSearchParams.delete('search');
+                    setSearchParams(newSearchParams, { replace: true });
+                    setShouldTriggerSearch(true);
+                  }}
+                  className="ml-1 px-2 py-2 text-muted hover:text-text"
+                  title="Clear search"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            {/* Market buttons - show on same row for Results, separate row for Next Matches */}
+            {selectedMarket === "Results" && (
+              <div className="flex gap-1">
+                {markets.map((market) => (
+                  <button
+                    key={market}
+                    onClick={() => {
+                      console.log("Market button clicked:", market);
+                      
+                      // Set switching state and clear data immediately to prevent flash
+                      setIsSwitchingMarket(true);
+                      setMatchingInfo([]);
+                      setLoading(true);
+                      
+                      setSelectedMarket(market);
+                      setCurrentPage(1);
+                      setCurrentPage(1); // Reset API page
+                      if (market === "Next Matches") {
+                        setSelectedYear(undefined);
+                      }
+                    }}
+                    className={`px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                      selectedMarket === market
+                        ? "bg-accent text-white shadow-lg"
+                        : "bg-surface text-muted hover:text-text hover:bg-surface/80 border border-border"
+                    }`}
+                  >
+                    {market === "Results" ? "Results" : "Next"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Row 2: Market buttons (Next Matches) OR Year filters (Results) */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {selectedMarket === "Next Matches" ? (
+              // Show market buttons on second row for Next Matches
+              <div className="flex gap-1">
+                {markets.map((market) => (
+                  <button
+                    key={market}
+                    onClick={() => {
+                      console.log("Market button clicked:", market);
+                      
+                      // Set switching state and clear data immediately to prevent flash
+                      setIsSwitchingMarket(true);
+                      setMatchingInfo([]);
+                      setLoading(true);
+                      
+                      setSelectedMarket(market);
+                      setCurrentPage(1);
+                      setCurrentPage(1); // Reset API page
+                      if (market === "Next Matches") {
+                        setSelectedYear(undefined);
+                      }
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      selectedMarket === market
+                        ? "bg-accent text-white shadow-lg"
+                        : "bg-surface text-muted hover:text-text hover:bg-surface/80 border border-border"
+                    }`}
+                  >
+                    {market}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              // Show year filters on second row for Results
+              <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+                {[2021, 2022, 2023, 2024, 2025].map(year => (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      const newYear = selectedYear === year ? undefined : year;
+                      console.log("Year button clicked:", year, "new selectedYear:", newYear);
+                      setSelectedYear(newYear);
+                      setCurrentPage(1); 
+                      setCurrentPage(1); 
+                    }}
+                    className={`px-2 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
+                      selectedYear === year
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-muted hover:text-text hover:bg-surface/80"
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {viewMode === "cards" ? (
@@ -1198,7 +1448,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                          )}
                        </div>
                        <div className="text-sm font-medium text-text text-center">
-                         {match.teams.split(' vs ')[0]}
+                         {highlightSearchTerm(match.teams.split(' vs ')[0], searchQuery)}
                        </div>
                      </div>
 
@@ -1228,7 +1478,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                          )}
                        </div>
                        <div className="text-sm font-medium text-text text-center">
-                         {match.teams.split(' vs ')[1]}
+                         {highlightSearchTerm(match.teams.split(' vs ')[1], searchQuery)}
                        </div>
                      </div>
                    </div>
@@ -1402,7 +1652,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                           }}
                         />
                       )}
-                      <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[0]}</span>
+                      <span className="text-sm font-medium text-text truncate">{highlightSearchTerm(match.teams.split(' vs ')[0], searchQuery)}</span>
                       <span className="text-sm text-muted font-bold px-1">VS</span>
                       {getTeamLogo(match.teams.split(' vs ')[1], selectedCountry?.name || getCountryNameFromLeague(match.league)) && (
                         <img 
@@ -1414,7 +1664,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                           }}
                         />
                       )}
-                      <span className="text-sm font-medium text-text truncate">{match.teams.split(' vs ')[1]}</span>
+                      <span className="text-sm font-medium text-text truncate">{highlightSearchTerm(match.teams.split(' vs ')[1], searchQuery)}</span>
                     </div>
                   </div>
                   
@@ -1598,7 +1848,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                                 }}
                               />
                             )}
-                            <span className="text-sm font-medium text-text">{odds.teams.split(' vs ')[0]}</span>
+                            <span className="text-sm font-medium text-text">{highlightSearchTerm(odds.teams.split(' vs ')[0], searchQuery)}</span>
                           </>
                         ) : odds.type === 'away' ? (
                           <>
@@ -1612,7 +1862,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                                 }}
                               />
                             )}
-                            <span className="text-sm font-medium text-text">{odds.teams.split(' vs ')[1]}</span>
+                            <span className="text-sm font-medium text-text">{highlightSearchTerm(odds.teams.split(' vs ')[1], searchQuery)}</span>
                           </>
                         ) : (
                           <span className="text-sm font-medium text-text">Draw</span>
@@ -1778,7 +2028,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
              {totalPages > 1 && (
          <div className="flex items-center justify-center gap-2 mt-8 px-2">
            <button
-             onClick={() => setCurrentPage(1)}
+             onClick={() => handlePageChange(1)}
              disabled={currentPage === 1}
              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                currentPage === 1
@@ -1790,7 +2040,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
            </button>
            
            <button
-             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
              disabled={currentPage === 1}
              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                currentPage === 1
@@ -1817,7 +2067,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                return (
                  <button
                    key={pageNum}
-                   onClick={() => setCurrentPage(pageNum)}
+                   onClick={() => handlePageChange(pageNum)}
                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200 ${
                      currentPage === pageNum
                        ? 'bg-accent text-white'
@@ -1831,7 +2081,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
            </div>
            
            <button
-             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+             onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
              disabled={currentPage === totalPages}
              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                currentPage === totalPages
@@ -1843,7 +2093,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
            </button>
            
            <button
-             onClick={() => setCurrentPage(totalPages)}
+             onClick={() => handlePageChange(totalPages)}
              disabled={currentPage === totalPages}
              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                currentPage === totalPages
@@ -1972,10 +2222,10 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                             <div key={index} className="bg-white/5 rounded-xl p-3 border border-white/10">
                               <div className="flex justify-between items-start">
                                 <div className="flex-1">
-                                  <div className="text-white font-medium text-sm mb-1">{odds.teams}</div>
+                                  <div className="text-white font-medium text-sm mb-1">{highlightSearchTerm(odds.teams, searchQuery)}</div>
                                   <div className="text-white/70 text-xs">
-                                    {odds.type === 'home' ? odds.teams.split(' vs ')[0] : 
-                                     odds.type === 'away' ? odds.teams.split(' vs ')[1] : 'Draw'} 
+                                    {odds.type === 'home' ? highlightSearchTerm(odds.teams.split(' vs ')[0], searchQuery) : 
+                                     odds.type === 'away' ? highlightSearchTerm(odds.teams.split(' vs ')[1], searchQuery) : 'Draw'} 
                                     <span className="text-yellow-400 font-semibold ml-2">({formatOdds(odds.odds)})</span>
                                   </div>
                                 </div>

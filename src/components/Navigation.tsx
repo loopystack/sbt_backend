@@ -128,6 +128,8 @@ export default function Navigation() {
 
   useEffect(() => {
     const path = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    
     if (path === "/") {
       setActiveTab("home");
     } else if (path === "/matches") {
@@ -138,8 +140,14 @@ export default function Navigation() {
       setActiveTab("sure-bets");
     } else if (path === "/in-play-odds") {
       setActiveTab("in-play-odds");
-    } else if (path === "/all-events") {   
-      setActiveTab("all-events");
+    } else if (path === "/all-events") {
+      // Only set active tab if there's no search parameter (user navigated directly)
+      // If there's a search parameter, don't select the tab to avoid showing it as selected
+      if (!searchParams.has('search')) {
+        setActiveTab("all-events");
+      } else {
+        setActiveTab(""); // Clear active tab when coming from search
+      }
     } else if (path === "/betting") {
       setActiveTab("betting");
     } else if (path === "/bookmakers") {
@@ -149,7 +157,7 @@ export default function Navigation() {
     } else if (path === "/dashboard") {
       setActiveTab("dashboard");
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   // 🎯 Clear active tab when league is selected (mutual exclusion)
   useEffect(() => {
@@ -161,6 +169,11 @@ export default function Navigation() {
 
   const handleTabClick = (tabId: string) => {
     console.log('Desktop Navigation clicked:', tabId, '- clearing selectedLeague and navigating');
+    
+    // Scroll to top immediately (especially important for mobile)
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
     
     switch (tabId) {
       case "home":

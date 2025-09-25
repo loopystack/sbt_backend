@@ -34,6 +34,13 @@ export default function Dashboard() {
     return formatted;
   };
 
+  // Helper function to format currency amounts with proper precision
+  const formatCurrency = (amount: number): string => {
+    // Round to 2 decimal places to avoid floating point precision issues
+    const rounded = Math.round(amount * 100) / 100;
+    return rounded.toFixed(2);
+  };
+
   // Helper function to format transaction description with odds conversion
   const formatTransactionDescription = (description: string): string => {
     if (!description || description.trim() === '') {
@@ -402,7 +409,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-yellow-300 drop-shadow-lg">
-                  ${userFunds.toFixed(2)}
+                  ${formatCurrency(userFunds)}
                 </div>
               )}
               <div className="text-xs text-white/70 mt-1">Available for betting</div>
@@ -420,8 +427,8 @@ export default function Dashboard() {
                         Balance may be out of sync
                       </div>
                       <div className="text-xs text-orange-300/80 mt-1">
-                        Current: ${syncCheck.currentBalance.toFixed(2)} | 
-                        Latest transaction: ${syncCheck.latestTransactionBalance.toFixed(2)}
+                        Current: ${formatCurrency(syncCheck.currentBalance)} | 
+                        Latest transaction: ${formatCurrency(syncCheck.latestTransactionBalance)}
                       </div>
                     </div>
                   );
@@ -505,7 +512,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 drop-shadow-lg">
-                {(bettingStats?.total_profit || 0) >= 0 ? '+' : '-'}${Math.abs(bettingStats?.total_profit || 0).toFixed(2)}
+                {(bettingStats?.total_profit || 0) >= 0 ? '+' : '-'}${formatCurrency(Math.abs(bettingStats?.total_profit || 0))}
               </div>
             )}
             <div className={`font-medium text-xs sm:text-sm ${(bettingStats?.total_profit || 0) >= 0 ? 'text-green-100' : 'text-red-100'}`}>
@@ -783,7 +790,7 @@ export default function Dashboard() {
                     
                     {/* Amount */}
                     <td className="py-3 px-2">
-                      <div className="text-sm text-text">${record.bet_amount.toFixed(2)}</div>
+                      <div className="text-sm text-text">${formatCurrency(record.bet_amount)}</div>
                     </td>
                     
                     {/* Match Date */}
@@ -816,13 +823,13 @@ export default function Dashboard() {
                         {record.bet_status === 'pending' ? (
                           <div className="flex items-center justify-end gap-1">
                             <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
-                            <span>${record.potential_win.toFixed(2)}</span>
+                            <span>${formatCurrency(record.potential_win)}</span>
                           </div>
                         ) : record.actual_profit !== undefined ? (
-                          `${record.actual_profit >= 0 ? '+' : '-'}$${Math.abs(record.actual_profit).toFixed(2)}`
+                          `${record.actual_profit >= 0 ? '+' : '-'}$${formatCurrency(Math.abs(record.actual_profit))}`
                         ) : (
-                          record.bet_status === 'won' ? `+$${(record.potential_win - record.bet_amount).toFixed(2)}` : 
-                          `-$${record.bet_amount.toFixed(2)}`
+                          record.bet_status === 'won' ? `+$${formatCurrency(record.potential_win - record.bet_amount)}` : 
+                          `-$${formatCurrency(record.bet_amount)}`
                         )}
                       </div>
                       <div className="text-xs text-muted capitalize">
@@ -857,7 +864,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-text">${record.bet_amount}</div>
+                      <div className="text-sm font-semibold text-text">${formatCurrency(record.bet_amount)}</div>
                       <div className="text-xs text-muted">Bet Amount</div>
                     </div>
                   </div>
@@ -869,7 +876,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <span className="text-muted">Potential:</span>
-                      <span className="ml-1 font-medium text-green-400">${record.potential_win}</span>
+                      <span className="ml-1 font-medium text-green-400">${formatCurrency(record.potential_win)}</span>
                     </div>
                     <div>
                       <span className="text-muted">Match Date:</span>
@@ -994,95 +1001,169 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/30">
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Type</th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Description</th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Amount</th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Balance After</th>
-                  <th className="text-left py-3 px-2 text-sm font-medium text-muted">Date</th>
-                  <th className="text-right py-3 px-2 text-sm font-medium text-muted">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.slice(0, 10).map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-border/10 hover:bg-bg/50 transition-colors">
-                    {/* Transaction Type */}
-                    <td className="py-3 px-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                          transaction.transaction_type === 'deposit' ? 'bg-green-500/20 text-green-500' :
-                          transaction.transaction_type === 'withdrawal' ? 'bg-red-500/20 text-red-500' :
-                          transaction.transaction_type === 'bet_placed' ? 'bg-blue-500/20 text-blue-500' :
-                          transaction.transaction_type === 'bet_won' ? 'bg-green-500/20 text-green-500' :
-                          transaction.transaction_type === 'bet_lost' ? 'bg-red-500/20 text-red-500' :
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left py-3 px-2 text-sm font-medium text-muted">Type</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-muted">Description</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-muted">Amount</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-muted">Balance After</th>
+                    <th className="text-left py-3 px-2 text-sm font-medium text-muted">Date</th>
+                    <th className="text-right py-3 px-2 text-sm font-medium text-muted">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.slice(0, 10).map((transaction) => (
+                    <tr key={transaction.id} className="border-b border-border/10 hover:bg-bg/50 transition-colors">
+                      {/* Transaction Type */}
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                            transaction.transaction_type === 'deposit' ? 'bg-green-500/20 text-green-500' :
+                            transaction.transaction_type === 'withdrawal' ? 'bg-red-500/20 text-red-500' :
+                            transaction.transaction_type === 'bet_placed' ? 'bg-blue-500/20 text-blue-500' :
+                            transaction.transaction_type === 'bet_won' ? 'bg-green-500/20 text-green-500' :
+                            transaction.transaction_type === 'bet_lost' ? 'bg-red-500/20 text-red-500' :
+                            'bg-gray-500/20 text-gray-500'
+                          }`}>
+                            {transactionService.getTransactionTypeIcon(transaction.transaction_type)}
+                          </div>
+                          <span className="text-sm font-medium text-text">
+                            {transactionService.formatTransactionType(transaction.transaction_type)}
+                          </span>
+                        </div>
+                      </td>
+                      
+                      {/* Description */}
+                      <td className="py-3 px-2">
+                        <div className="text-sm text-text max-w-xs">
+                          {formatTransactionDescription(transaction.description)}
+                        </div>
+                        {transaction.payment_method && (
+                          <div className="text-xs text-muted mt-1">
+                            via {transaction.payment_method}
+                          </div>
+                        )}
+                      </td>
+                      
+                      {/* Amount */}
+                      <td className="py-3 px-2">
+                        <div className={`text-sm font-semibold ${
+                          transaction.amount >= 0 ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {transaction.amount >= 0 ? '+' : ''}${formatCurrency(Math.abs(transaction.amount))}
+                        </div>
+                      </td>
+                      
+                      {/* Balance After */}
+                      <td className="py-3 px-2">
+                        <div className="text-sm text-text">
+                          ${formatCurrency(transaction.balance_after)}
+                        </div>
+                      </td>
+                      
+                      {/* Date */}
+                      <td className="py-3 px-2">
+                        <div className="text-sm text-text">
+                          {new Date(transaction.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-muted">
+                          {new Date(transaction.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
+                      
+                      {/* Status */}
+                      <td className="py-3 px-2 text-right">
+                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                          transaction.status === 'completed' ? 'bg-green-500/20 text-green-500' :
+                          transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
+                          transaction.status === 'failed' ? 'bg-red-500/20 text-red-500' :
                           'bg-gray-500/20 text-gray-500'
                         }`}>
-                          {transactionService.getTransactionTypeIcon(transaction.transaction_type)}
+                          {transaction.status}
                         </div>
-                        <span className="text-sm font-medium text-text">
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-3">
+              {transactions.slice(0, 10).map((transaction) => (
+                <div key={transaction.id} className="bg-bg border border-border rounded-lg p-4 hover:bg-surface/50 transition-colors">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        transaction.transaction_type === 'deposit' ? 'bg-green-500/20 text-green-500' :
+                        transaction.transaction_type === 'withdrawal' ? 'bg-red-500/20 text-red-500' :
+                        transaction.transaction_type === 'bet_placed' ? 'bg-blue-500/20 text-blue-500' :
+                        transaction.transaction_type === 'bet_won' ? 'bg-green-500/20 text-green-500' :
+                        transaction.transaction_type === 'bet_lost' ? 'bg-red-500/20 text-red-500' :
+                        'bg-gray-500/20 text-gray-500'
+                      }`}>
+                        {transactionService.getTransactionTypeIcon(transaction.transaction_type)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-text">
                           {transactionService.formatTransactionType(transaction.transaction_type)}
-                        </span>
-                      </div>
-                    </td>
-                    
-                    {/* Description */}
-                    <td className="py-3 px-2">
-                      <div className="text-sm text-text max-w-xs">
-                        {formatTransactionDescription(transaction.description)}
-                      </div>
-                      {transaction.payment_method && (
-                        <div className="text-xs text-muted mt-1">
-                          via {transaction.payment_method}
                         </div>
-                      )}
-                    </td>
-                    
-                    {/* Amount */}
-                    <td className="py-3 px-2">
+                        <div className="text-xs text-muted">
+                          {formatTransactionDescription(transaction.description)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
                       <div className={`text-sm font-semibold ${
                         transaction.amount >= 0 ? 'text-green-500' : 'text-red-500'
                       }`}>
-                        {transaction.amount >= 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
+                        {transaction.amount >= 0 ? '+' : ''}${formatCurrency(Math.abs(transaction.amount))}
                       </div>
-                    </td>
-                    
-                    {/* Balance After */}
-                    <td className="py-3 px-2">
-                      <div className="text-sm text-text">
-                        ${transaction.balance_after.toFixed(2)}
-                      </div>
-                    </td>
-                    
-                    {/* Date */}
-                    <td className="py-3 px-2">
-                      <div className="text-sm text-text">
-                        {new Date(transaction.created_at).toLocaleDateString()}
-                      </div>
-                      <div className="text-xs text-muted">
-                        {new Date(transaction.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </td>
-                    
-                    {/* Status */}
-                    <td className="py-3 px-2 text-right">
-                      <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        transaction.status === 'completed' ? 'bg-green-500/20 text-green-500' :
-                        transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
-                        transaction.status === 'failed' ? 'bg-red-500/20 text-red-500' :
-                        'bg-gray-500/20 text-gray-500'
+                      <div className="text-xs text-muted">Amount</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-muted">Balance After:</span>
+                      <span className="ml-1 font-medium text-text">${formatCurrency(transaction.balance_after)}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Status:</span>
+                      <span className={`ml-1 font-medium ${
+                        transaction.status === 'completed' ? 'text-green-500' :
+                        transaction.status === 'pending' ? 'text-yellow-500' :
+                        transaction.status === 'failed' ? 'text-red-500' :
+                        'text-gray-500'
                       }`}>
                         {transaction.status}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Date:</span>
+                      <span className="ml-1 text-text">{new Date(transaction.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted">Time:</span>
+                      <span className="ml-1 text-text">{new Date(transaction.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+                  
+                  {transaction.payment_method && (
+                    <div className="mt-2 pt-2 border-t border-border/30">
+                      <div className="text-xs text-muted">
+                        Payment Method: <span className="text-text">{transaction.payment_method}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-          </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
