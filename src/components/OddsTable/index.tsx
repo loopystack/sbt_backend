@@ -319,6 +319,33 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   
   // State to track matches user has already bet on
   const [userBetMatchIds, setUserBetMatchIds] = useState<Set<string>>(new Set());
+  
+  // Validation function to check for multiple bets on same match
+  const validateBettingSelections = () => {
+    const matchCounts = new Map<string, number>();
+    const invalidMatchIds = new Set<string>();
+    
+    selectedOdds.forEach(odds => {
+      const currentCount = matchCounts.get(odds.matchId) || 0;
+      matchCounts.set(odds.matchId, currentCount + 1);
+      
+      if (currentCount + 1 > 1) {
+        invalidMatchIds.add(odds.matchId);
+      }
+    });
+    
+    return {
+      isValid: invalidMatchIds.size === 0,
+      invalidMatchIds: Array.from(invalidMatchIds)
+    };
+  };
+  
+  const bettingValidation = validateBettingSelections();
+  
+  // Function to check if a match has invalid selections
+  const isMatchInvalid = (matchId: string): boolean => {
+    return bettingValidation.invalidMatchIds.includes(matchId);
+  };
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [isBetSlipCollapsed, setIsBetSlipCollapsed] = useState(false);
   const [isBetSlipHiding, setIsBetSlipHiding] = useState(false);
@@ -421,6 +448,18 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const handlePlaceBet = async () => {
     if (!isAuthenticated) {
       navigate("/signin");
+      return;
+    }
+    
+    // Check for invalid betting selections
+    if (!bettingValidation.isValid) {
+      setBettingError("Cannot place multiple bets on the same match");
+      return;
+    }
+    
+    // Prevent rapid clicking
+    if (isPlacingBet || isConfirmingBet || showBetConfirmation) {
+      console.log('🚫 Bet placement already in progress, ignoring click');
       return;
     }
     
@@ -569,8 +608,18 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         }
         console.log('🎉 All betting records saved successfully');
         
-        // Refresh user's existing bets to update the UI
-        await fetchUserExistingBets();
+        // IMMEDIATELY update local state to show "bet placed" effect
+        const newBetMatchIds = new Set(userBetMatchIds);
+        selectedOdds.forEach(odds => {
+          newBetMatchIds.add(odds.matchId);
+        });
+        setUserBetMatchIds(newBetMatchIds);
+        console.log('⚡ INSTANT UI update: Added match IDs to local state:', Array.from(newBetMatchIds));
+        
+        // Refresh user's existing bets to sync with database (but don't wait for it)
+        fetchUserExistingBets().catch(error => {
+          console.error('⚠️ Background sync failed, but UI is already updated:', error);
+        });
         
       } catch (recordError: any) {
         console.error('❌ Error saving betting records - FULL ERROR DETAILS:', {
@@ -1557,6 +1606,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                 className={`relative overflow-hidden rounded-xl p-4 transition-all duration-500 ${
                   isMatchHighlighted(match)
                     ? 'bg-gradient-to-br from-yellow-400/20 via-orange-400/15 to-red-400/10 border-2 border-yellow-400 shadow-2xl shadow-yellow-400/30 transform scale-105 animate-glow-pulse'
+                    : isMatchInvalid(match.id)
+                    ? 'bg-surface border-2 border-red-500 hover:shadow-lg animate-pulse'
                     : 'bg-surface border border-border hover:shadow-lg'
                 }`}
               >
@@ -1620,7 +1671,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                   </div>
                 </div>
                 
-                 <div className="mb-4">
+                 <div className="mb-4 min-h-[80px] flex flex-col justify-center">
                    <div className="flex items-center justify-between">
                      {/* First Team */}
                      <div className="flex flex-col items-center text-center flex-1">
@@ -1749,7 +1800,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                         
                         {/* Beautiful bet placed overlay */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="relative w-full h-full">
+                          <div className="relative w-full h-full flex flex-col items-center justify-center">
                             {/* Main overlay with glass effect */}
                             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-500/15 to-cyan-500/10 backdrop-blur-sm rounded-lg border border-emerald-400/30 shadow-xl">
                               {/* Animated background pattern */}
@@ -1759,37 +1810,35 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                                 <div className="absolute bottom-3 left-4 w-1 h-1 bg-cyan-400 rounded-full animate-bounce"></div>
                                 <div className="absolute bottom-2 right-2 w-2 h-2 bg-emerald-300 rounded-full animate-ping"></div>
                               </div>
-                              
-                              {/* Success icon with animation */}
-                              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                <div className="relative">
-                                  {/* Outer ring */}
-                                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
-                                    {/* Inner circle */}
-                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-inner">
-                                      {/* Checkmark */}
-                                      <svg className="w-8 h-8 text-emerald-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    </div>
+                            </div>
+                            
+                            {/* Success icon with animation - positioned in center */}
+                            <div className="relative z-10 mb-4">
+                              <div className="relative">
+                                {/* Outer ring */}
+                                <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
+                                  {/* Inner circle */}
+                                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-inner">
+                                    {/* Checkmark */}
+                                    <svg className="w-8 h-8 text-emerald-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
                                   </div>
-                                  
-                                  {/* Floating particles */}
-                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
                                 </div>
+                                
+                                {/* Floating particles */}
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
                               </div>
-                              
-                              {/* Text with beautiful styling */}
-                              <div className="absolute bottom-7 left-1/2 transform -translate-x-1/2">
-                                <div className="text-center">
-                                  <p className="text-emerald-700 font-bold text-sm tracking-wide bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
-                                    ❤️ Bet Placed Already!
-                                  </p>
-                                  <p className="text-emerald-600/80 text-xs mt-1 font-medium">
-                                    Waiting for match result
-                                  </p>
-                                </div>
+                            </div>
+                            
+                            {/* Text with beautiful styling - positioned below icon */}
+                            <div className="relative z-10 -top-5">
+                              <div className="text-center">
+                                <p className="text-emerald-700 font-bold text-sm tracking-wide bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-md">
+                                  ❤️ Bet Placed Already!
+                                </p>
+                               
                               </div>
                             </div>
                             
@@ -2019,9 +2068,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                               </div>
                               
                               {/* Text */}
-                              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                              <div className="absolute bottom-0 inset-x-0 flex justify-center">
                                 <div className="bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
-                                  <span className="text-emerald-700 font-bold text-xs tracking-wide">✨ Bet Placed</span>
+                                  <span className="text-emerald-700 font-bold text-xs tracking-wide">💕 Bet Placed</span>
                                 </div>
                               </div>
                             </div>
@@ -2299,21 +2348,41 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-sm text-green-400">Ready to place your bet!</span>
+              <div className={`flex items-center gap-2 mb-4 p-3 rounded-lg ${
+                bettingValidation.isValid 
+                  ? 'bg-green-500/10 border border-green-500/30' 
+                  : 'bg-red-500/10 border border-red-500/30'
+              }`}>
+                {bettingValidation.isValid ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                )}
+                <span className={`text-sm ${
+                  bettingValidation.isValid ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {bettingValidation.isValid 
+                    ? 'Ready to place your bet!' 
+                    : 'At least one of the selections is invalid!'
+                  }
+                </span>
               </div>
             )}
             
             <div className="flex gap-2 mb-3">
               <button className="flex-1 py-3 bg-surface border border-border text-text rounded-lg text-sm font-medium">SHARE</button>
               <button 
-                className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors"
+                className="flex-1 py-3 bg-yellow-500 text-black rounded-lg text-sm font-medium hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handlePlaceBet}
+                disabled={isPlacingBet || isConfirmingBet || !bettingValidation.isValid}
               >
-                {isAuthenticated ? "PLACE BET" : "LOGIN"}
+                {isAuthenticated ? (
+                  isPlacingBet || isConfirmingBet ? "PLACING BET..." : "PLACE BET"
+                ) : "LOGIN"}
               </button>
             </div>
             
