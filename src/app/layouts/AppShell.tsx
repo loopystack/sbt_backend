@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../../components/Header";
 import LeftSidebar from "../../components/LeftSidebar";
@@ -21,16 +21,31 @@ export default function AppShell() {
   const location = useLocation();
   const { theme } = useTheme();
   const { setSelectedLeague } = useCountry();
+  
+  // Refs for touch/swipe detection
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const isSwipeGesture = useRef<boolean>(false);
+  
+  // State for iPad detection
+  const [isIPad, setIsIPad] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      // Use 1025px to ensure iPad Pro (1024px) gets desktop layout
+      if (window.innerWidth >= 1025) {
         setIsMobileMenuOpen(false);
         setIsLeftSidebarOpen(false);
         setIsRightSidebarOpen(false);
       }
+      
+      // Detect iPad Pro (1024px width)
+      setIsIPad(window.innerWidth === 1024);
     };
 
+    // Initial check
+    handleResize();
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -46,6 +61,54 @@ export default function AppShell() {
     
     console.log('🔄 Route changed, scrolling to top:', location.pathname);
   }, [location.pathname]);
+
+  // iPad swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Only handle on iPad
+    if (!isIPad) return;
+    
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isSwipeGesture.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Only handle on iPad
+    if (!isIPad) return;
+    
+    const touchCurrentX = e.touches[0].clientX;
+    const touchCurrentY = e.touches[0].clientY;
+    const deltaX = touchCurrentX - touchStartX.current;
+    const deltaY = touchCurrentY - touchStartY.current;
+    
+    // Check if this is a horizontal swipe (more horizontal than vertical movement)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      isSwipeGesture.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Only handle on iPad
+    if (!isIPad) return;
+    
+    if (!isSwipeGesture.current) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX.current;
+    
+    // Swipe right to open left sidebar
+    if (deltaX > 100) {
+      setIsLeftSidebarOpen(true);
+      setIsRightSidebarOpen(false);
+    }
+    // Swipe left to open right sidebar
+    else if (deltaX < -100) {
+      setIsRightSidebarOpen(true);
+      setIsLeftSidebarOpen(false);
+    }
+    
+    isSwipeGesture.current = false;
+  };
 
   const handleNavigation = (path: string) => {
     // Clear selected league when navigating to any page
@@ -63,7 +126,12 @@ export default function AppShell() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-16 lg:pb-0">
+    <div 
+      className="min-h-screen relative overflow-hidden pb-16 lg:pb-0"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="fixed inset-0 pointer-events-none">
         {theme === 'dark' && (
           <>
@@ -114,10 +182,10 @@ export default function AppShell() {
       />
       
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 xl:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
       
-      <div className={`fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+      <div className={`fixed top-16 left-0 w-72 sm:w-80 h-full bg-surface border-r border-border z-50 transform transition-transform duration-300 ease-in-out xl:hidden ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="p-4">
@@ -204,7 +272,7 @@ export default function AppShell() {
 
       <div className="flex">
         {/* Left Sidebar */}
-        <div className={`fixed top-0 left-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out lg:hidden ${
+        <div className={`fixed top-0 left-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out xl:hidden ${
           isLeftSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
           {/* Sidebar Header */}
@@ -230,18 +298,18 @@ export default function AppShell() {
         
         {/* Left Sidebar Overlay */}
         {isLeftSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[9999] lg:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-[9999] xl:hidden" onClick={() => setIsLeftSidebarOpen(false)} />
         )}
         
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           <LeftSidebar />
         </div>
         
         <main className={`flex-1 transition-all duration-300 ${
-          isLeftSidebarOpen || isRightSidebarOpen ? 'lg:ml-0' : ''
+          isLeftSidebarOpen || isRightSidebarOpen ? 'xl:ml-0' : ''
         }`}>
           {/* Mobile Components - Only show on mobile */}
-          <div className="lg:hidden">
+          <div className="xl:hidden">
             <MobileSportsCategories />
           </div>
           
@@ -252,7 +320,7 @@ export default function AppShell() {
         </main>
         
         {/* Right Sidebar */}
-        <div className={`fixed top-0 right-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out lg:hidden ${
+        <div className={`fixed top-0 right-0 w-72 sm:w-80 h-screen bg-surface z-[10000] transform transition-transform duration-300 ease-in-out xl:hidden ${
           isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'
         }`}>
           {/* Sidebar Header */}
@@ -278,23 +346,92 @@ export default function AppShell() {
         
         {/* Right Sidebar Overlay */}
         {isRightSidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-[9999] lg:hidden" onClick={() => setIsRightSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/50 z-[9999] xl:hidden" onClick={() => setIsRightSidebarOpen(false)} />
         )}
         
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           <RightSidebar />
         </div>
       </div>
+      
+      {/* iPad-only Sidebar Toggle Buttons - Only show on iPad Pro (1024px) */}
+      {isIPad && (
+        <div>
+        {/* Left Sidebar Toggle Button - Right Arrow with Flow Effect */}
+        <button
+          onClick={() => {
+            setIsLeftSidebarOpen(!isLeftSidebarOpen);
+            setIsRightSidebarOpen(false);
+          }}
+          className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 bg-black/80 backdrop-blur-sm border border-gray-600 rounded-full flex items-center justify-center text-white hover:bg-black/90 hover:border-gray-500 transition-all duration-300 shadow-lg hover:shadow-xl group"
+          title="Swipe right to open left sidebar"
+        >
+          <div className="relative overflow-hidden">
+            {/* Main Arrow */}
+            <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            {/* Flowing Arrow Effect */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white/60 animate-flow-right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            {/* Moving Arrow Trail */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white/60 rounded-full animate-move-right"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </button>
+        
+        {/* Right Sidebar Toggle Button - Left Arrow with Flow Effect */}
+        <button
+          onClick={() => {
+            setIsRightSidebarOpen(!isRightSidebarOpen);
+            setIsLeftSidebarOpen(false);
+          }}
+          className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50 w-12 h-12 bg-black/80 backdrop-blur-sm border border-gray-600 rounded-full flex items-center justify-center text-white hover:bg-black/90 hover:border-gray-500 transition-all duration-300 shadow-lg hover:shadow-xl group"
+          title="Swipe left to open right sidebar"
+        >
+          <div className="relative overflow-hidden">
+            {/* Main Arrow */}
+            <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {/* Flowing Arrow Effect */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white/60 animate-flow-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </div>
+            {/* Moving Arrow Trail */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white/60 rounded-full animate-move-left"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </button>
+        </div>
+      )}
       
       <Footer />
       
       <ScrollToFooter />
       
-        {/* Mobile Bottom Navigation */}
-        <MobileBottomNav 
-          onLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
-          onRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-        />
+        {/* Mobile Bottom Navigation - Hidden on iPad Pro and larger */}
+        <div className="xl:hidden">
+          <MobileBottomNav 
+            onLeftSidebarToggle={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+            onRightSidebarToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+          />
+        </div>
 
     </div>
   );

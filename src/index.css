@@ -153,6 +153,92 @@ body {
   animation: football-spin 2s linear infinite;
 }
 
+/* Arrow flow animations for iPad sidebar buttons */
+@keyframes flowRight {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowLeft {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* Tailwind animation classes for arrow flow effects */
+.animate-flow-right {
+  animation: flowRight 2s ease-in-out infinite;
+}
+
+.animate-flow-left {
+  animation: flowLeft 2s ease-in-out infinite;
+}
+
+.animate-move-right {
+  animation: moveRight 1.5s ease-in-out infinite;
+}
+
+.animate-move-left {
+  animation: moveLeft 1.5s ease-in-out infinite;
+}
+
 .animate-confetti {
   animation: confetti linear infinite;
 }
@@ -210,6 +296,92 @@ body {
   animation: football-spin 2s linear infinite;
 }
 
+/* Arrow flow animations for iPad sidebar buttons */
+@keyframes flowRight {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowLeft {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* Tailwind animation classes for arrow flow effects */
+.animate-flow-right {
+  animation: flowRight 2s ease-in-out infinite;
+}
+
+.animate-flow-left {
+  animation: flowLeft 2s ease-in-out infinite;
+}
+
+.animate-move-right {
+  animation: moveRight 1.5s ease-in-out infinite;
+}
+
+.animate-move-left {
+  animation: moveLeft 1.5s ease-in-out infinite;
+}
+
 .animate-float {
   animation: float ease-in-out infinite;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -253,6 +425,92 @@ body {
 
 .animate-football-spin {
   animation: football-spin 2s linear infinite;
+}
+
+/* Arrow flow animations for iPad sidebar buttons */
+@keyframes flowRight {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowLeft {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* Tailwind animation classes for arrow flow effects */
+.animate-flow-right {
+  animation: flowRight 2s ease-in-out infinite;
+}
+
+.animate-flow-left {
+  animation: flowLeft 2s ease-in-out infinite;
+}
+
+.animate-move-right {
+  animation: moveRight 1.5s ease-in-out infinite;
+}
+
+.animate-move-left {
+  animation: moveLeft 1.5s ease-in-out infinite;
 }
 
 /* Line clamp utility */
@@ -341,6 +599,92 @@ body {
   animation: football-spin 2s linear infinite;
 }
 
+/* Arrow flow animations for iPad sidebar buttons */
+@keyframes flowRight {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowLeft {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* Tailwind animation classes for arrow flow effects */
+.animate-flow-right {
+  animation: flowRight 2s ease-in-out infinite;
+}
+
+.animate-flow-left {
+  animation: flowLeft 2s ease-in-out infinite;
+}
+
+.animate-move-right {
+  animation: moveRight 1.5s ease-in-out infinite;
+}
+
+.animate-move-left {
+  animation: moveLeft 1.5s ease-in-out infinite;
+}
+
 /* Custom scrollbar for betting slip */
 .betting-slip-scroll {
   scrollbar-width: thin;
@@ -422,4 +766,90 @@ body {
 
 .animate-football-spin {
   animation: football-spin 2s linear infinite;
+}
+
+/* Arrow flow animations for iPad sidebar buttons */
+@keyframes flowRight {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowLeft {
+  0% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+}
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(15px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-15px);
+    opacity: 0;
+  }
+}
+
+/* Tailwind animation classes for arrow flow effects */
+.animate-flow-right {
+  animation: flowRight 2s ease-in-out infinite;
+}
+
+.animate-flow-left {
+  animation: flowLeft 2s ease-in-out infinite;
+}
+
+.animate-move-right {
+  animation: moveRight 1.5s ease-in-out infinite;
+}
+
+.animate-move-left {
+  animation: moveLeft 1.5s ease-in-out infinite;
 }
