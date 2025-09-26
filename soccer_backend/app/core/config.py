@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     
     # App Configuration
-    APP_NAME: str = "Soccer Betting API"
+    APP_NAME: str = "Soccer Betting Platform"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     

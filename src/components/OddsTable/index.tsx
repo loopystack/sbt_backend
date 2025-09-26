@@ -7,6 +7,7 @@ import { useNotifications } from "../../contexts/NotificationContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useOddsFormat } from "../../hooks/useOddsFormat";
 import { OddsConverter } from "../../utils/oddsConverter";
+import { calculateBettingReturnFromAmerican, calculateBettingReturnFromDecimal } from "../../utils/bettingCalculator";
 import { useAppDispatch } from "../../store/hooks";
 import { getMatchingInfoAction } from "../../store/matchinginfo/actions";
 import { authService } from "../../services/authService";
@@ -441,6 +442,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const [bettingError, setBettingError] = useState<string>("");
   const [showBetConfirmation, setShowBetConfirmation] = useState(false);
   const [isConfirmingBet, setIsConfirmingBet] = useState(false);
+  const [duplicateBetError, setDuplicateBetError] = useState<string>("");
   
   // Get user funds from auth context
   const userFunds = user?.funds_usd || 0;
@@ -449,6 +451,13 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const handlePlaceBet = async () => {
     if (!isAuthenticated) {
       navigate("/signin");
+      return;
+    }
+    
+    // Check for duplicate bets first
+    const duplicateMatches = selectedOdds.filter(odds => hasUserBetOnMatch(odds.matchId));
+    if (duplicateMatches.length > 0) {
+      setDuplicateBetError("Bet Placed Already!");
       return;
     }
     
@@ -478,6 +487,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     }
     
     setBettingError("");
+    setDuplicateBetError("");
     setShowBetConfirmation(true);
   };
 
@@ -578,9 +588,21 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
             console.log('⚠️ No valid match date/time found, saving without match_date');
           }
 
+          // Calculate betting return using consistent utility function
+          const stake = parseFloat(odds.stake || '10');
+          // Detect if odds are already in decimal format or need conversion
+          const oddsString = odds.odds || '2.0';
+          const isDecimalFormat = oddsString.includes('.') || (parseFloat(oddsString) >= 1.0 && parseFloat(oddsString) <= 10.0);
+          
+          const bettingCalculation = isDecimalFormat 
+            ? calculateBettingReturnFromDecimal(stake, oddsString)
+            : calculateBettingReturnFromAmerican(stake, oddsString);
+          
           const bettingRecord: BettingRecordCreate = {
-            bet_amount: parseFloat(odds.stake || '10'),
-            potential_win: parseFloat(odds.stake || '10') * americanToDecimal(odds.odds || '+100'),
+            bet_amount: stake,
+            // Potential win = Total Return = Stake × Decimal Odds
+            // Example: $10 stake at 2.5 odds = $25 total return
+            potential_win: bettingCalculation.totalReturn,
             match_id: odds.matchId ? parseInt(odds.matchId.toString()) : null, // Store exact match ID
             match_teams: odds.teams || 'Unknown Match',
             match_date: realMatchDate, // Save the REAL match date from interface (or null)
@@ -590,7 +612,7 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
             selected_team: odds.type === 'home' ? (odds.teams || '').split(' vs ')[0] : 
                           odds.type === 'away' ? (odds.teams || '').split(' vs ')[1] : undefined,
             odds_value: odds.odds || '+100',
-            odds_decimal: americanToDecimal(odds.odds || '+100')
+            odds_decimal: bettingCalculation.decimalOdds
           };
           
           console.log('📝 Creating betting record with data:', bettingRecord);
@@ -890,12 +912,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   // Don't render matches when switching markets to prevent flash
   const groupedMatches = isSwitchingMarket ? [] : allGroupedMatches;
   const handleOddsClick = (match: Match, type: 'home' | 'draw' | 'away', odds: string, event: React.MouseEvent) => {
-    // Check if user has already bet on this match
-    if (hasUserBetOnMatch(match.id)) {
-      console.log('🚫 User has already bet on match:', match.id);
-      event.preventDefault();
-      return;
-    }
+    // Clear any previous error messages
+    setDuplicateBetError("");
+    setBettingError("");
 
     const selectedBet = {
       matchId: match.id,
@@ -906,6 +925,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       stake: "10",
       matchDate: match.date
     };
+    
+    // Clear duplicate bet error when selecting new odds
+    setDuplicateBetError("");
     
     const button = event.currentTarget as HTMLElement;
     const rect = button.getBoundingClientRect();
@@ -922,6 +944,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
       setSelectedOdds(prev => prev.filter(
         odds => !(odds.matchId === match.id && odds.type === type)
       ));
+      // Clear duplicate bet error when removing odds
+      setDuplicateBetError("");
       if (selectedOdds.length === 1) {
         setIsBetSlipHiding(true);
         setTimeout(() => {
@@ -963,20 +987,22 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     ));
   };
 
-  // Convert American odds to decimal odds
+  // Convert American odds to decimal odds (consistent with OddsConverter)
   const americanToDecimal = (americanOdds: string): number => {
-    const odds = parseFloat(americanOdds.replace('+', ''));
-    if (odds > 0) {
-      return (odds / 100) + 1;
-    } else {
-      return (100 / Math.abs(odds)) + 1;
-    }
+    // Use the same logic as OddsConverter for consistency
+    return OddsConverter.stringToDecimal(americanOdds);
   };
 
   // Calculate total odds (multiply all decimal odds)
   const calculateTotalOdds = (): number => {
     return selectedOdds.reduce((total, odds) => {
-      const decimalOdd = americanToDecimal(odds.odds);
+      // Detect if odds are already in decimal format or need conversion
+      const oddsString = odds.odds || '2.0';
+      const isDecimalFormat = oddsString.includes('.') || (parseFloat(oddsString) >= 1.0 && parseFloat(oddsString) <= 10.0);
+      
+      const decimalOdd = isDecimalFormat 
+        ? parseFloat(oddsString)
+        : americanToDecimal(oddsString);
       return total * decimalOdd;
     }, 1);
   };
@@ -985,8 +1011,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   const calculatePotentialWin = (): number => {
     return selectedOdds.reduce((totalWin, odds) => {
       const stake = parseFloat(odds.stake || '0');
-      const decimalOdd = americanToDecimal(odds.odds);
-      return totalWin + (stake * decimalOdd);
+      // Detect if odds are already in decimal format or need conversion
+      const oddsString = odds.odds || '2.0';
+      const isDecimalFormat = oddsString.includes('.') || (parseFloat(oddsString) >= 1.0 && parseFloat(oddsString) <= 10.0);
+      
+      const calculation = isDecimalFormat 
+        ? calculateBettingReturnFromDecimal(stake, oddsString)
+        : calculateBettingReturnFromAmerican(stake, oddsString);
+      return totalWin + calculation.totalReturn;
     }, 0);
   };
 
@@ -2262,6 +2294,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                       setSelectedOdds(prev => prev.filter(
                         item => !(item.matchId === odds.matchId && item.type === odds.type)
                       ));
+                      // Clear duplicate bet error when removing odds
+                      setDuplicateBetError("");
                       if (selectedOdds.length === 1) {
                         setIsBetSlipHiding(true);
                         setTimeout(() => {
@@ -2346,6 +2380,21 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                   onClick={() => navigate("/profile")}
                 >
                   DEPOSIT
+                </button>
+              </div>
+            ) : duplicateBetError ? (
+              <div className="mb-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg text-center">
+                <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-orange-400 mb-3">{duplicateBetError}</p>
+                <button 
+                  className="w-full py-3 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-400 transition-colors"
+                  onClick={() => setDuplicateBetError("")}
+                >
+                  OK
                 </button>
               </div>
             ) : (

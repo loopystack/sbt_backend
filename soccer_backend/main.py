@@ -65,7 +65,7 @@ print('settings.APP_VERSION', settings.APP_VERSION)
 @app.get("/")
 async def root():
     print('root')
-    return {"message": "Soccer Betting API", "version": settings.APP_VERSION}
+    return {"message": "Soccer Betting Platform", "version": settings.APP_VERSION}
 
 @app.get("/api/health")
 async def health_check():

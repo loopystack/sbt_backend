@@ -42,7 +42,7 @@ router = APIRouter()
 @router.get("/test")
 async def get_test():
     print('root')
-    return {"message": "Soccer Betting API"}
+    return {"message": "Soccer Betting Platform"}
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(

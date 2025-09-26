@@ -823,13 +823,17 @@ export default function Dashboard() {
                         {record.bet_status === 'pending' ? (
                           <div className="flex items-center justify-end gap-1">
                             <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>
+                            {/* Show total return for pending bets */}
                             <span>${formatCurrency(record.potential_win)}</span>
                           </div>
                         ) : record.actual_profit !== undefined ? (
+                          /* Show actual profit/loss for settled bets */
                           `${record.actual_profit >= 0 ? '+' : '-'}$${formatCurrency(Math.abs(record.actual_profit))}`
                         ) : (
-                          record.bet_status === 'won' ? `+$${formatCurrency(record.potential_win - record.bet_amount)}` : 
-                          `-$${formatCurrency(record.bet_amount)}`
+                          /* Calculate profit from potential_win (total return) - stake */
+                          record.bet_status === 'won' ? 
+                            `+$${formatCurrency(record.potential_win - record.bet_amount)}` : 
+                            `-$${formatCurrency(record.bet_amount)}`
                         )}
                       </div>
                       <div className="text-xs text-muted capitalize">
