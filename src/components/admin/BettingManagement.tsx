@@ -34,6 +34,10 @@ export default function BettingManagement() {
     status: "",
     search: ""
   });
+  const [searchInputs, setSearchInputs] = useState({
+    user_id: "",
+    search: ""
+  });
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -63,6 +67,21 @@ export default function BettingManagement() {
   const handleFilterChange = (key: string, value: string) => {
     setFilters({ ...filters, [key]: value });
     setCurrentPage(1);
+  };
+
+  const handleSearchInputChange = (key: string, value: string) => {
+    setSearchInputs({ ...searchInputs, [key]: value });
+  };
+
+  const handleSearchSubmit = (key: string) => {
+    setFilters({ ...filters, [key]: searchInputs[key as keyof typeof searchInputs] });
+    setCurrentPage(1);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent, key: string) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(key);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -121,9 +140,10 @@ export default function BettingManagement() {
             <label className="block text-sm font-medium text-gray-400 mb-2">User ID</label>
             <input
               type="text"
-              placeholder="Filter by user ID..."
-              value={filters.user_id}
-              onChange={(e) => handleFilterChange("user_id", e.target.value)}
+              placeholder="Filter by user ID... (Press Enter to search)"
+              value={searchInputs.user_id}
+              onChange={(e) => handleSearchInputChange("user_id", e.target.value)}
+              onKeyPress={(e) => handleKeyPress(e, "user_id")}
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
@@ -145,9 +165,10 @@ export default function BettingManagement() {
             <label className="block text-sm font-medium text-gray-400 mb-2">Search Teams</label>
             <input
               type="text"
-              placeholder="Search by team names..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange("search", e.target.value)}
+              placeholder="Search by team names... (Press Enter to search)"
+              value={searchInputs.search}
+              onChange={(e) => handleSearchInputChange("search", e.target.value)}
+              onKeyPress={(e) => handleKeyPress(e, "search")}
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>

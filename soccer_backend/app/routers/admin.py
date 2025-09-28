@@ -10,6 +10,7 @@ from app.core.admin_deps import get_admin_user
 from app.models.user import User
 from app.models.betting_record import BettingRecord
 from app.models.transaction import Transaction
+from app.models.deposit import DepositIntent, CryptoTransaction, UserCryptoBalance
 from app.schemas.user import UserResponse
 from app.schemas.admin import (
     AdminUserResponse, 
@@ -156,6 +157,8 @@ async def update_user(
 ):
     """Update user information"""
     
+    print(f"🔍 Backend: Updating user {user_id} with data: {user_data}")
+    
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
@@ -166,6 +169,8 @@ async def update_user(
             detail="User not found"
         )
     
+    print(f"🔍 Backend: Found user {user.username}, current is_superuser: {user.is_superuser}")
+    
     # Update fields
     if user_data.is_active is not None:
         user.is_active = user_data.is_active
@@ -173,13 +178,91 @@ async def update_user(
         user.is_verified = user_data.is_verified
     if user_data.is_superuser is not None:
         user.is_superuser = user_data.is_superuser
+        print(f"🔍 Backend: Setting is_superuser to {user_data.is_superuser}")
     if user_data.funds_usd is not None:
         user.funds_usd = user_data.funds_usd
     
     await db.commit()
     await db.refresh(user)
     
+    print(f"🔍 Backend: After update, user.is_superuser: {user.is_superuser}")
+    
     return {"message": "User updated successfully", "user": AdminUserResponse.model_validate(user)}
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a user from the database"""
+    
+    print(f"🔍 Backend: Deleting user {user_id}")
+    
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    print(f"🔍 Backend: Found user {user.username} to delete")
+    
+    try:
+        # Delete related records first to avoid foreign key constraint violations
+        # Delete betting records
+        betting_records_stmt = select(BettingRecord).where(BettingRecord.user_id == user_id)
+        betting_records_result = await db.execute(betting_records_stmt)
+        betting_records = betting_records_result.scalars().all()
+        for record in betting_records:
+            await db.delete(record)
+        
+        # Delete transactions
+        transactions_stmt = select(Transaction).where(Transaction.user_id == user_id)
+        transactions_result = await db.execute(transactions_stmt)
+        transactions = transactions_result.scalars().all()
+        for transaction in transactions:
+            await db.delete(transaction)
+        
+        # Delete deposit intents and related crypto transactions
+        deposit_intents_stmt = select(DepositIntent).where(DepositIntent.user_id == user_id)
+        deposit_intents_result = await db.execute(deposit_intents_stmt)
+        deposit_intents = deposit_intents_result.scalars().all()
+        for deposit_intent in deposit_intents:
+            # Delete related crypto transactions first
+            crypto_transactions_stmt = select(CryptoTransaction).where(CryptoTransaction.deposit_intent_id == deposit_intent.id)
+            crypto_transactions_result = await db.execute(crypto_transactions_stmt)
+            crypto_transactions = crypto_transactions_result.scalars().all()
+            for crypto_transaction in crypto_transactions:
+                await db.delete(crypto_transaction)
+            # Then delete the deposit intent
+            await db.delete(deposit_intent)
+        
+        # Delete user crypto balances
+        crypto_balances_stmt = select(UserCryptoBalance).where(UserCryptoBalance.user_id == user_id)
+        crypto_balances_result = await db.execute(crypto_balances_stmt)
+        crypto_balances = crypto_balances_result.scalars().all()
+        for crypto_balance in crypto_balances:
+            await db.delete(crypto_balance)
+        
+        # Finally delete the user
+        await db.delete(user)
+        await db.commit()
+        
+        print(f"🔍 Backend: User {user.username} and all related records deleted successfully")
+        
+        return {"message": f"User {user.username} and all related data deleted successfully"}
+        
+    except Exception as e:
+        await db.rollback()
+        print(f"🔍 Backend: Error deleting user {user.username}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user: {str(e)}"
+        )
 
 @router.get("/betting-records", response_model=List[AdminBettingRecordResponse])
 async def get_all_betting_records(
@@ -187,6 +270,7 @@ async def get_all_betting_records(
     size: int = Query(20, ge=1, le=100),
     user_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -202,6 +286,11 @@ async def get_all_betting_records(
         
         if status:
             query = query.where(BettingRecord.bet_status == status)
+        
+        if search:
+            # Search in match_teams field for team names
+            search_filter = BettingRecord.match_teams.ilike(f"%{search}%")
+            query = query.where(search_filter)
         
         query = query.order_by(desc(BettingRecord.created_at)).offset(offset).limit(size)
         
