@@ -1414,12 +1414,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setIsEditingSearch(false); // Reset editing state
-                  // Clear search from URL and trigger search to clear results
-                  const newSearchParams = new URLSearchParams(searchParams);
-                  newSearchParams.delete('search');
-                  setSearchParams(newSearchParams, { replace: true });
-                  setShouldTriggerSearch(true);
+                  setIsEditingSearch(true); // Set as editing to prevent URL sync from restoring the search
+                  // Only clear the input text, don't clear results or change URL
                 }}
                 className="ml-1 px-2 py-2 text-muted hover:text-text"
                 title="Clear search"
@@ -1533,12 +1529,8 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                 <button
                   onClick={() => {
                     setSearchQuery("");
-                    setIsEditingSearch(false); // Reset editing state
-                    // Clear search from URL and trigger search to clear results
-                    const newSearchParams = new URLSearchParams(searchParams);
-                    newSearchParams.delete('search');
-                    setSearchParams(newSearchParams, { replace: true });
-                    setShouldTriggerSearch(true);
+                    setIsEditingSearch(true); // Set as editing to prevent URL sync from restoring the search
+                    // Only clear the input text, don't clear results or change URL
                   }}
                   className="ml-1 px-2 py-2 text-muted hover:text-text"
                   title="Clear search"

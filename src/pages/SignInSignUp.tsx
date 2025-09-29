@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
+import ReCaptchaComponent, { ReCaptchaRef } from "../components/ReCaptcha";
+import { recaptchaService } from "../services/recaptchaService";
 export default function SignInSignUp() {
   const [searchParams] = useSearchParams();
   const [isSignIn, setIsSignIn] = useState(true);
@@ -16,6 +18,13 @@ export default function SignInSignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
+  // reCAPTCHA state management
+  const [recaptchaVerified, setRecaptchaVerified] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const [recaptchaError, setRecaptchaError] = useState("");
+  const recaptchaRef = React.useRef<ReCaptchaRef>(null);
+  
   const { theme } = useTheme();
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -79,6 +88,48 @@ export default function SignInSignUp() {
     setConfirmPassword("");
     setError("");
     setSuccess("");
+    
+    // Reset reCAPTCHA state
+    setRecaptchaVerified(false);
+    setRecaptchaToken(null);
+    setRecaptchaError("");
+    recaptchaRef.current?.reset();
+  };
+
+  // reCAPTCHA success handler
+  const handleRecaptchaVerify = async (token: string) => {
+    try {
+      // Verify token with backend
+      const response = await recaptchaService.verifyToken(token);
+      
+      if (response.success) {
+        setRecaptchaToken(token);
+        setRecaptchaVerified(true);
+        setRecaptchaError("");
+        console.log('✅ reCAPTCHA verified successfully');
+      } else {
+        setRecaptchaVerified(false);
+        setRecaptchaError(response.message || 'reCAPTCHA verification failed');
+      }
+    } catch (error: any) {
+      console.error('reCAPTCHA verification error:', error);
+      setRecaptchaVerified(false);
+      setRecaptchaError(error.message || 'reCAPTCHA verification failed');
+    }
+  };
+
+  // reCAPTCHA expiration handler
+  const handleRecaptchaExpire = () => {
+    setRecaptchaVerified(false);
+    setRecaptchaToken(null);
+    setRecaptchaError("reCAPTCHA has expired. Please verify again.");
+  };
+
+  // reCAPTCHA error handler
+  const handleRecaptchaError = (error: string) => {
+    setRecaptchaVerified(false);
+    setRecaptchaToken(null);
+    setRecaptchaError(error);
   };
 
   const handleGoogleLogin = () => {
@@ -149,6 +200,14 @@ export default function SignInSignUp() {
     setIsLoading(true);
     setError("");
     setSuccess("");
+    setRecaptchaError("");
+
+    // Check reCAPTCHA verification
+    if (!recaptchaVerified) {
+      setError("Please complete the reCAPTCHA verification first");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       if (isSignIn) {
@@ -475,9 +534,29 @@ export default function SignInSignUp() {
                 </Link>
               </div>
             )}
+            
+            {/* Google reCAPTCHA */}
+            <ReCaptchaComponent
+              ref={recaptchaRef}
+              siteKey={recaptchaService.getSiteKey()}
+              onVerify={handleRecaptchaVerify}
+              onExpire={handleRecaptchaExpire}
+              onError={handleRecaptchaError}
+              theme="dark"
+              size="normal"
+              className="mb-6"
+            />
+            
+            {/* reCAPTCHA Error Display */}
+            {recaptchaError && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                <p className="text-red-400 text-xs font-medium">{recaptchaError}</p>
+              </div>
+            )}
+            
             <button
               type="submit"
-              disabled={isLoading || !email || !password || (!isSignIn && (!confirmPassword || !username))}
+              disabled={isLoading || !email || !password || (!isSignIn && (!confirmPassword || !username)) || !recaptchaVerified}
               className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-black py-3 px-4 rounded-lg transition-all duration-300 font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2"
             >
               {isLoading ? (

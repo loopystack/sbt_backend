@@ -35,6 +35,7 @@ from app.schemas.auth import (
 from app.schemas.user import UserCreate, UserResponse
 from app.services.email_service import email_service
 from app.services.transaction_service import TransactionService
+from app.services.recaptcha_service import recaptcha_service
 
 router = APIRouter()
 
@@ -698,4 +699,41 @@ async def google_auth(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Google authentication failed: {str(e)}"
+        )
+
+
+@router.post("/verify-recaptcha")
+async def verify_recaptcha(
+    request: Request,
+    recaptcha_response: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    """Verify reCAPTCHA response token"""
+    try:
+        response_token = recaptcha_response.get("recaptcha_token")
+        if not response_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="reCAPTCHA response token is required"
+            )
+        
+        # Get client IP
+        client_ip = getattr(request.client, 'host', None) if request.client else None
+        
+        # Verify reCAPTCHA
+        verification_result = await recaptcha_service.verify_recaptcha(response_token, client_ip)
+        
+        return {
+            "success": True,
+            "message": "reCAPTCHA verification successful",
+            "score": verification_result.get('score'),
+            "hostname": verification_result.get('hostname')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"reCAPTCHA verification error: {str(e)}"
         )

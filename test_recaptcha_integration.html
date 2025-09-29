@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCAPTCHA Integration Test</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        
+        .test-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #4CAF50;
+        }
+        
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: #f44336;
+        }
+        
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 1px solid rgba(33, 150, 243, 0.5);
+            color: #2196F3;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Google reCAPTCHA Integration Test</h1>
+        
+        <div class="instructions">
+            <h3>📋 Setup Instructions:</h3>
+            <ol>
+                <li>Add <code>VITE_RECAPTCHA_SITE_KEY</code> to your .env file</li>
+                <li>Use test key: <code>6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI</code></li>
+                <li>For production, get keys from <a href="https://www.google.com/recaptcha/admin/" target="_blank" style="color: #ffeb3b;">reCAPTCHA Admin</a></li>
+            </ol>
+        </div>
+        
+        <div class="test-box">
+            <h3>🎯 Test reCAPTCHA</h3>
+            <p>Complete the reCAPTCHA below to test integration:</p>
+            
+            <div id="recaptcha-container">
+                <div class="g-recaptcha" 
+                     data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                     data-callback="onRecaptchaSuccess"
+                     data-expired-callback="onRecaptchaExpired"
+                     data-error-callback="onRecaptchaError">
+                </div>
+            </div>
+            
+            <div id="status-display"></div>
+            
+            <button id="test-button" onclick="testSubmission()" disabled>
+                Test Submission → Backend API
+            </button>
+            
+            <button onclick="resetRecaptcha()">
+                🔄 Reset reCAPTCHA
+            </button>
+        </div>
+        
+        <div class="test-box">
+            <h3>🔍 Debug Information</h3>
+            <div id="debug-info">
+                <div class="status info">
+                    🗝️ Using test site key: <code>6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI</code>
+                </div>
+                <div class="status info">
+                    🌐 API endpoint: <code>/api/auth/verify-recaptcha</code>
+                </div>
+                <div id="recaptcha-response" class="status info">
+                    📝 Response: Not verified yet
+                </div>
+            </div>
+        </div>
+        
+        <div id="api-response" class="test-box" style="display: none;">
+            <h3>📡 Backend API Response</h3>
+            <div id="api-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let recaptchaToken = null;
+        
+        function onRecaptchaSuccess(response) {
+            recaptchaToken = response;
+            document.getElementById('test-button').disabled = false;
+            document.getElementById('recaptcha-response').innerHTML = 
+                '📝 Response: <span style="color: #4CAF50;">Verified!</span>';
+            showStatus('✅ reCAPTCHA verified successfully!', 'success');
+        }
+        
+        function onRecaptchaExpired() {
+            recaptchaToken = null;
+            document.getElementById('test-button').disabled = true;
+            document.getElementById('recaptcha-response').innerHTML = 
+                '📝 Response: <span style="color: #f44336;">Expired</span>';
+            showStatus('⏰ reCAPTCHA has expired. Please verify again.', 'error');
+        }
+        
+        function on recaptchaError() {
+            recaptchaToken = null;
+            document.getElementById('test-button').disabled = true;
+            document.getElementById('recaptcha-response').innerHTML = 
+                '📝 Response: <span style="color: #f44336;">Error</span>';
+            showStatus('❌ reCAPTCHA encountered an error.', 'error');
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-display');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function resetRecaptcha() {
+            grecaptcha.reset();
+            recaptchaToken = null;
+            document.getElementById('test-button').disabled = true;
+            document.getElementById('recaptcha-response').innerHTML = 
+                '📝 Response: Not verified yet';
+            document.getElementById('status-display').innerHTML = '';
+            document.getElementById('api-response').style.display = 'none';
+        }
+        
+        async function testSubmission() {
+            if (!recaptchaToken) {
+                showStatus('❌ Please complete reCAPTCHA first', 'error');
+                return;
+            }
+            
+            showStatus('🔄 Testing backend verification...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/verify-recaptcha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        recaptcha_token: recaptchaToken
+                    })
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('api-result').innerHTML = 
+                    `<pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(result, null, 2)}</pre>`;
+                
+                if (result.success) {
+                    showStatus('🎉 Backend verification successful!', 'success');
+                } else {
+                    showStatus('❌ Backend verification failed: ' + result.message, 'error');
+                }
+                
+                document.getElementById('api-answer').style.display = 'block';
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                showStatus('❌ API error: ' + error.message, 'error');
+                document.getElementById('api-result').innerHTML = 
+                    `<div class="status error">Error: ${error.message}</div>`;
+                document.getElementById('api-response').style.display = 'block';
+            }
+        }
+        
+        // Auto-check setup on load
+        window.onload = function() {
+            console.log('🔍 reCAPTCHA test page loaded');
+            console.log('🚀 Make sure your backend is running on http://localhost:5001');
+            console.log('🔧 Ensure your .env file contains the reCAPTCHA site key');
+        };
+    </script>
+</body>
+</html>

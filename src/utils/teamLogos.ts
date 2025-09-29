@@ -258,6 +258,7 @@ export const getTeamLogo = (teamName: string, country?: string): string | null =
       'servette': 'Servette.png', 'servette fc': 'Servette.png',
       'sion': 'Sion.png', 'fc sion': 'Sion.png',
       'st. gallen': 'St. Gallen.png', 'st gallen': 'St. Gallen.png',
+      'winterthur': 'Winterthur.png', 'fc winterthur': 'Winterthur.png',
       'young boys': 'Young Boys.png', 'yb bern': 'Young Boys.png',
       'zurich': 'Zurich.png', 'fc zurich': 'Zurich.png'
     }
@@ -308,7 +309,7 @@ export const reportMissingLogos = () => {
 - Portugal: 18 teams ✅ (Benfica, Porto, Sporting, etc.)
 - Russia: 16 teams ✅ (Zenit, CSKA, Spartak, etc.)
 - Spain: 24 teams ✅ (Real Madrid, Barcelona, Atletico, etc.)
-- Switzerland: 10 teams ✅ (Basel, Young Boys, Zurich, etc.)
+- Switzerland: 11 teams ✅ (Basel, Young Boys, Zurich, Winterthur, etc.)
 - Turkey: 19 teams ✅ (Galatasaray, Fenerbahce, Besiktas, etc.)
 - Ukraine: 15 teams ✅ (Shakhtar, Dynamo Kyiv, etc.)
 

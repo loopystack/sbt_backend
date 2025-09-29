@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     
     # App Configuration
-    APP_NAME: str = "Soccer Betting Platform"
+    APP_NAME: str = "Soccer Betting Platform" 
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     
@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     PAYPAL_CLIENT_ID: str = ""
     PAYPAL_CLIENT_SECRET: str = ""
     PAYPAL_MODE: str = "sandbox"  # 'sandbox' or 'live'
+    
+    # Google reCAPTCHA Configuration
+    RECAPTCHA_SITE_KEY: str = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+    RECAPTCHA_SECRET_KEY: str = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
     
     @property
     def stripe_secret_key(self) -> str:

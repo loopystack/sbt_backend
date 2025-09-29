@@ -141,13 +141,9 @@ export default function Navigation() {
     } else if (path === "/in-play-odds") {
       setActiveTab("in-play-odds");
     } else if (path === "/all-events") {
-      // Only set active tab if there's no search parameter (user navigated directly)
-      // If there's a search parameter, don't select the tab to avoid showing it as selected
-      if (!searchParams.has('search')) {
-        setActiveTab("all-events");
-      } else {
-        setActiveTab(""); // Clear active tab when coming from search
-      }
+      // Never auto-activate all-events tab to prevent unwanted redirects
+      // Only activate when user explicitly clicks the All Events tab
+      setActiveTab("");
     } else if (path === "/betting") {
       setActiveTab("betting");
     } else if (path === "/bookmakers") {
