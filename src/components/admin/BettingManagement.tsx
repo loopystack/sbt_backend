@@ -114,22 +114,67 @@ export default function BettingManagement() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="text-center">
+          {/* Betting Loading Animation */}
+          <div className="relative mb-8">
+            {/* Central Betting Icon */}
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-blue-500 rounded animate-pulse mx-auto"></div>
+            
+            {/* Data Points */}
+            <div className="absolute inset-0 w-24 h-24 mx-auto">
+              <div className="absolute top-2 left-4 w-2 h-3 bg-emerald-500/70 rounded-sm animate-bounce"></div>
+              <div className="absolute top-6 right-4 w-2 h-5 bg-blue-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <div className="absolute top-4 left-6 w-2 h-7 bg-purple-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.4s'}}></div>
+              <div className="absolute top-8 right-6 w-2 h-4 bg-amber-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.6s'}}></div>
+            </div>
+            
+            {/* Betting Lines */}
+            <div className="absolute inset-0 w-24 h-24 mx-auto">
+              <div className="absolute top-2 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/30 via-transparent to-emerald-500/30"></div>
+              <div className="absolute top-6 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/30 via-transparent to-blue-500/30"></div>
+              <div className="absolute top-4 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500/30 via-transparent to-purple-500/30"></div>
+            </div>
+          </div>
+          
+          <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            Loading Betting Records
+          </h3>
+          <p className="text-gray-400 text-sm">Processing betting data and transactions...</p>
+          
+          {/* Progress bars */}
+          <div className="flex justify-center space-x-1 mt-6">
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={i}
+                className="w-1.5 h-4 bg-gradient-to-t from-emerald-500/30 to-blue-500/30 rounded-full animate-pulse"
+                style={{animationDelay: `${i * 0.3}s`}}
+              ></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Betting Records Management</h2>
-          <p className="text-gray-400">Monitor and manage all betting activities</p>
-        </div>
-        <div className="text-sm text-gray-400">
-          Total Records: {bettingRecords.length}
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 backdrop-blur-2xl border border-emerald-500/30 rounded-2xl p-8 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <span className="text-2xl">🎯</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Betting Management</h1>
+              <p className="text-gray-300/90 text-lg">Monitor and manage all betting activities and transactions</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-white">{bettingRecords.length}</div>
+            <div className="text-sm text-gray-400">Total Records</div>
+          </div>
         </div>
       </div>
 

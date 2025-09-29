@@ -122,22 +122,67 @@ export default function TransactionManagement() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="text-center">
+          {/* Transaction Loading Animation */}
+          <div className="relative mb-8">
+            {/* Central Transaction Icon */}
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded animate-pulse mx-auto"></div>
+            
+            {/* Financial Flow */}
+            <div className="absolute inset-0 w-24 h-24 mx-auto">
+              <div className="absolute top-2 left-4 w-3 h-2 bg-green-500/70 rounded-sm animate-bounce"></div>
+              <div className="absolute top-6 right-4 w-3 h-3 bg-red-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              <div className="absolute top-4 left-6 w-3 h-4 bg-blue-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.4s'}}></div>
+              <div className="absolute top-8 right-6 w-3 h-2 bg-purple-500/70 rounded-sm animate-bounce" style={{animationDelay: '0.6s'}}></div>
+            </div>
+            
+            {/* Flow Lines */}
+            <div className="absolute inset-0 w-24 h-24 mx-auto">
+              <div className="absolute top-2 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500/30 via-transparent to-green-500/30"></div>
+              <div className="absolute top-6 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500/30 via-transparent to-red-500/30"></div>
+              <div className="absolute top-4 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/30 via-transparent to-blue-500/30"></div>
+            </div>
+          </div>
+          
+          <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-green-400 bg-clip-text text-transparent mb-2">
+            Loading Transactions
+          </h3>
+          <p className="text-gray-400 text-sm">Processing financial data and transaction history...</p>
+          
+          {/* Progress bars */}
+          <div className="flex justify-center space-x-1 mt-6">
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={i}
+                className="w-1.5 h-4 bg-gradient-to-t from-purple-500/30 to-blue-500/30 rounded-full animate-pulse"
+                style={{animationDelay: `${i * 0.3}s`}}
+              ></div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Transaction Management</h2>
-          <p className="text-gray-400">Monitor all financial transactions and activities</p>
-        </div>
-        <div className="text-sm text-gray-400">
-          Total Transactions: {transactions.length}
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-blue-500/20 backdrop-blur-2xl border border-purple-500/30 rounded-2xl p-8 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <span className="text-2xl">💳</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Transaction Management</h1>
+              <p className="text-gray-300/90 text-lg">Monitor financial transactions and payment activities</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-white">{transactions.length}</div>
+            <div className="text-sm text-gray-400">Total Transactions</div>
+          </div>
         </div>
       </div>
 

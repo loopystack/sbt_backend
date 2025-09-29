@@ -198,27 +198,92 @@ export default function UserManagement() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="text-center">
+          {/* Modern Loading Animation */}
+          <div className="relative mb-8">
+            {/* Central Hub */}
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse mx-auto"></div>
+            
+            {/* Orbiting Elements */}
+            <div className="absolute inset-0 w-32 h-32 mx-auto">
+              {/* First Ring */}
+              <div className="absolute w-4 h-4 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full animate-ping"></div>
+              <div className="absolute top-12 w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+              <div className="absolute top-6 right-6 w-4 h-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+              <div className="absolute top-6 left-6 w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-ping" style={{animationDelay: '1.5s'}}></div>
+            </div>
+            
+            {/* Second Ring */}
+            <div className="absolute inset-0 w-40 h-40 mx-auto">
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-emerald-500/60 rounded-full animate-bounce"></div>
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500/60 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></div>
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-purple-500/60 rounded-full animate-bounce" style={{animationDelay: '0.6s'}}></div>
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-yellow-500/60 rounded-full animate-bounce" style={{animationDelay: '0.9s'}}></div>
+            </div>
+            
+            {/* Connecting Lines */}
+            <div className="absolute inset-0 w-40 h-40 mx-auto">
+              <div className="absolute top-2 left-1/2 w-0.5 h-3 bg-gradient-to-b from-emerald-500/40 to-transparent transform -translate-x-1/2"></div>
+              <div className="absolute bottom-2 left-1/2 w-0.5 h-3 bg-gradient-to-t from-blue-500/40 to-transparent transform -translate-x-1/2"></div>
+              <div className="absolute left-2 top-1/2 w-3 h-0.5 bg-gradient-to-r from-purple-500/40 to-transparent transform -translate-y-1/2"></div>
+              <div className="absolute right-2 top-1/2 w-3 h-0.5 bg-gradient-to-l from-yellow-500/40 to-transparent transform -translate-y-1/2"></div>
+            </div>
+          </div>
+          
+          {/* Loading text */}
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
+              Loading User Management
+            </h3>
+            <p className="text-gray-400 text-sm">Retrieving user data and permissions...</p>
+            
+            {/* Creative Progress Indicator */}
+            <div className="flex justify-center space-x-1 mt-6">
+              {[...Array(8)].map((_, i) => (
+                <div 
+                  key={i}
+                  className="w-2 h-6 bg-gradient-to-t from-blue-500/20 to-purple-500/20 rounded-full animate-pulse"
+                  style={{animationDelay: `${i * 0.2}s`}}
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">User Management</h2>
-          <p className="text-gray-400">Manage users, permissions, and account settings</p>
-        </div>
-        <div className="text-sm text-gray-400">
-          Total Users: {users.length}
+    <div className="space-y-8">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-emerald-500/20 backdrop-blur-2xl border border-blue-500/30 rounded-2xl p-8 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <span className="text-2xl">👥</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
+              <p className="text-gray-300/90 text-lg">Manage user accounts, permissions, and access controls</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-white">{users.length}</div>
+            <div className="text-sm text-gray-400">Total Users</div>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-black/30 backdrop-blur-xl border border-gray-800 rounded-xl p-6">
+      {/* Premium Search Section */}
+      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-2xl p-8 shadow-xl">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+            <span className="text-white text-lg">🔍</span>
+          </div>
+          <h3 className="text-xl font-bold text-white">Search & Filter Users</h3>
+        </div>
+        
         <form onSubmit={handleSearch} className="flex items-center space-x-4">
           <div className="flex-1">
             <input
@@ -226,12 +291,12 @@ export default function UserManagement() {
               placeholder="Search users by email, username, or name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-6 py-3 bg-gradient-to-r from-gray-800/60 to-gray-700/60 backdrop-blur-xl border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-300"
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:scale-105 transition-transform duration-300"
+            className="px-8 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:scale-105 transition-all duration-300 shadow-lg font-medium"
           >
             Search
           </button>
@@ -240,16 +305,33 @@ export default function UserManagement() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+        <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-xl border border-red-500/30 rounded-2xl p-6 shadow-xl">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white text-lg">⚠️</span>
+            </div>
+            <div>
+              <h4 className="text-red-400 font-semibold mb-1">Operation Error</h4>
+              <p className="text-red-300/90 text-sm">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Users Table */}
-      <div className="bg-black/30 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden">
+      {/* Premium Users Table */}
+      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-gray-700/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg">📋</span>
+            </div>
+            <h3 className="text-xl font-bold text-white">User Directory</h3>
+          </div>
+        </div>
+        
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-800/50">
+            <thead className="bg-gradient-to-r from-gray-800/60 to-gray-700/60">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
@@ -261,18 +343,18 @@ export default function UserManagement() {
             <tbody className="divide-y divide-gray-800">
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-800/30 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-6">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-white font-bold text-lg">
                           {user.username.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white">{user.username}</div>
-                        <div className="text-sm text-gray-400">{user.email}</div>
+                        <div className="text-sm font-bold text-white">{user.username}</div>
+                        <div className="text-sm text-gray-300">{user.email}</div>
                         {user.full_name && (
-                          <div className="text-xs text-gray-500">{user.full_name}</div>
+                          <div className="text-xs text-gray-400">{user.full_name}</div>
                         )}
                       </div>
                     </div>
@@ -325,45 +407,33 @@ export default function UserManagement() {
                       <div>Transactions: {user.total_transactions}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-6">
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handlePermissionChange(user)}
-                        className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors text-sm"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-500/30 text-purple-300 hover:text-white rounded-xl hover:border-purple-500/50 hover:scale-105 transition-all duration-300 text-sm font-medium shadow-lg"
                         title="Manage Permissions"
                       >
                         🔐 Permissions
                       </button>
                       <button
                         onClick={() => handleEditUser(user)}
-                        className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors text-sm"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 text-blue-300 hover:text-white rounded-xl hover:border-blue-500/50 hover:scale-105 transition-all duration-300 text-sm font-medium shadow-lg"
                       >
-                        Edit
+                        ✏️ Edit
                       </button>
                       <button
                         onClick={() => handleAdjustFunds(user.id, 100, "Admin bonus")}
-                        className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors text-sm"
+                        className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 text-emerald-300 hover:text-white rounded-xl hover:border-emerald-500/50 hover:scale-105 transition-all duration-300 text-sm font-medium shadow-lg"
                       >
-                        +$100
+                        💰 +$100
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user)}
-                        className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors text-sm flex items-center justify-center"
+                        className="px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 text-red-300 hover:text-white rounded-xl hover:border-red-500/50 hover:scale-105 transition-all duration-300 text-sm font-medium shadow-lg"
                         title="Delete User"
                       >
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                          />
-                        </svg>
+                        🗑️ Delete
                       </button>
                     </div>
                   </td>

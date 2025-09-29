@@ -1748,30 +1748,39 @@ export default function Profile() {
                   </div>
                 </button>
                 
-                <button className="w-full flex items-center gap-3 p-3 bg-bg border border-border rounded-lg hover:bg-white/5 transition-colors text-left">
-                  <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <button 
+                  onClick={() => {
+                    // Navigate to home page
+                    window.location.href = '/';
+                  }}
+                  className="w-full flex items-center gap-3 p-3 bg-bg border border-border rounded-lg hover:bg-blue-500/10 hover:border-blue-500/30 transition-all text-left"
+                >
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-text">Privacy Settings</p>
-                    <p className="text-sm text-muted">Manage privacy</p>
+                    <p className="font-medium text-white">Go to Home</p>
+                    <p className="text-sm text-gray-400">Return to homepage</p>
                   </div>
                 </button>
                 
                 <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors text-left"
+                  onClick={() => {
+                    // Navigate to dashboard page
+                    window.location.href = '/dashboard';
+                  }}
+                  className="w-full flex items-center gap-3 p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg hover:bg-purple-500/30 transition-colors text-left"
                 >
-                  <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-medium text-red-400">Sign Out</p>
-                    <p className="text-sm text-red-400/70">Sign out of account</p>
+                    <p className="font-medium text-purple-400">Go to Dashboard</p>
+                    <p className="text-sm text-purple-400/70">Access admin dashboard</p>
                   </div>
                 </button>
                 
