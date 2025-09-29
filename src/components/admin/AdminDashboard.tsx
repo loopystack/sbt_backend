@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiMethods } from "../../lib/api";
+import IncomeOutcomeCharts from "./IncomeOutcomeCharts";
 
 interface AdminStats {
   total_users: number;
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
       </div>
-    );
+    ); 
   }
 
   if (error) {
@@ -163,6 +164,9 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Financial Charts */}
+      <IncomeOutcomeCharts />
 
       {/* Recent Activity */}
       <div className="bg-black/30 backdrop-blur-xl border border-gray-800 rounded-xl p-6">

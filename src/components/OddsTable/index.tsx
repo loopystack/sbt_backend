@@ -270,6 +270,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
         console.log('✅ User existing bets loaded:', matchIds.size, 'matches');
         console.log('📊 Match IDs user has bet on (as strings):', Array.from(matchIds));
         console.log('📊 Match IDs user has bet on (types):', Array.from(matchIds).map(id => ({ value: id, type: typeof id })));
+        
+        // Enable odds buttons after user bets are loaded
+        setIsOddsDisabled(false);
       } else {
         console.log('⚠️ No records found in response');
         console.log('⚠️ Response structure:', {
@@ -277,8 +280,14 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           hasRecords: !!(response && response.records),
           responseKeys: response ? Object.keys(response) : 'no response'
         });
+        
+        // Enable odds buttons even when no records are found
+        setIsOddsDisabled(false);
       }
     } catch (error) {
+      console.log('❌ Error fetching user existing bets:', error);
+      // Enable odds buttons even if there's an error fetching user bets
+      setIsOddsDisabled(false);
     }
   };
 
@@ -301,6 +310,12 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
     console.log('🔄 useEffect triggered - fetchUserExistingBets will be called');
     console.log('🔐 useEffect - isAuthenticated:', isAuthenticated);
     console.log('👤 useEffect - user?.id:', user?.id);
+    
+    // Disable odds buttons during loading if authenticated
+    if (isAuthenticated) {
+      setIsOddsDisabled(true);
+    }
+    
     fetchUserExistingBets();
   }, [isAuthenticated, user?.id]);
 
@@ -321,6 +336,9 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   
   // State to track matches user has already bet on
   const [userBetMatchIds, setUserBetMatchIds] = useState<Set<string>>(new Set());
+  
+  // State to track if odds buttons should be disabled during data loading
+  const [isOddsDisabled, setIsOddsDisabled] = useState(false);
   
   // Validation function to check for multiple bets on same match
   const validateBettingSelections = () => {
@@ -1630,6 +1648,18 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
           </div>
         </div>
       </div>
+      
+      {/* Betting disabled indicator */}
+      {isOddsDisabled && isAuthenticated && (
+        <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 border border-blue-500/30 rounded-lg p-3 mb-4 flex items-center gap-3">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+          <div className="text-sm text-blue-300">
+            <span className="font-medium">Checking your previous bets...</span>
+            <span className="text-blue-200 ml-2">Betting temporarily disabled for your safety</span>
+          </div>
+        </div>
+      )}
+      
       {viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {groupedMatches.map(({ date, matches }) => 
@@ -1885,12 +1915,15 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                         <div className="text-center">
                           <div className="text-xs text-muted mb-1">1</div>
                           <button 
+                            disabled={isOddsDisabled}
                             className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                              isOddsSelected(match.id, 'home') 
-                                ? 'bg-yellow-500 text-black border-yellow-500' 
-                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              isOddsDisabled 
+                                ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                                : isOddsSelected(match.id, 'home') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
                             }`}
-                            onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                            onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
                           >
                             {formatOdds(match.bookmakers[0]?.home || '-')}
                           </button>
@@ -1898,12 +1931,15 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                         <div className="text-center">
                           <div className="text-xs text-muted mb-1">X</div>
                           <button 
+                            disabled={isOddsDisabled}
                             className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                              isOddsSelected(match.id, 'draw') 
-                                ? 'bg-yellow-500 text-black border-yellow-500' 
-                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              isOddsDisabled 
+                                ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                                : isOddsSelected(match.id, 'draw') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
                             }`}
-                            onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                            onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
                           >
                             {formatOdds(match.bookmakers[0]?.draw || '-')}
                           </button>
@@ -1911,12 +1947,15 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                         <div className="text-center">
                           <div className="text-xs text-muted mb-1">2</div>
                           <button 
+                            disabled={isOddsDisabled}
                             className={`w-full py-2 px-1 border rounded-lg text-sm font-semibold transition-all duration-200 ${
-                              isOddsSelected(match.id, 'away') 
-                                ? 'bg-yellow-500 text-black border-yellow-500' 
-                                : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
+                              isOddsDisabled 
+                                ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                                : isOddsSelected(match.id, 'away') 
+                                  ? 'bg-yellow-500 text-black border-yellow-500' 
+                                  : 'bg-transparent text-text border-border hover:bg-bg/50 hover:border-border/80'
                             }`}
-                            onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                            onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
                           >
                             {formatOdds(match.bookmakers[0]?.away || '-')}
                           </button>
@@ -2116,32 +2155,41 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
                     ) : (
                       <div className="flex items-center gap-1">
                         <button 
+                          disabled={isOddsDisabled}
                           className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
-                            isOddsSelected(match.id, 'home') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                            isOddsDisabled 
+                              ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                              : isOddsSelected(match.id, 'home') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
                           }`}
-                          onClick={(e) => handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
+                          onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'home', match.bookmakers[0]?.home || '-', e)}
                         >
                           {formatOdds(match.bookmakers[0]?.home || '-')}
                         </button>
                         <button 
+                          disabled={isOddsDisabled}
                           className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
-                            isOddsSelected(match.id, 'draw') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                            isOddsDisabled 
+                              ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                              : isOddsSelected(match.id, 'draw') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
                           }`}
-                          onClick={(e) => handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
+                          onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'draw', match.bookmakers[0]?.draw || '-', e)}
                         >
                           {formatOdds(match.bookmakers[0]?.draw || '-')}
                         </button>
                         <button 
+                          disabled={isOddsDisabled}
                           className={`text-sm font-semibold min-w-[40px] py-1 rounded border transition-all duration-200 ${
-                            isOddsSelected(match.id, 'away') 
-                              ? 'bg-yellow-500 text-black border-yellow-500' 
-                              : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
+                            isOddsDisabled 
+                              ? 'bg-gray-500/50 text-gray-400 border-gray-500/50 cursor-not-allowed' 
+                              : isOddsSelected(match.id, 'away') 
+                                ? 'bg-yellow-500 text-black border-yellow-500' 
+                                : 'text-text hover:bg-surface/50 border-border hover:border-border/80'
                           }`}
-                          onClick={(e) => handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
+                          onClick={(e) => !isOddsDisabled && handleOddsClick(match, 'away', match.bookmakers[0]?.away || '-', e)}
                         >
                           {formatOdds(match.bookmakers[0]?.away || '-')}
                         </button>
