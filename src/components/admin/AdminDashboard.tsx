@@ -272,52 +272,52 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Premium Welcome Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-emerald-500/20 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-8 shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-emerald-500/20 backdrop-blur-xl border border-purple-500/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-emerald-500/10"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/30 to-transparent rounded-full blur-xl"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-500/30 to-transparent rounded-full blur-xl"></div>
+        <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-purple-500/30 to-transparent rounded-full blur-xl"></div>
+        <div className="absolute bottom-0 left-0 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-blue-500/30 to-transparent rounded-full blur-xl"></div>
         
-        <div className="relative flex items-center space-x-6">
+        <div className="relative flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 via-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-2xl">
-              <span className="text-3xl">🎮</span>
+            <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-purple-500 via-blue-500 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-2xl">
+              <span className="text-xl sm:text-2xl lg:text-3xl">🎮</span>
             </div>
-            <div className="absolute inset-0 w-16 h-16 bg-gradient-to-r from-purple-500 via-blue-500 to-emerald-500 rounded-2xl blur opacity-75"></div>
+            <div className="absolute inset-0 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r from-purple-500 via-blue-500 to-emerald-500 rounded-xl sm:rounded-2xl blur opacity-75"></div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent mb-2">
               Admin Control Center
             </h1>
-            <p className="text-gray-300/90 text-lg">Command your sports betting empire with advanced insights and powerful management tools</p>
+            <p className="text-gray-300/90 text-sm sm:text-base lg:text-lg">Command your sports betting empire with advanced insights and powerful management tools</p>
           </div>
         </div>
       </div>
 
       {/* Enhanced Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {statCards.map((card, index) => (
           <div
             key={index}
-            className={`group relative overflow-hidden ${card.bgColor} ${card.borderColor} ${card.shadowColor} border-2 rounded-2xl p-6 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:border-opacity-50`}
+            className={`group relative overflow-hidden ${card.bgColor} ${card.borderColor} ${card.shadowColor} border-2 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:border-opacity-50`}
           >
             {/* Animated background glow */}
             <div className={`absolute inset-0 bg-gradient-to-r ${card.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl`}></div>
             
             {/* Card content */}
             <div className="relative z-10">
-              <div className="flex bits-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-300 mb-1 uppercase tracking-wide">{card.title}</p>
-                  <p className="text-4xl font-bold text-white mb-2">{card.value}</p>
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-300 mb-1 uppercase tracking-wide">{card.title}</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">{card.value}</p>
                   <div className="flex items-center space-x-2">
                     <span className={`text-xs font-medium ${card.trendColor}`}>{card.trend}</span>
-                    <span className="text-xs text-gray-400">vs last month</span>
+                    <span className="text-xs text-gray-400 hidden sm:inline">vs last month</span>
                   </div>
                 </div>
-                <div className={`w-16 h-16 bg-gradient-to-r ${card.color} rounded-2xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-300`}>
-                  <span className="text-3xl">{card.icon}</span>
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-r ${card.color} rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-300`}>
+                  <span className="text-xl sm:text-2xl lg:text-3xl">{card.icon}</span>
                 </div>
               </div>
               
@@ -340,30 +340,30 @@ export default function AdminDashboard() {
       </div>
 
       {/* Premium Quick Actions */}
-      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white text-lg">⚡</span>
+      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
+        <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+            <span className="text-white text-sm sm:text-lg">⚡</span>
           </div>
-          <h3 className="text-2xl font-bold text-white">Quick Actions</h3>
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Quick Actions</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {quickActions.map((action, index) => (
             <button
               key={index}
               onClick={action.action}
-              className={`group relative overflow-hidden ${action.bgColor} ${action.borderColor} border-2 rounded-2xl p-6 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-opacity-50`}
+              className={`group relative overflow-hidden ${action.bgColor} ${action.borderColor} border-2 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-500 hover:scale-110 hover:shadow-2xl hover:border-opacity-50`}
             >
               {/* Animated background */}
               <div className={`absolute inset-0 bg-gradient-to-r ${action.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl`}></div>
               
               <div className="relative z-10 text-center">
-                <div className={`w-12 h-12 bg-gradient-to-r ${action.color} rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:rotate-12 transition-transform duration-300`}>
-                  <span className="text-2xl">{action.icon}</span>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${action.color} rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg group-hover:rotate-12 transition-transform duration-300`}>
+                  <span className="text-lg sm:text-xl lg:text-2xl">{action.icon}</span>
                 </div>
-                <h4 className="font-bold text-white mb-2 text-lg">{action.title}</h4>
-                <p className="text-gray-300/80 text-sm">{action.description}</p>
+                <h4 className="font-bold text-white mb-2 text-sm sm:text-base lg:text-lg">{action.title}</h4>
+                <p className="text-gray-300/80 text-xs sm:text-sm">{action.description}</p>
               </div>
               
               {/* Hover effect overlay */}
@@ -377,13 +377,13 @@ export default function AdminDashboard() {
       <IncomeOutcomeCharts />
 
       {/* Enhanced Recent Activity */}
-      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-2xl p-8 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-black/40 backdrop-blur-2xl border border-gray-700/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg">📈</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm sm:text-lg">📈</span>
             </div>
-            <h3 className="text-2xl font-bold text-white">Live Activity Feed</h3>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Live Activity Feed</h3>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -391,27 +391,27 @@ export default function AdminDashboard() {
           </div>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {recentActivities.map((activity, index) => (
             <div
               key={index}
-              className={`group flex items-center space-x-4 p-4 ${activity.bgColor} border border-white/10 rounded-xl hover:bg-white/5 transition-all duration-300`}
+              className={`group flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 ${activity.bgColor} border border-white/10 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all duration-300`}
             >
               {/* Timeline connector */}
               {index < recentActivities.length - 1 && (
-                <div className="absolute left-6 mt-12 w-0.5 h-8 bg-gradient-to-b from-white/20 to-transparent"></div>
+                <div className="absolute left-5 sm:left-6 mt-10 sm:mt-12 w-0.5 h-6 sm:h-8 bg-gradient-to-b from-white/20 to-transparent"></div>
               )}
               
-              <div className={`relative w-10 h-10 bg-gradient-to-r ${activity.color} rounded-full flex items-center justify-center shadow-lg`}>
-                <span className="text-white text-lg">{activity.icon}</span>
+              <div className={`relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r ${activity.color} rounded-full flex items-center justify-center shadow-lg`}>
+                <span className="text-white text-sm sm:text-lg">{activity.icon}</span>
               </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <p className="text-white font-semibold truncate">{activity.title}</p>
-                  <span className="text-gray-400 text-xs flex-shrink-0">{activity.time}</span>
+                  <p className="text-white font-semibold truncate text-sm sm:text-base">{activity.title}</p>
+                  <span className="text-gray-400 text-xs flex-shrink-0 ml-2">{activity.time}</span>
                 </div>
-                <p className="text-gray-300/80 text-sm truncate">{activity.subtitle}</p>
+                <p className="text-gray-300/80 text-xs sm:text-sm truncate">{activity.subtitle}</p>
               </div>
               
               {/* Hover indicator */}
@@ -420,8 +420,8 @@ export default function AdminDashboard() {
           ))}
         </div>
         
-        <div className="mt-6 text-center">
-          <button className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105">
+        <div className="mt-4 sm:mt-6 text-center">
+          <button className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-300 hover:scale-105 text-sm sm:text-base">
             View All Activities
           </button>
         </div>
