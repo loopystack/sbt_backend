@@ -69,7 +69,7 @@ const ReCaptchaComponent = forwardRef<ReCaptchaRef, ReCaptchaProps>(({
       </div>
       
       {/* Custom styling overlay */}
-      <style jsx>{`
+      <style>{`
         .recaptcha-container {
           display: flex;
           justify-content: center;
