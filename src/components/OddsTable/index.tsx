@@ -1206,6 +1206,11 @@ export default function OddsTable({ highlightMatchId, initialSearchTerm }: OddsT
   
   useEffect(() => {
     fetchCurrentPageMatches();
+    // Also refresh user's existing bets when loading new matches
+    // This ensures bet status is always up-to-date even after time passes
+    if (isAuthenticated && user?.id) {
+      fetchUserExistingBets();
+    }
   }, [fetchCurrentPageMatches]);
 
   // Reset to page 1 when filters change

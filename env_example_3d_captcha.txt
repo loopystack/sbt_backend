@@ -1,0 +1,13 @@
+# Google reCAPTCHA Configuration
+VITE_RECAPTCHA_SITE_KEY=your_recaptcha_site_key_here
+
+# FunCaptcha 3D CAPTCHA Configuration
+VITE_FUNCAPTCHA_PUBLIC_KEY=your_funcaptcha_public_key_here
+VITE_FUNCAPTCHA_SECRET_KEY=your_funcaptcha_secret_key_here
+
+# Backend URL (automatically determined based on environment)
+# VITE_BACKEND_URL=http://localhost:5001  # for development
+# VITE_BACKEND_URL=https://sportsbetting-seiw.onrender.com  # for production
+
+# Other environment variables...
+# Add your other environment variables here

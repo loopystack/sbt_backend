@@ -4,6 +4,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { authService, tokenManager } from "../services/authService";
 import ReCaptchaComponent, { ReCaptchaRef } from "../components/ReCaptcha";
+import RecaptchaDebug from "../components/RecaptchaDebug";
 import { recaptchaService } from "../services/recaptchaService";
 export default function SignInSignUp() {
   const [searchParams] = useSearchParams();
@@ -132,8 +133,10 @@ export default function SignInSignUp() {
     setRecaptchaError(error);
   };
 
+
   const handleGoogleLogin = () => {
     console.log('🚀 Google login button clicked');
+    
     setIsLoading(true);
     setError("");
     
@@ -628,6 +631,9 @@ export default function SignInSignUp() {
           </Link>
         </div>
       </div>
+      
+      {/* Debug component - remove after fixing */}
+      <RecaptchaDebug />
     </div>
   );
 }
