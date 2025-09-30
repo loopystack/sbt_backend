@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { apiMethods } from "../../lib/api";
 import { toast } from "react-toastify";
 
@@ -41,6 +41,27 @@ export default function UserManagement() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Helper function to highlight search terms in text
+  const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      return text;
+    }
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="bg-yellow-300 text-black font-semibold px-1 rounded">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -193,7 +214,8 @@ export default function UserManagement() {
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    user.id.toString().includes(searchTerm)
   );
 
   if (isLoading) {
@@ -288,7 +310,7 @@ export default function UserManagement() {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Search users by email, username, or name..."
+              placeholder="Search users by email, username, name, or user ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-6 py-3 bg-gradient-to-r from-gray-800/60 to-gray-700/60 backdrop-blur-xl border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-300"
@@ -351,10 +373,11 @@ export default function UserManagement() {
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-bold text-white">{user.username}</div>
-                        <div className="text-sm text-gray-300">{user.email}</div>
+                        <div className="text-sm font-bold text-white">{highlightSearchTerm(user.username, searchTerm)}</div>
+                        <div className="text-sm text-gray-300">{highlightSearchTerm(user.email, searchTerm)}</div>
+                        <div className="text-xs text-gray-500">ID: {highlightSearchTerm(user.id.toString(), searchTerm)}</div>
                         {user.full_name && (
-                          <div className="text-xs text-gray-400">{user.full_name}</div>
+                          <div className="text-xs text-gray-400">{highlightSearchTerm(user.full_name, searchTerm)}</div>
                         )}
                       </div>
                     </div>
@@ -541,6 +564,7 @@ export default function UserManagement() {
                 <div>
                   <div className="text-sm font-medium text-white">{selectedUser.username}</div>
                   <div className="text-xs text-gray-400">{selectedUser.email}</div>
+                  <div className="text-xs text-gray-500">ID: {selectedUser.id}</div>
                 </div>
               </div>
             </div>
@@ -659,6 +683,7 @@ export default function UserManagement() {
                 <div>
                   <div className="text-sm font-medium text-white">{userToDelete.username}</div>
                   <div className="text-xs text-gray-400">{userToDelete.email}</div>
+                  <div className="text-xs text-gray-500">ID: {userToDelete.id}</div>
                 </div>
               </div>
             </div>

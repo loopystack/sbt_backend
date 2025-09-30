@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { apiMethods } from "../../lib/api";
 
 interface BettingRecord {
@@ -39,6 +39,28 @@ export default function BettingManagement() {
     search: ""
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [allBettingRecords, setAllBettingRecords] = useState<BettingRecord[]>([]);
+
+  // Helper function to highlight search terms in text
+  const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      return text;
+    }
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="bg-yellow-300 text-black font-semibold px-1 rounded">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  }, []);
 
   useEffect(() => {
     fetchBettingRecords();
@@ -47,6 +69,7 @@ export default function BettingManagement() {
   const fetchBettingRecords = async () => {
     try {
       setIsLoading(true);
+      setError(null); // Clear any previous errors
       const params = new URLSearchParams({
         page: currentPage.toString(),
         size: "20"
@@ -54,9 +77,11 @@ export default function BettingManagement() {
       
       if (filters.user_id) params.append("user_id", filters.user_id);
       if (filters.status) params.append("status", filters.status);
+      if (filters.search) params.append("search", filters.search);
 
       const response = await apiMethods.get(`/api/admin/betting-records?${params}`);
       setBettingRecords(response);
+      setAllBettingRecords(response);
     } catch (err: any) {
       setError(err.message || "Failed to fetch betting records");
     } finally {
@@ -77,6 +102,32 @@ export default function BettingManagement() {
     setFilters({ ...filters, [key]: searchInputs[key as keyof typeof searchInputs] });
     setCurrentPage(1);
   };
+
+  // Real-time filtering like users page
+  const filteredBettingRecords = allBettingRecords.filter(record => {
+    const searchTerm = searchInputs.search.toLowerCase();
+    const userSearchTerm = searchInputs.user_id.toLowerCase();
+    
+    if (searchTerm && !(
+      record.match_teams.toLowerCase().includes(searchTerm) ||
+      (record.selected_team && record.selected_team.toLowerCase().includes(searchTerm)) ||
+      (record.match_league && record.match_league.toLowerCase().includes(searchTerm)) ||
+      (record.user_username && record.user_username.toLowerCase().includes(searchTerm)) ||
+      (record.user_email && record.user_email.toLowerCase().includes(searchTerm))
+    )) {
+      return false;
+    }
+    
+    if (userSearchTerm && !record.user_id.toString().includes(userSearchTerm)) {
+      return false;
+    }
+    
+    if (filters.status && record.bet_status !== filters.status) {
+      return false;
+    }
+    
+    return true;
+  });
 
   const handleKeyPress = (e: React.KeyboardEvent, key: string) => {
     if (e.key === 'Enter') {
@@ -223,7 +274,15 @@ export default function BettingManagement() {
       {/* Error Message */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-red-400">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-300 ml-4 text-sm underline"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
@@ -242,20 +301,20 @@ export default function BettingManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {bettingRecords.map((record) => (
+              {filteredBettingRecords.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-white">{record.user_username}</div>
-                      <div className="text-sm text-gray-400">{record.user_email}</div>
-                      <div className="text-xs text-gray-500">ID: {record.user_id}</div>
+                      <div className="text-sm font-medium text-white">{highlightSearchTerm(record.user_username || '', searchInputs.search)}</div>
+                      <div className="text-sm text-gray-400">{highlightSearchTerm(record.user_email || '', searchInputs.search)}</div>
+                      <div className="text-xs text-gray-500">ID: {highlightSearchTerm(record.user_id.toString(), searchInputs.search)}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-white">{record.match_teams}</div>
+                      <div className="text-sm font-medium text-white">{highlightSearchTerm(record.match_teams, searchInputs.search)}</div>
                       {record.match_league && (
-                        <div className="text-sm text-gray-400">{record.match_league}</div>
+                        <div className="text-sm text-gray-400">{highlightSearchTerm(record.match_league, searchInputs.search)}</div>
                       )}
                       <div className="flex items-center space-x-2 mt-1">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getMatchStatusColor(record.match_status)}`}>
@@ -269,7 +328,7 @@ export default function BettingManagement() {
                       <div className="text-sm text-white">
                         <span className="font-medium">{record.selected_outcome}</span>
                         {record.selected_team && (
-                          <span className="text-gray-400"> - {record.selected_team}</span>
+                          <span className="text-gray-400"> - {highlightSearchTerm(record.selected_team, searchInputs.search)}</span>
                         )}
                       </div>
                       <div className="text-sm text-gray-400">
@@ -322,7 +381,7 @@ export default function BettingManagement() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-400">
-          Showing {bettingRecords.length} records
+          Showing {filteredBettingRecords.length} records
         </div>
         <div className="flex items-center space-x-2">
           <button

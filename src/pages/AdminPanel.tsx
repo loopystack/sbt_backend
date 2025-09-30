@@ -7,13 +7,17 @@ import BettingManagement from "../components/admin/BettingManagement";
 import TransactionManagement from "../components/admin/TransactionManagement";
 
 export default function AdminPanel() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // Wait for authentication check to complete before making decisions
+    if (isLoading) {
+      return; // Still loading, don't redirect yet
+    }
+
     // Check if user is authenticated and is admin
     if (!isAuthenticated) {
       navigate("/signin");
@@ -24,9 +28,7 @@ export default function AdminPanel() {
       navigate("/");
       return;
     }
-
-    setIsLoading(false);
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, isLoading]);
 
   if (isLoading) {
     return (

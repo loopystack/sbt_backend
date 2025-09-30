@@ -288,8 +288,12 @@ async def get_all_betting_records(
             query = query.where(BettingRecord.bet_status == status)
         
         if search:
-            # Search in match_teams field for team names
-            search_filter = BettingRecord.match_teams.ilike(f"%{search}%")
+            # Search in multiple fields for team names: match_teams, selected_team, and match_league
+            search_filter = or_(
+                BettingRecord.match_teams.ilike(f"%{search}%"),
+                BettingRecord.selected_team.ilike(f"%{search}%"),
+                BettingRecord.match_league.ilike(f"%{search}%")
+            )
             query = query.where(search_filter)
         
         query = query.order_by(desc(BettingRecord.created_at)).offset(offset).limit(size)
@@ -297,12 +301,17 @@ async def get_all_betting_records(
         result = await db.execute(query)
         records = result.scalars().all()
         
-        # Convert to AdminBettingRecordResponse
+        # Convert to AdminBettingRecordResponse with user information
         admin_records = []
         for record in records:
+            # Get user information for each record
+            user_stmt = select(User).where(User.id == record.user_id)
+            user_result = await db.execute(user_stmt)
+            user = user_result.scalar_one_or_none()
+            
             admin_record = AdminBettingRecordResponse.model_validate(record)
-            admin_record.user_email = None  # Will be populated separately if needed
-            admin_record.user_username = None
+            admin_record.user_email = user.email if user else None
+            admin_record.user_username = user.username if user else None
             admin_records.append(admin_record)
         
         return admin_records
@@ -316,6 +325,7 @@ async def get_all_transactions(
     size: int = Query(20, ge=1, le=100),
     user_id: Optional[int] = Query(None),
     transaction_type: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     current_user: User = Depends(get_admin_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -332,17 +342,27 @@ async def get_all_transactions(
         if transaction_type:
             query = query.where(Transaction.transaction_type == transaction_type)
         
+        if search:
+            # Search in description field for transaction descriptions
+            search_filter = Transaction.description.ilike(f"%{search}%")
+            query = query.where(search_filter)
+        
         query = query.order_by(desc(Transaction.created_at)).offset(offset).limit(size)
         
         result = await db.execute(query)
         transactions = result.scalars().all()
         
-        # Convert to AdminTransactionResponse
+        # Convert to AdminTransactionResponse with user information
         admin_transactions = []
         for transaction in transactions:
+            # Get user information for each transaction
+            user_stmt = select(User).where(User.id == transaction.user_id)
+            user_result = await db.execute(user_stmt)
+            user = user_result.scalar_one_or_none()
+            
             admin_transaction = AdminTransactionResponse.model_validate(transaction)
-            admin_transaction.user_email = None  # Will be populated separately if needed
-            admin_transaction.user_username = None
+            admin_transaction.user_email = user.email if user else None
+            admin_transaction.user_username = user.username if user else None
             admin_transactions.append(admin_transaction)
         
         return admin_transactions

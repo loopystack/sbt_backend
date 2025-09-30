@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { apiMethods } from "../../lib/api";
 
 interface Transaction {
@@ -35,6 +35,28 @@ export default function TransactionManagement() {
     search: ""
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+
+  // Helper function to highlight search terms in text
+  const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      return text;
+    }
+    
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <span key={index} className="bg-yellow-300 text-black font-semibold px-1 rounded">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  }, []);
 
   useEffect(() => {
     fetchTransactions();
@@ -43,6 +65,7 @@ export default function TransactionManagement() {
   const fetchTransactions = async () => {
     try {
       setIsLoading(true);
+      setError(null); // Clear any previous errors
       const params = new URLSearchParams({
         page: currentPage.toString(),
         size: "20"
@@ -50,9 +73,11 @@ export default function TransactionManagement() {
       
       if (filters.user_id) params.append("user_id", filters.user_id);
       if (filters.transaction_type) params.append("transaction_type", filters.transaction_type);
+      if (filters.search) params.append("search", filters.search);
 
       const response = await apiMethods.get(`/api/admin/transactions?${params}`);
       setTransactions(response);
+      setAllTransactions(response);
     } catch (err: any) {
       setError(err.message || "Failed to fetch transactions");
     } finally {
@@ -73,6 +98,26 @@ export default function TransactionManagement() {
     setFilters({ ...filters, [key]: searchInputs[key as keyof typeof searchInputs] });
     setCurrentPage(1);
   };
+
+  // Real-time filtering like users page
+  const filteredTransactions = allTransactions.filter(transaction => {
+    const searchTerm = searchInputs.search.toLowerCase();
+    const userSearchTerm = searchInputs.user_id.toLowerCase();
+    
+    if (searchTerm && !transaction.description.toLowerCase().includes(searchTerm)) {
+      return false;
+    }
+    
+    if (userSearchTerm && !transaction.user_id.toString().includes(userSearchTerm)) {
+      return false;
+    }
+    
+    if (filters.transaction_type && transaction.transaction_type !== filters.transaction_type) {
+      return false;
+    }
+    
+    return true;
+  });
 
   const handleKeyPress = (e: React.KeyboardEvent, key: string) => {
     if (e.key === 'Enter') {
@@ -233,7 +278,15 @@ export default function TransactionManagement() {
       {/* Error Message */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-red-400">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-300 ml-4 text-sm underline"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
@@ -252,13 +305,13 @@ export default function TransactionManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {transactions.map((transaction) => (
+              {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-medium text-white">{transaction.user_username}</div>
-                      <div className="text-sm text-gray-400">{transaction.user_email}</div>
-                      <div className="text-xs text-gray-500">ID: {transaction.user_id}</div>
+                      <div className="text-sm font-medium text-white">{highlightSearchTerm(transaction.user_username || '', searchInputs.search)}</div>
+                      <div className="text-sm text-gray-400">{highlightSearchTerm(transaction.user_email || '', searchInputs.search)}</div>
+                      <div className="text-xs text-gray-500">ID: {highlightSearchTerm(transaction.user_id.toString(), searchInputs.search)}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -268,7 +321,7 @@ export default function TransactionManagement() {
                           {transaction.transaction_type.replace('_', ' ').toUpperCase()}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-300">{transaction.description}</div>
+                      <div className="text-sm text-gray-300">{highlightSearchTerm(transaction.description, searchInputs.search)}</div>
                       {transaction.payment_method && (
                         <div className="text-xs text-gray-500">Method: {transaction.payment_method}</div>
                       )}
@@ -309,7 +362,7 @@ export default function TransactionManagement() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-400">
-          Showing {transactions.length} transactions
+          Showing {filteredTransactions.length} transactions
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -333,25 +386,25 @@ export default function TransactionManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
           <div className="text-2xl font-bold text-green-400">
-            ${transactions.filter(t => t.transaction_type === 'deposit').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+            ${filteredTransactions.filter(t => t.transaction_type === 'deposit').reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
           </div>
           <div className="text-sm text-gray-400">Total Deposits</div>
         </div>
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
           <div className="text-2xl font-bold text-red-400">
-            ${Math.abs(transactions.filter(t => t.transaction_type === 'withdrawal').reduce((sum, t) => sum + t.amount, 0)).toFixed(2)}
+            ${Math.abs(filteredTransactions.filter(t => t.transaction_type === 'withdrawal').reduce((sum, t) => sum + t.amount, 0)).toFixed(2)}
           </div>
           <div className="text-sm text-gray-400">Total Withdrawals</div>
         </div>
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <div className="text-2xl font-bold text-blue-400">
-            ${Math.abs(transactions.filter(t => t.transaction_type === 'bet_placed').reduce((sum, t) => sum + t.amount, 0)).toFixed(2)}
+            ${Math.abs(filteredTransactions.filter(t => t.transaction_type === 'bet_placed').reduce((sum, t) => sum + t.amount, 0)).toFixed(2)}
           </div>
           <div className="text-sm text-gray-400">Total Bet Amount</div>
         </div>
         <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
           <div className="text-2xl font-bold text-purple-400">
-            {transactions.length}
+            {filteredTransactions.length}
           </div>
           <div className="text-sm text-gray-400">Total Transactions</div>
         </div>

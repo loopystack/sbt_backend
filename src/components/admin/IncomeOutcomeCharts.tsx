@@ -75,8 +75,8 @@ export default function IncomeOutcomeCharts() {
 
       // Fetch financial data from admin endpoints
       const [transactionsResponse, bettingResponse] = await Promise.all([
-        apiMethods.get(`/api/admin/transactions?page=1&size=1000`),
-        apiMethods.get(`/api/admin/betting-records?page=1&size=1000`)
+        apiMethods.get(`/api/admin/transactions?page=1&size=100`),
+        apiMethods.get(`/api/admin/betting-records?page=1&size=50`)
       ]);
 
       const processedData = processFinancialData(
