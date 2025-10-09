@@ -28,7 +28,7 @@ class ForgotPassword(BaseModel):
 
 class ResetPassword(BaseModel):
     token: str
-    new_password: str = Field(..., min_length=8, max_length=100)
+    new_password: str = Field(..., min_length=8, max_length=72)
 
 
 class EmailVerification(BaseModel):
@@ -44,7 +44,7 @@ class GoogleAuthResponse(BaseModel):
 
 class ChangePassword(BaseModel):
     current_password: str
-    new_password: str = Field(..., min_length=8, max_length=100)
+    new_password: str = Field(..., min_length=8, max_length=72)
 
 
 class ResendVerificationEmail(BaseModel):

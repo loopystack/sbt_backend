@@ -370,6 +370,104 @@ async def get_all_transactions(
         print(f"Error in get_all_transactions: {e}")
         return []
 
+@router.get("/financial-analytics")
+async def get_financial_analytics(
+    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get comprehensive financial analytics for the platform"""
+    
+    try:
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        
+        # Get all transactions in the date range
+        transactions_stmt = select(Transaction).where(
+            Transaction.created_at >= start_date,
+            Transaction.created_at <= end_date,
+            Transaction.status == "completed"
+        )
+        transactions_result = await db.execute(transactions_stmt)
+        transactions = transactions_result.scalars().all()
+        
+        # Get all betting records in the date range
+        betting_records_stmt = select(BettingRecord).where(
+            BettingRecord.created_at >= start_date,
+            BettingRecord.created_at <= end_date
+        )
+        betting_records_result = await db.execute(betting_records_stmt)
+        betting_records = betting_records_result.scalars().all()
+        
+        # Calculate financial metrics
+        total_income = 0
+        total_outcome = 0
+        total_profit = 0
+        
+        # Process transactions
+        for transaction in transactions:
+            amount = abs(transaction.amount)
+            
+            # Income sources
+            if transaction.transaction_type in ['deposit', 'bet_won'] or \
+               (transaction.transaction_type == 'manual_adjustment' and transaction.amount > 0):
+                total_income += amount
+            
+            # Outcome sources  
+            elif transaction.transaction_type in ['withdrawal', 'bet_lost'] or \
+                 (transaction.transaction_type == 'manual_adjustment' and transaction.amount < 0):
+                total_outcome += amount
+        
+        # Process betting records for additional profit data
+        for record in betting_records:
+            if record.is_settled and record.actual_profit is not None:
+                profit = record.actual_profit
+                total_profit += profit
+                
+                if profit > 0:
+                    total_income += profit
+                else:
+                    total_outcome += abs(profit)
+        
+        # Calculate derived metrics
+        net_profit = total_income - total_outcome
+        profit_margin = (net_profit / total_income * 100) if total_income > 0 else 0
+        roi = (net_profit / total_outcome * 100) if total_outcome > 0 else 0
+        daily_income = total_income / days
+        daily_outcome = total_outcome / days
+        
+        return {
+            "total_income": total_income,
+            "total_outcome": total_outcome,
+            "net_profit": net_profit,
+            "profit_margin": round(profit_margin, 1),
+            "roi": round(roi, 1),
+            "daily_income": round(daily_income, 0),
+            "daily_outcome": round(daily_outcome, 0),
+            "period_days": days,
+            "transactions_count": len(transactions),
+            "betting_records_count": len(betting_records),
+            "settled_bets_count": len([r for r in betting_records if r.is_settled])
+        }
+        
+    except Exception as e:
+        print(f"Error in get_financial_analytics: {e}")
+        # Return default values if there's an error
+        return {
+            "total_income": 0,
+            "total_outcome": 0,
+            "net_profit": 0,
+            "profit_margin": 0.0,
+            "roi": 0.0,
+            "daily_income": 0,
+            "daily_outcome": 0,
+            "period_days": days,
+            "transactions_count": 0,
+            "betting_records_count": 0,
+            "settled_bets_count": 0
+        }
+
 @router.post("/users/{user_id}/funds")
 async def adjust_user_funds(
     user_id: int,
