@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     # Stop crypto scheduler
     # await stop_crypto_scheduler()
     # scheduler_task.cancel()
-    # try:
+    # try: 
     #     await scheduler_task
     # except asyncio.CancelledError:
     #     pass
