@@ -4,11 +4,12 @@ import re
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict
 from decimal import Decimal
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -95,49 +96,179 @@ LEAGUES: List[LeagueConfig] = [
 # -------------------- Selenium setup --------------------
 def make_driver(headless: bool = True) -> uc.Chrome:
     chrome_opts = Options()
+    
+    # Basic settings
     if headless:
         chrome_opts.add_argument("--headless=new")
     chrome_opts.add_argument("--disable-gpu")
     chrome_opts.add_argument("--no-sandbox")
-    chrome_opts.add_argument("--window-size=1600,1400")
+    chrome_opts.add_argument("--window-size=1920,1080")  # More common resolution
     chrome_opts.add_argument("--disable-dev-shm-usage")
     chrome_opts.add_argument("--lang=en-US")
+    
+    # Anti-detection measures
     chrome_opts.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_opts.add_argument("--disable-web-security")
+    chrome_opts.add_argument("--disable-features=VizDisplayCompositor")
     chrome_opts.add_argument("--disable-extensions")
     chrome_opts.add_argument("--disable-plugins")
+    chrome_opts.add_argument("--disable-default-apps")
+    chrome_opts.add_argument("--disable-sync")
+    chrome_opts.add_argument("--no-first-run")
+    chrome_opts.add_argument("--no-default-browser-check")
+    chrome_opts.add_argument("--disable-background-timer-throttling")
+    chrome_opts.add_argument("--disable-backgrounding-occluded-windows")
+    chrome_opts.add_argument("--disable-renderer-backgrounding")
+    
+    # More realistic user agent (Chrome 130+)
     chrome_opts.add_argument(
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
     )
-    driver = uc.Chrome(options=chrome_opts)
-    driver.set_page_load_timeout(60)
-    return driver
+    
+    # Performance improvements  
+    chrome_opts.add_argument("--disable-logging")
+    chrome_opts.add_argument("--disable-gpu-logging")
+    chrome_opts.add_argument("--silent")
+    
+    try:
+        driver = uc.Chrome(options=chrome_opts)
+        driver.set_page_load_timeout(60)
+        
+        # Additional anti-detection via JS
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
+        print("🚗 Chrome driver initialized successfully")
+        return driver
+        
+    except Exception as e:
+        print(f"❌ Failed to create Chrome driver: {e}")
+        print("💡 Try updating Chrome browser or check if Chrome is properly installed")
+        raise
 
 def wait_for_results_table(driver):
-    WebDriverWait(driver, 25).until(
-        EC.presence_of_element_located(
-            (By.XPATH, "//div[@data-testid='secondary-header'] | //div[@data-testid='game-row']")
+    """Wait for results table with fallback strategies"""
+    try:
+        # Primary strategy: wait for game rows or headers
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//div[@data-testid='secondary-header'] | //div[@data-testid='game-row']")
+            )
         )
-    )
+        print("✅ Found results table elements")
+    except Exception as e1:
+        print(f"⚠️ Primary wait failed: {str(e1)[:100]}...")
+        try:
+            # Fallback 1: wait for any table-like structure
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//div[contains(@class,'table') or contains(@class,'row') or contains(@class,'match')]")
+                )
+            )
+            print("✅ Found table-like elements (fallback 1)")
+        except Exception as e2:
+            print(f"⚠️ Fallback 1 failed: {str(e2)[:100]}...")
+            try:
+                # Fallback 2: wait for page body to be present
+                WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.TAG_NAME, "body"))
+                )
+                print("✅ Page body loaded (fallback 2)")
+                
+                # Debug: show what's actually on the page
+                page_source_snippet = driver.page_source[:500] if driver.page_source else "No page source"
+                print(f"🔍 Page source snippet: {page_source_snippet}...")
+                print(f"🔍 Current URL: {driver.current_url}")
+                
+            except Exception as e3:
+                print(f"❌ All wait strategies failed: {str(e3)[:100]}...")
+                raise e1  # Raise the original exception
+    
     time.sleep(0.4)
 
 def close_popups(driver):
-    for by, sel in [
-        (By.XPATH, "//button[contains(., 'Accept') or contains(.,'I Agree') or contains(.,'I accept')]"),
-        (By.CSS_SELECTOR, "div[role='dialog'] button"),
+    """Close various popups and overlays that might block the page"""
+    popup_selectors = [
+        # Cookie banners
+        (By.XPATH, "//button[contains(., 'Accept') or contains(.,'I Agree') or contains(.,'I accept') or contains(.,'Allow') or contains(.,'OK')]"),
+        (By.XPATH, "//button[contains(@class,'cookie') or contains(@id,'cookie')]"),
         (By.XPATH, "//div[contains(@class,'cookie')]//button"),
-    ]:
+        
+        # General dialogs and modals
+        (By.CSS_SELECTOR, "div[role='dialog'] button"),
+        (By.CSS_SELECTOR, ".modal button"),
+        (By.CSS_SELECTOR, "[class*='modal'] button"),
+        (By.CSS_SELECTOR, "[class*='popup'] button"),
+        (By.CSS_SELECTOR, "[class*='overlay'] button"),
+        
+        # Close buttons
+        (By.XPATH, "//button[contains(@class,'close') or contains(@aria-label,'close') or text()='×' or text()='X']"),
+        (By.CSS_SELECTOR, ".close, [class*='close']"),
+        
+        # GDPR and privacy
+        (By.XPATH, "//button[contains(text(),'Accept all') or contains(text(),'Accept All')]"),
+        (By.XPATH, "//button[contains(@class,'consent') or contains(@id,'consent')]"),
+    ]
+    
+    popups_closed = 0
+    for by, sel in popup_selectors:
         try:
-            el = WebDriverWait(driver, 2).until(EC.element_to_be_clickable((by, sel)))
-            el.click()
-            time.sleep(0.2)
+            elements = driver.find_elements(by, sel)
+            for el in elements[:3]:  # Limit to first 3 to avoid clicking too many things
+                if el.is_displayed() and el.is_enabled():
+                    el.click()
+                    popups_closed += 1
+                    time.sleep(0.3)
+                    print(f"🔧 Closed popup/modal ({popups_closed})")
+                    break
         except Exception:
-            pass
+            continue
+    
+    # Try to dismiss any remaining overlays with ESC key
+    try:
+        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+        time.sleep(0.2)
+    except Exception:
+        pass
 
-def go_to_url(driver, url: str):
-    driver.get(url)
-    wait_for_results_table(driver)
-    close_popups(driver)
+def go_to_url(driver, url: str, max_retries: int = 2):
+    """Navigate to URL with retries and popup handling"""
+    for attempt in range(max_retries + 1):
+        try:
+            print(f"🌐 Navigating to: {url}")
+            if attempt > 0:
+                print(f"   (Retry {attempt}/{max_retries})")
+                
+            driver.get(url)
+            time.sleep(2)  # Give page time to start loading
+            
+            # Close popups first (they might block content loading)
+            close_popups(driver)
+            time.sleep(1)
+            
+            # Now wait for the actual content
+            wait_for_results_table(driver)
+            
+            print("✅ Page loaded successfully")
+            return
+            
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt + 1} failed: {str(e)[:100]}...")
+            if attempt < max_retries:
+                wait_time = (attempt + 1) * 3  # Progressive backoff: 3s, 6s
+                print(f"   Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+            else:
+                print(f"❌ All {max_retries + 1} attempts failed for URL: {url}")
+                
+                # Try to get some diagnostic info
+                try:
+                    print(f"🔍 Current URL: {driver.current_url}")
+                    print(f"🔍 Page title: {driver.title}")
+                except:
+                    print("🔍 Cannot get page info")
+                
+                raise e
 
 def _row_count(driver) -> int:
     return len(driver.find_elements(
@@ -401,6 +532,109 @@ def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_n
             continue
     return rows
 
+# -------------------- Database checking helpers --------------------
+def get_existing_seasons_for_league(conn, country: str, league: str) -> List[int]:
+    """Get list of seasons that already have data for a specific league"""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT season 
+            FROM odds 
+            WHERE country = %s AND league = %s AND season IS NOT NULL
+            ORDER BY season DESC
+        """, (country, league))
+        return [row[0] for row in cur.fetchall()]
+
+def get_date_range_for_season(conn, country: str, league: str, season: int) -> Tuple[Optional[date], Optional[date]]:
+    """Get the min and max dates for a specific league/season"""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT MIN(date), MAX(date)
+            FROM odds 
+            WHERE country = %s AND league = %s AND season = %s
+        """, (country, league, season))
+        result = cur.fetchone()
+        return (result[0], result[1]) if result else (None, None)
+
+def count_matches_in_season(conn, country: str, league: str, season: int) -> int:
+    """Count total matches for a specific league/season"""
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM odds 
+            WHERE country = %s AND league = %s AND season = %s
+        """, (country, league, season))
+        return cur.fetchone()[0]
+
+def is_season_complete(conn, country: str, league: str, season: int, min_matches: int = 300) -> bool:
+    """
+    Check if a season appears complete based on match count.
+    Most major leagues have 380+ matches per season, so 300 is a reasonable threshold.
+    """
+    count = count_matches_in_season(conn, country, league, season)
+    return count >= min_matches
+
+def should_skip_season(conn, country: str, league: str, season: int, force_rescrape: bool = False) -> bool:
+    """
+    Determine if we should skip scraping a season.
+    Skip if season is complete unless force_rescrape is True.
+    """
+    if force_rescrape:
+        return False
+    
+    # Check global skip settings
+    current_year = datetime.now().year
+    if season >= current_year and not SKIP_CURRENT_SEASON:
+        return False
+    
+    return is_season_complete(conn, country, league, season, MIN_MATCHES_COMPLETE)
+
+def get_missing_date_ranges(conn, country: str, league: str, season: int) -> List[Tuple[date, date]]:
+    """
+    Identify date ranges that might be missing matches.
+    Returns list of (start_date, end_date) tuples where we might need to scrape more data.
+    """
+    with conn.cursor() as cur:
+        # Get all existing dates for this league/season, ordered
+        cur.execute("""
+            SELECT DISTINCT date FROM odds 
+            WHERE country = %s AND league = %s AND season = %s
+            ORDER BY date
+        """, (country, league, season))
+        existing_dates = [row[0] for row in cur.fetchall()]
+    
+    if not existing_dates:
+        return []  # No existing data, would need to scrape everything
+    
+    missing_ranges = []
+    
+    # Check for gaps larger than 10 days (might indicate missing data)
+    for i in range(len(existing_dates) - 1):
+        current_date = existing_dates[i]
+        next_date = existing_dates[i + 1] 
+        gap_days = (next_date - current_date).days
+        
+        if gap_days > 10:  # Potential missing data
+            gap_start = current_date + timedelta(days=1)
+            gap_end = next_date - timedelta(days=1)
+            missing_ranges.append((gap_start, gap_end))
+    
+    return missing_ranges
+
+def has_significant_gaps(conn, country: str, league: str, season: int) -> bool:
+    """
+    Check if a season has significant gaps that might warrant re-scraping specific ranges.
+    """
+    missing_ranges = get_missing_date_ranges(conn, country, league, season)
+    if not missing_ranges:
+        return False
+    
+    # Check if any gap is longer than 30 days
+    for start_date, end_date in missing_ranges:
+        if (end_date - start_date).days > 30:
+            return True
+    
+    return False
+
 # -------------------- Postgres helpers --------------------
 def _parse_time(t: Optional[str]):
     if not t: return None
@@ -463,11 +697,72 @@ def insert_rows(conn, values: List[Tuple]):
 SCRAPE_RESULTS = True
 SCRAPE_NEXT    = True
 
+# -------------------- Skip optimization settings --------------------
+SKIP_EXISTING_SEASONS = True      # Skip seasons that appear complete
+FORCE_RESCRAPE_ALL = False        # Force rescrape everything (ignores all skip logic)
+MIN_MATCHES_COMPLETE = 300        # Minimum matches to consider a season "complete"
+SKIP_CURRENT_SEASON = False       # Whether to skip current/future seasons (usually False)
+ALWAYS_SCRAPE_NEXT_MATCHES = True # Always scrape next matches regardless of skip settings
+
 def scrape_results_for_league(conn, driver, league: LeagueConfig):
+    # Check what seasons already exist
+    existing_seasons = get_existing_seasons_for_league(conn, league.country, league.league_name)
+    print(f"\n=== LEAGUE ANALYSIS • {league.country.upper()} • {league.league_name} ===")
+    print(f"Seasons to scrape: {league.seasons}")
+    print(f"Existing seasons in DB: {existing_seasons}")
+    
     for start_year in league.seasons:
+        # Check if we should skip this season
+        if SKIP_EXISTING_SEASONS and not FORCE_RESCRAPE_ALL:
+            if should_skip_season(conn, league.country, league.league_name, start_year, FORCE_RESCRAPE_ALL):
+                match_count = count_matches_in_season(conn, league.country, league.league_name, start_year)
+                date_range = get_date_range_for_season(conn, league.country, league.league_name, start_year)
+                
+                # Check for significant gaps that might warrant re-scraping
+                if has_significant_gaps(conn, league.country, league.league_name, start_year):
+                    missing_ranges = get_missing_date_ranges(conn, league.country, league.league_name, start_year)
+                    print(f"🔍 Season {start_year} has {match_count} matches but significant gaps detected:")
+                    for gap_start, gap_end in missing_ranges:
+                        gap_days = (gap_end - gap_start).days
+                        if gap_days > 30:
+                            print(f"   📅 Gap: {gap_start} to {gap_end} ({gap_days} days)")
+                    print(f"   ✅ Proceeding to re-scrape to fill gaps...")
+                else:
+                    print(f"⏭️  SKIPPING {start_year} - already has {match_count} matches (dates: {date_range[0]} to {date_range[1]})")
+                    continue
+        
         url = league.results_url(start_year)
         print(f"\n=== RESULTS • {league.country.upper()} • {league.league_name} • {start_year} ===")
-        go_to_url(driver, url)
+        
+        # Show existing data info for this season
+        existing_count = count_matches_in_season(conn, league.country, league.league_name, start_year)
+        if existing_count > 0:
+            date_range = get_date_range_for_season(conn, league.country, league.league_name, start_year)
+            print(f"📊 Existing data: {existing_count} matches (dates: {date_range[0]} to {date_range[1]})")
+            
+            # Check for suspicious future dates (might indicate data issues)
+            if date_range[1] and date_range[1] > datetime.now().date():
+                days_in_future = (date_range[1] - datetime.now().date()).days
+                if days_in_future > 30:
+                    print(f"⚠️ WARNING: Latest match date is {days_in_future} days in the future")
+                    print(f"   This might indicate data issues or unusual league structure")
+        
+        try:
+            go_to_url(driver, url)
+        except Exception as e:
+            print(f"❌ Failed to load season {start_year}: {e}")
+            print(f"🔗 Problem URL: {url}")
+            
+            # Check if this is a known problematic season
+            current_year = datetime.now().year
+            if start_year >= current_year:
+                print(f"💡 This is a current/future season ({start_year}). The page structure might be different.")
+                print(f"   • Try running with headless=False to see what's happening")
+                print(f"   • The season might not have started yet or have a different URL structure")
+            
+            # For now, continue with next season instead of crashing
+            print(f"⏭️ Skipping season {start_year} and continuing...")
+            continue
 
         total_pages = get_total_pages(driver)
         if total_pages is None:
@@ -491,15 +786,70 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
 def scrape_next_for_league(conn, driver, league: LeagueConfig):
     url = league.next_url()
     print(f"\n=== NEXT MATCHES • {league.country.upper()} • {league.league_name} ===")
+    
+    # Check if we should skip next matches (usually we don't)
+    if not ALWAYS_SCRAPE_NEXT_MATCHES and SKIP_EXISTING_SEASONS and not FORCE_RESCRAPE_ALL:
+        # Count existing future matches
+        current_date = datetime.now().date()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT COUNT(*) FROM odds 
+                WHERE country = %s AND league = %s AND date >= %s
+            """, (league.country, league.league_name, current_date))
+            future_matches = cur.fetchone()[0]
+        
+        if future_matches > 50:  # Arbitrary threshold for "enough" future matches
+            print(f"⏭️  SKIPPING next matches - already has {future_matches} future matches")
+            return
+    
     go_to_url(driver, url)
-    # Next-matches pages often aren’t paginated; if they are, logic can be extended similarly.
+    # Next-matches pages often aren't paginated; if they are, logic can be extended similarly.
     rows = collect_rows_on_page_dynamic_season(driver, league, page_num=1)
     insert_rows(conn, build_insert_values(rows))
+
+def print_scraping_summary(conn):
+    """Print a summary of what data already exists and what will be scraped"""
+    print("\n" + "="*80)
+    print("🚀 SCRAPING SUMMARY")
+    print("="*80)
+    print(f"📋 Configuration:")
+    print(f"   • Skip existing seasons: {SKIP_EXISTING_SEASONS}")
+    print(f"   • Force rescrape all: {FORCE_RESCRAPE_ALL}")
+    print(f"   • Min matches for complete season: {MIN_MATCHES_COMPLETE}")
+    print(f"   • Always scrape next matches: {ALWAYS_SCRAPE_NEXT_MATCHES}")
+    print(f"   • Scrape results: {SCRAPE_RESULTS}")
+    print(f"   • Scrape next: {SCRAPE_NEXT}")
+    
+    total_existing_matches = 0
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM odds")
+        total_existing_matches = cur.fetchone()[0]
+    
+    print(f"\n📊 Current database status:")
+    print(f"   • Total matches in database: {total_existing_matches:,}")
+    
+    if total_existing_matches > 0:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT country, league, COUNT(*) as match_count, MIN(date) as earliest, MAX(date) as latest
+                FROM odds 
+                GROUP BY country, league 
+                ORDER BY country, league
+            """)
+            print(f"   • Breakdown by league:")
+            for row in cur.fetchall():
+                country, league, count, earliest, latest = row
+                print(f"     - {country.title()} {league}: {count:,} matches ({earliest} to {latest})")
+    
+    print("="*80)
 
 def main(headless=True):
     conn = psycopg2.connect(**DB_CONFIG)
     driver = None
     try:
+        # Show summary before starting
+        print_scraping_summary(conn)
+        
         driver = make_driver(headless=headless)
         for lg in LEAGUES:
             if SCRAPE_RESULTS:
@@ -518,4 +868,7 @@ def main(headless=True):
             pass
 
 if __name__ == "__main__":
-    main(headless=True)
+    # Set headless=False to see the browser window for debugging
+    # Set headless=True for normal automated operation
+    DEBUG_MODE = False  # Change to True to see what's happening in browser
+    main(headless=not DEBUG_MODE)
