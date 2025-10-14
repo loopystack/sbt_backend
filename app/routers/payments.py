@@ -113,10 +113,14 @@ async def process_card_payment(
             if test_token:
                 # Create REAL Stripe PaymentIntent with test token
                 logger.info(f"Creating real Stripe transaction with test token: {test_token}")
+                
+                # For payment methods that are already created (pm_*), we need to specify
+                # the payment_method_types instead of using automatic_payment_methods
                 intent = stripe.PaymentIntent.create(
                     amount=int(payment_data.amount * 100),
                     currency='usd',
                     payment_method=test_token,
+                    payment_method_types=['card'],  # Specify card as the payment method type
                     confirm=True,
                     description=f'Payment for user {current_user.id}',
                     metadata={
@@ -125,12 +129,7 @@ async def process_card_payment(
                         'mode': settings.PAYMENT_MODE,
                         'card_last4': card_number[-4:],
                         'cardholder_name': payment_data.cardholder_name
-                    },
-                    automatic_payment_methods={
-                        'enabled': True,
-                        'allow_redirects': 'never'
-                    },
-                    return_url='http://62.169.28.113/payment-success'  # Required for some payment methods
+                    }
                 )
                 logger.info(f"Real Stripe PaymentIntent created: {intent.id}, Status: {intent.status}")
             else:
@@ -284,7 +283,7 @@ async def process_bank_transfer(
             extra_data={
                 "bank_name": payment_data.bank_name,
                 "account_number": payment_data.account_number[-4:],  # Only last 4 digits for security
-                "account_holder": payment_data.account_holder,
+                "account_holder": payment_data.account_holder_name,
                 "routing_number": payment_data.routing_number
             }
         )

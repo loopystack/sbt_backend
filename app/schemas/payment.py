@@ -52,6 +52,7 @@ class BankTransferRequest(BaseModel):
     account_number: str = Field(..., min_length=4, max_length=17)
     routing_number: str = Field(..., min_length=9, max_length=9)
     account_holder_name: str = Field(..., min_length=2, max_length=100)
+    bank_name: str = Field(..., min_length=2, max_length=100)
     amount: float = Field(..., gt=0, le=50000)
     
     @validator('account_number')
@@ -104,3 +105,40 @@ class PaymentMethodInfo(BaseModel):
 
 class PaymentMethodsResponse(BaseModel):
     payment_methods: list[PaymentMethodInfo]
+
+# Withdrawal Schemas
+class WithdrawalMethod(str, Enum):
+    CRYPTO = "crypto"
+    CASH = "cash"
+
+class WithdrawalRequest(BaseModel):
+    amount: float = Field(..., gt=0)
+    method: WithdrawalMethod
+    
+    # Crypto fields
+    crypto_address: Optional[str] = None
+    crypto_currency: Optional[str] = None
+    crypto_network: Optional[str] = None
+    memo: Optional[str] = None
+    
+    # Cash fields
+    card_number: Optional[str] = None
+    cardholder_name: Optional[str] = None
+    expiry_month: Optional[int] = None
+    expiry_year: Optional[int] = None
+    cvv: Optional[str] = None
+    bank_account: Optional[str] = None
+    routing_number: Optional[str] = None
+    account_holder_name: Optional[str] = None
+    paypal_email: Optional[EmailStr] = None
+    cash_method: Optional[str] = None  # "VISA", "Mastercard", "Bank Transfer", "PayPal"
+
+class WithdrawalResponse(BaseModel):
+    transaction_id: str
+    status: Literal["success", "failed", "pending", "processing"]
+    amount: float
+    currency: str = "USD"
+    message: str
+    new_balance: float
+    processing_time: Optional[str] = None
+    estimated_arrival: Optional[str] = None
