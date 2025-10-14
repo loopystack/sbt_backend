@@ -127,7 +127,8 @@ async def process_card_payment(
                     automatic_payment_methods={
                         'enabled': True,
                         'allow_redirects': 'never'
-                    }
+                    },
+                    return_url='http://62.169.28.113/payment-success'
                 )
                 logger.info(f"Real Stripe PaymentIntent created: {intent.id}, Status: {intent.status}")
             else:
