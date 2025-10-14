@@ -178,7 +178,7 @@ async def mock_google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost:5173"
+            frontend_base_url = "http://62.169.28.113"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -218,7 +218,7 @@ async def mock_google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost:5173"
+            frontend_base_url = "http://62.169.28.113"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -343,7 +343,7 @@ async def google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost:5173"
+            frontend_base_url = "http://62.169.28.113"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -393,7 +393,7 @@ async def google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost:5173"
+            frontend_base_url = "http://62.169.28.113"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
