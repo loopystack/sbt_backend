@@ -4,6 +4,15 @@ from .odds import Odds
 from .deposit import DepositIntent, CryptoTransaction, CryptoInventory, UserCryptoBalance
 from .betting_record import BettingRecord
 from .transaction import Transaction
+from .affiliate import Affiliate, Referral, AffiliateCommission
+from .analytics import (
+    ClickEvent,
+    PageView,
+    ConversionEvent,
+    RegionalRestriction,
+    UserCompliance,
+    ComplianceAlert
+)
 
 __all__ = [
     "Base", 
@@ -16,5 +25,14 @@ __all__ = [
     "CryptoInventory",
     "UserCryptoBalance",
     "BettingRecord",
-    "Transaction"
+    "Transaction",
+    "Affiliate",
+    "Referral",
+    "AffiliateCommission",
+    "ClickEvent",
+    "PageView",
+    "ConversionEvent",
+    "RegionalRestriction",
+    "UserCompliance",
+    "ComplianceAlert"
 ]

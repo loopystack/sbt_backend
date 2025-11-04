@@ -34,3 +34,4 @@ class Transaction(Base):
     
     # Relationships
     user = relationship("User", back_populates="transactions")
+    affiliate_commissions = relationship("AffiliateCommission", back_populates="transaction")

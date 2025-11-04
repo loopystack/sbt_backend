@@ -188,6 +188,8 @@ async def get_transactions(
 ):
     """Get user's transaction history with pagination"""
     try:
+        print(f"🔍 Fetching transactions for user {current_user.id} (page={page}, per_page={per_page})")
+        
         # 🤖 AUTOMATIC SETTLEMENT: Run settlement before fetching transactions
         await auto_settle_user_bets(db, current_user.id)
         
@@ -218,6 +220,8 @@ async def get_transactions(
         # Calculate total pages
         total_pages = (total + per_page - 1) // per_page
         
+        print(f"✅ Found {len(transactions)} transactions out of {total} total for user {current_user.id}")
+        
         return TransactionResponse(
             transactions=transactions,
             total=total,
@@ -226,6 +230,7 @@ async def get_transactions(
             total_pages=total_pages
         )
     except Exception as e:
+        print(f"❌ Error fetching transactions: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch transactions: {str(e)}")
 
 @router.get("/summary", response_model=TransactionSummary)

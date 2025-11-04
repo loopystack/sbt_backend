@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Numeric
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Numeric, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -23,6 +23,10 @@ class User(Base):
     # User funds (in USD)
     funds_usd = Column(Numeric(15, 2), default=0.00, nullable=False)
     
+    # Affiliate/Referral tracking
+    referral_code_used = Column(String(50), nullable=True, index=True)  # Code used when signing up
+    referred_by_affiliate_id = Column(Integer, ForeignKey("affiliates.id"), nullable=True, index=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -33,6 +37,20 @@ class User(Base):
     crypto_balances = relationship("UserCryptoBalance", back_populates="user")
     betting_records = relationship("BettingRecord", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
+    click_events = relationship("ClickEvent", back_populates="user")
+    page_views = relationship("PageView", back_populates="user")
+    conversion_events = relationship("ConversionEvent", back_populates="user")
+    compliance = relationship("UserCompliance", back_populates="user", uselist=False)
+    compliance_alerts = relationship("ComplianceAlert", back_populates="user")
+    # User who referred this user (if any) - uses User.referred_by_affiliate_id -> Affiliate.id  
+    # Note: affiliate_account is created via backref from Affiliate.user relationship
+    # We use primaryjoin to explicitly specify this uses referred_by_affiliate_id, not user_id
+    referred_by_affiliate = relationship(
+        "Affiliate", 
+        foreign_keys=[referred_by_affiliate_id],
+        primaryjoin="User.referred_by_affiliate_id == Affiliate.id",
+        overlaps="affiliate_account"
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', username='{self.username}')>"

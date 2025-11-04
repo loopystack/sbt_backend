@@ -24,10 +24,10 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = "700550723594-eepho7l9d04n0im6qs04jb03gpqivk97.apps.googleusercontent.com"
     GOOGLE_CLIENT_SECRET: str = "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"
-    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    GOOGLE_REDIRECT_URI: str = "http://18.199.221.93:5001/api/auth/google/callback"
     
     # Frontend URL
-    FRONTEND_URL: str = "http://localhost:5173"
+    FRONTEND_URL: str = "http://18.199.221.93"
     
     # App Configuration
     APP_NAME: str = "Soccer Betting Platform" 
@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     # Google reCAPTCHA Configuration
     RECAPTCHA_SITE_KEY: str = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
     RECAPTCHA_SECRET_KEY: str = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+    
+    # Rollbar Error Tracking Configuration
+    ROLLBAR_ACCESS_TOKEN: Optional[str] = None
+    ROLLBAR_ENVIRONMENT: str = "development"
+    ROLLBAR_ENABLED: bool = True
     
     @property
     def stripe_secret_key(self) -> str:

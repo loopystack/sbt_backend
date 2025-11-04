@@ -10,6 +10,7 @@ from ..models.betting_record import BettingRecord
 from ..models.odds import Odds
 from ..models.transaction import Transaction
 from ..services.transaction_service import TransactionService
+from ..services.compliance_service import compliance_service
 from ..schemas.betting_record import (
     BettingRecordCreate, 
     BettingRecordResponse, 
@@ -193,6 +194,19 @@ async def create_betting_record(
 ):
     """Create a new betting record"""
     try:
+        # Check compliance limits before allowing bet
+        compliance_check = await compliance_service.check_bet_limits(
+            user_id=current_user.id,
+            bet_amount=betting_record.bet_amount,
+            db=db
+        )
+        
+        if not compliance_check.get("allowed"):
+            raise HTTPException(
+                status_code=403,
+                detail=compliance_check.get("reason", "Bet limit exceeded")
+            )
+        
         db_record = BettingRecord(
             user_id=current_user.id,
             **betting_record.model_dump()
@@ -236,6 +250,8 @@ async def get_betting_records(
 ):
     """Get user's betting records with pagination"""
     try:
+        print(f"🔍 Fetching betting records for user {current_user.id} (page={page}, per_page={per_page})")
+        
         # 🤖 AUTOMATIC SETTLEMENT: Run settlement before fetching records
         await auto_settle_user_bets(db, current_user.id)
         
@@ -262,6 +278,8 @@ async def get_betting_records(
         # Calculate total pages
         total_pages = (total + per_page - 1) // per_page
         
+        print(f"✅ Found {len(records)} records out of {total} total for user {current_user.id}")
+        
         return BettingRecordResponse(
             records=records,
             total=total,
@@ -270,6 +288,7 @@ async def get_betting_records(
             total_pages=total_pages
         )
     except Exception as e:
+        print(f"❌ Error fetching betting records: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch betting records: {str(e)}")
 
 @router.get("/records/stats")
@@ -279,6 +298,8 @@ async def get_betting_stats(
 ):
     """Get user's betting statistics"""
     try:
+        print(f"🔍 Fetching betting stats for user {current_user.id}")
+        
         # 🤖 AUTOMATIC SETTLEMENT: Run settlement before fetching stats
         await auto_settle_user_bets(db, current_user.id)
         
@@ -286,6 +307,8 @@ async def get_betting_stats(
         query = select(BettingRecord).where(BettingRecord.user_id == current_user.id)
         result = await db.execute(query)
         records = result.scalars().all()
+        
+        print(f"📊 Found {len(records)} betting records for user {current_user.id}")
         
         total_bets = len(records)
         total_amount_bet = sum(record.bet_amount for record in records)
@@ -309,6 +332,7 @@ async def get_betting_stats(
             "win_rate": round(win_rate, 2)
         }
     except Exception as e:
+        print(f"❌ Error fetching betting stats: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch betting stats: {str(e)}")
 
 @router.post("/fix-missing-dates")

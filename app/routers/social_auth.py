@@ -167,18 +167,18 @@ async def mock_google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://18.199.221.93"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -207,18 +207,18 @@ async def mock_google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://18.199.221.93"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -237,6 +237,20 @@ async def google_callback(
         # Get the authorization code from the callback
         code = request.query_params.get("code")
         state = request.query_params.get("state")
+        error = request.query_params.get("error")
+        
+        print(f"🔍 Google OAuth Callback received:")
+        print(f"   Code: {code[:50] if code else None}...")
+        print(f"   State: {state}")
+        print(f"   Error: {error}")
+        
+        if error:
+            print(f"❌ OAuth error received: {error}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"OAuth error: {error}"
+            )
+            
         if not code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -255,7 +269,11 @@ async def google_callback(
         )
         
         # Exchange code for token
-        flow.fetch_token(code=code)
+        try:
+            flow.fetch_token(code=code)
+        except Exception as fetch_error:
+            print(f"❌ Error fetching token: {str(fetch_error)}")
+            raise
         # Get user info from Google
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
@@ -332,18 +350,18 @@ async def google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://18.199.221.93"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -363,7 +381,10 @@ async def google_callback(
         )
         
     except Exception as e:
-        print(f"Google callback error: {str(e)}")
+        import traceback
+        print(f"❌ Google callback error: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        
         # Use dynamic frontend URL for error redirect too
         referer = request.headers.get("referer", "")
         host = request.headers.get("host", "")
@@ -382,18 +403,18 @@ async def google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in referer.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in host.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93" in origin.lower(),
+            "18.199.221.93:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://18.199.221.93"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
