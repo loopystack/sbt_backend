@@ -1,6 +1,8 @@
 # odds_multi_countries_fixed_dates.py
 import time
 import re
+import os
+import shutil
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict
 from decimal import Decimal
@@ -18,8 +20,9 @@ from selenium.common.exceptions import (
     ElementClickInterceptedException,
 )
 
-import psycopg2
-from psycopg2.extras import execute_values
+import psycopg
+from psycopg.sql import SQL, Identifier
+# import psycopg.pool  # Not used in script - psycopg-pool is separate package if needed
 
 # -------------------- DB CONFIG --------------------
 DB_CONFIG = {
@@ -131,20 +134,59 @@ def make_driver(headless: bool = True) -> uc.Chrome:
     chrome_opts.add_argument("--disable-gpu-logging")
     chrome_opts.add_argument("--silent")
     
-    try:
-        driver = uc.Chrome(options=chrome_opts)
-        driver.set_page_load_timeout(60)
-        
-        # Additional anti-detection via JS
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        
-        print("🚗 Chrome driver initialized successfully")
-        return driver
-        
-    except Exception as e:
-        print(f"❌ Failed to create Chrome driver: {e}")
-        print("💡 Try updating Chrome browser or check if Chrome is properly installed")
-        raise
+    max_retries = 3
+    retry_delay = 2  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Specify Chrome version to match installed browser (141)
+            # This forces undetected-chromedriver to download matching ChromeDriver
+            if attempt > 0:
+                print(f"🔄 Retry attempt {attempt + 1}/{max_retries}...")
+                time.sleep(retry_delay * attempt)  # Exponential backoff
+            
+            driver = uc.Chrome(options=chrome_opts, version_main=141)
+            driver.set_page_load_timeout(60)
+            
+            # Additional anti-detection via JS
+            driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+            print("🚗 Chrome driver initialized successfully")
+            return driver
+            
+        except Exception as e:
+            error_msg = str(e).lower()
+            is_download_error = any(keyword in error_msg for keyword in [
+                "retrieval incomplete",
+                "contenttooshort",
+                "urlopen error",
+                "got only"
+            ])
+            
+            if is_download_error and attempt < max_retries - 1:
+                print(f"⚠️ ChromeDriver download incomplete (attempt {attempt + 1}/{max_retries})")
+                print(f"   Error: {str(e)[:200]}...")
+                print(f"   Retrying in {retry_delay * (attempt + 1)} seconds...")
+                
+                # Clear cache to force fresh download
+                cache_dir = os.path.join(os.path.expanduser('~'), '.undetected_chromedriver')
+                if os.path.exists(cache_dir):
+                    try:
+                        shutil.rmtree(cache_dir)
+                        print(f"   Cleared ChromeDriver cache: {cache_dir}")
+                    except Exception as cache_error:
+                        print(f"   ⚠️ Could not clear cache: {cache_error}")
+                
+                continue  # Retry
+            else:
+                print(f"❌ Failed to create Chrome driver: {e}")
+                if attempt == max_retries - 1:
+                    print("💡 Tips:")
+                    print("   - Check your internet connection")
+                    print("   - Try running the script again (download may succeed on retry)")
+                    print("   - Update Chrome browser to latest version")
+                    print("   - Manually clear cache: Remove ~/.undetected_chromedriver folder")
+                raise
 
 def wait_for_results_table(driver):
     """Wait for results table with fallback strategies"""
@@ -686,11 +728,11 @@ def insert_rows(conn, values: List[Tuple]):
     sql = f"""
     INSERT INTO {TABLE}
     (country, league, season, "date", "time", home_team, away_team, result, odd_1, "odd_X", odd_2, bets)
-    VALUES %s
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (country, league, season, "date", "time", home_team, away_team) DO NOTHING;
     """
     with conn.cursor() as cur:
-        execute_values(cur, sql, values)
+        cur.executemany(sql, values)
     conn.commit()
 
 # -------------------- Orchestration --------------------
@@ -844,7 +886,7 @@ def print_scraping_summary(conn):
     print("="*80)
 
 def main(headless=True):
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = psycopg.connect(**DB_CONFIG)
     driver = None
     try:
         # Show summary before starting
@@ -858,9 +900,17 @@ def main(headless=True):
                 scrape_next_for_league(conn, driver, lg)
     finally:
         if driver:
-            try: 
+            try:
+                # Properly close the driver
                 driver.quit()
-            except Exception: 
+                # Small delay to ensure cleanup completes before garbage collection
+                time.sleep(0.2)
+            except (OSError, Exception) as e:
+                # Ignore "handle is invalid" errors during cleanup
+                # This is a known issue with undetected-chromedriver on Windows
+                error_msg = str(e).lower()
+                if "handle is invalid" not in error_msg and "winerror 6" not in error_msg:
+                    print(f"⚠️ Warning during driver cleanup: {e}")
                 pass
         try: 
             conn.close()
