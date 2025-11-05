@@ -1,6 +1,7 @@
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
 sqlalchemy==2.0.36
+setuptools>=65.0.0  # Required for distutils compatibility in Python 3.12+
 # psycopg2-binary==2.9.10  # Not compatible with Python 3.14 yet
 # asyncpg==0.30.0  # Not compatible with Python 3.14 yet - using psycopg instead
 psycopg>=3.2.0  # New psycopg3 Python package (includes sql module)
