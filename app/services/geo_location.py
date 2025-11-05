@@ -5,6 +5,7 @@ Handles IP-based country detection for regional restrictions
 import httpx
 from typing import Optional, Dict, Any
 from fastapi import Request
+from app.core.config import settings
 
 
 class GeoLocationService:
@@ -26,7 +27,7 @@ class GeoLocationService:
             ip_address: IP address to check
             test_country: If provided, return this country code for testing (for localhost)
         """
-        if not ip_address or ip_address == "18.199.221.93" or ip_address.startswith("192.168"):
+        if not ip_address or ip_address == settings.LOCALHOST_IP or ip_address.startswith("192.168"):
             # Localhost or private IP - return test country if specified, otherwise None
             if test_country:
                 # Map of test country codes to names
@@ -41,7 +42,7 @@ class GeoLocationService:
                 return {
                     "country_code": test_country.upper(),
                     "country_name": test_countries.get(test_country.upper(), "Test Country"),
-                    "ip": "18.199.221.93"
+                    "ip": settings.LOCALHOST_IP
                 }
             return None
         
@@ -105,7 +106,7 @@ class GeoLocationService:
         if hasattr(request.client, "host"):
             return request.client.host
         
-        return "18.199.221.93"
+        return settings.LOCALHOST_IP
     
     @staticmethod
     async def detect_user_country(request: Request, test_country: Optional[str] = None) -> Optional[Dict[str, Any]]:

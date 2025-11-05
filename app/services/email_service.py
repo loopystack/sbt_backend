@@ -87,7 +87,7 @@ class EmailService:
 
     async def send_verification_email(self, email: str, username: str, verification_token: str) -> bool:
         """Send email verification email"""
-        verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
+        verification_url = f"{settings.frontend_url}/verify-email?token={verification_token}"
         
         html_content = self.render_template(
             "verification.html",
@@ -147,7 +147,7 @@ class EmailService:
 
     async def send_password_reset_email(self, email: str, username: str, reset_token: str) -> bool:
         """Send password reset email"""
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        reset_url = f"{settings.frontend_url}/reset-password?token={reset_token}"
         
         html_content = self.render_template(
             "password_reset.html",
@@ -288,7 +288,7 @@ class EmailService:
                     
                     <!-- CTA Button -->
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="{settings.FRONTEND_URL}/dashboard" style="background-color: #667eea; color: white; padding: 14px 32px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">View Dashboard</a>
+                        <a href="{settings.frontend_url}/dashboard" style="background-color: #667eea; color: white; padding: 14px 32px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">View Dashboard</a>
                     </div>
                     
                     <p style="font-size: 14px; color: #7f8c8d; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
@@ -305,7 +305,7 @@ class EmailService:
                 <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; border-top: 1px solid #e0e0e0;">
                     <p style="margin: 0; font-size: 12px; color: #7f8c8d;">
                         You received this email because you placed a bet on {settings.APP_NAME}.<br>
-                        <a href="{settings.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit {settings.APP_NAME}</a>
+                        <a href="{settings.frontend_url}" style="color: #667eea; text-decoration: none;">Visit {settings.APP_NAME}</a>
                     </p>
                 </div>
             </div>
@@ -333,7 +333,7 @@ class EmailService:
         
         {result_message}
         
-        View your dashboard: {settings.FRONTEND_URL}/dashboard
+        View your dashboard: {settings.frontend_url}/dashboard
         
         {'Keep betting and good luck with your next bets! 🍀' if not bet_won else 'Congratulations on your win! 🎉'}
         
