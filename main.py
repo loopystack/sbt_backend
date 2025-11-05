@@ -69,7 +69,9 @@ if hasattr(settings, 'FRONTEND_PRODUCTION_URL') and settings.FRONTEND_PRODUCTION
 # Use regex pattern to allow any port on the server IP and localhost
 # This allows http://35.159.122.94:PORT, http://localhost:PORT, etc.
 # Also allows http://35.159.122.94 (no port) and https:// variants
-origin_regex = f"(http|https)://({settings.LOCALHOST_IP}|localhost|127\\.0\\.0\\.1)(:\\d+)?$"
+# Escape dots in IP address for regex
+escaped_ip = settings.LOCALHOST_IP.replace('.', r'\.')
+origin_regex = f"(http|https)://({escaped_ip}|localhost|127\\.0\\.0\\.1)(:\\d+)?$"
 
 app.add_middleware(
     CORSMiddleware,
