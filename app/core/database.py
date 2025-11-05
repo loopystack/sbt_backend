@@ -10,8 +10,8 @@ database_url = settings.DATABASE_URL
 
 # Handle different database types
 if database_url.startswith("postgresql://"):
-    # PostgreSQL with asyncpg driver
-    database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # PostgreSQL with psycopg driver (psycopg3 works with Python 3.14)
+    database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 elif database_url.startswith("sqlite://"):
     # SQLite with aiosqlite driver
     database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
