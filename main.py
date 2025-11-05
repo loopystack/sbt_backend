@@ -5,6 +5,10 @@ from contextlib import asynccontextmanager
 import uvicorn
 import asyncio
 import traceback
+import logging
+
+# Suppress SQLAlchemy engine logging
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 from app.core.config import settings
 from app.core.database import engine
@@ -44,10 +48,29 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware - Allow all origins for development
+# CORS middleware - Allow specific origins
+# Note: When allow_credentials=True, you cannot use allow_origins=["*"]
+# Must explicitly specify allowed origins or use regex patterns
+
+# Build allowed origins list
+allowed_origins = [
+    f"http://{settings.LOCALHOST_IP}",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
+# Add production URL if it exists and is not empty
+if hasattr(settings, 'FRONTEND_PRODUCTION_URL') and settings.FRONTEND_PRODUCTION_URL:
+    allowed_origins.append(settings.FRONTEND_PRODUCTION_URL)
+
+# Use regex pattern to allow any port on the server IP and localhost
+# This allows http://35.159.122.94:PORT, http://localhost:PORT, etc.
+origin_regex = f"http://({settings.LOCALHOST_IP}|localhost|127\\.0\\.0\\.1)(:\\d+)?"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
