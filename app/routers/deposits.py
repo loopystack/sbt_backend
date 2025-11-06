@@ -20,6 +20,7 @@ from app.schemas.deposit import (
     CryptoAsset
 )
 from app.services.address_generator import AddressGenerator
+from app.services.compliance_service import compliance_service
 
 router = APIRouter(prefix="/api/deposits", tags=["deposits"])
 
@@ -72,6 +73,19 @@ async def initiate_deposit(
         raise HTTPException(
             status_code=400,
             detail=f"Network {deposit_data.network} not supported for {deposit_data.asset}"
+        )
+    
+    # Check compliance limits
+    compliance_check = await compliance_service.check_deposit_limits(
+        user_id=current_user.id,
+        deposit_amount=deposit_data.amount_usd,
+        db=db
+    )
+    
+    if not compliance_check.get("allowed"):
+        raise HTTPException(
+            status_code=403,
+            detail=compliance_check.get("reason", "Deposit limit exceeded")
         )
     
     # Generate unique address and memo if needed

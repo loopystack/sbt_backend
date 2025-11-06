@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from datetime import datetime
+import asyncio
 
 from app.core.database import get_db
 from app.models.odds import Odds
 from app.models.betting_record import BettingRecord
 from app.models.transaction import Transaction
 from app.models.user import User
+from app.services.email_service import email_service
 
 router = APIRouter()
 
@@ -173,6 +175,25 @@ async def settle_match_bets_automatically(match: Odds, db: AsyncSession):
                     print(f"      💰 Balance: ${old_balance:.2f} → ${new_balance:.2f}")
                     print(f"      📝 Transaction created: bet_won, amount: ${winnings:.2f}")
                     
+                    # Send email notification to user
+                    try:
+                        asyncio.create_task(
+                            email_service.send_bet_settlement_email(
+                                email=user.email,
+                                username=user.username,
+                                match_teams=f"{match.home_team} vs {match.away_team}",
+                                match_result=match.result,
+                                bet_outcome=bet.selected_outcome,
+                                bet_won=True,
+                                bet_amount=bet.bet_amount,
+                                winnings=winnings,
+                                profit=profit
+                            )
+                        )
+                        print(f"      📧 Email notification sent to {user.email}")
+                    except Exception as email_error:
+                        print(f"      ⚠️ Failed to send email: {str(email_error)}")
+                    
                     settlement_details.append({
                         "bet_id": bet.id,
                         "user_id": user.id,
@@ -202,6 +223,25 @@ async def settle_match_bets_automatically(match: Odds, db: AsyncSession):
                     )
                     db.add(transaction)
                     print(f"      📝 Transaction created: bet_lost, loss: ${bet.bet_amount:.2f}")
+                    
+                    # Send email notification to user
+                    try:
+                        asyncio.create_task(
+                            email_service.send_bet_settlement_email(
+                                email=user.email,
+                                username=user.username,
+                                match_teams=f"{match.home_team} vs {match.away_team}",
+                                match_result=match.result,
+                                bet_outcome=bet.selected_outcome,
+                                bet_won=False,
+                                bet_amount=bet.bet_amount,
+                                winnings=0.0,
+                                profit=profit
+                            )
+                        )
+                        print(f"      📧 Email notification sent to {user.email}")
+                    except Exception as email_error:
+                        print(f"      ⚠️ Failed to send email: {str(email_error)}")
                     
                     settlement_details.append({
                         "bet_id": bet.id,

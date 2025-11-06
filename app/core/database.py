@@ -22,7 +22,7 @@ elif database_url.startswith("mysql://"):
 # Create async engine
 engine = create_async_engine(
     database_url,
-    echo=settings.DEBUG,
+    echo=False,  # Disable SQL query logging
     future=True,
     # SQLite specific configuration
     connect_args={"check_same_thread": False} if "sqlite" in database_url else {}

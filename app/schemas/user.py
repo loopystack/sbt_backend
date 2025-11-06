@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=72)
+    referral_code: Optional[str] = Field(None, max_length=50, description="Optional referral code used during signup")
 
 
 class UserUpdate(BaseModel):

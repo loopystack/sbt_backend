@@ -173,12 +173,12 @@ async def mock_google_callback(
             "127.0.0.1" in host.lower(),
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://localhost"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -213,12 +213,12 @@ async def mock_google_callback(
             "127.0.0.1" in host.lower(),
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://localhost"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -338,12 +338,12 @@ async def google_callback(
             "127.0.0.1" in host.lower(),
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://localhost"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -388,12 +388,12 @@ async def google_callback(
             "127.0.0.1" in host.lower(),
             "localhost" in origin.lower(),
             "127.0.0.1" in origin.lower(),
-            "localhost:8000" in str(request.url)
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://62.169.28.113"
+            frontend_base_url = "http://localhost"
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         

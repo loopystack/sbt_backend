@@ -1,6 +1,7 @@
 from .auth import *
 from .user import *
 from .odds import *
+from .analytics import *
 
 __all__ = [
     "UserCreate",
@@ -16,5 +17,6 @@ __all__ = [
     "OddsBase",
     "OddsResponse",
     "OddsListResponse",
-    "OddsQueryParams"
+    "OddsQueryParams",
+    "MatchCTR"
 ]

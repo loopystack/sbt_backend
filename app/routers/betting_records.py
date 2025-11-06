@@ -10,6 +10,10 @@ from ..models.betting_record import BettingRecord
 from ..models.odds import Odds
 from ..models.transaction import Transaction
 from ..services.transaction_service import TransactionService
+from ..services.compliance_service import compliance_service
+from ..services.affiliate_service import AffiliateService
+from ..models.affiliate import Referral
+from decimal import Decimal
 from ..schemas.betting_record import (
     BettingRecordCreate, 
     BettingRecordResponse, 
@@ -164,6 +168,31 @@ async def auto_settle_user_bets(db: AsyncSession, user_id: int):
                             payment_method="auto_settlement"
                         )
                         db.add(transaction)
+                        await db.flush()  # Flush to get transaction ID
+                        
+                        # Calculate affiliate commission on bet loss (platform profit)
+                        if user.referred_by_affiliate_id:
+                            try:
+                                referral_query = select(Referral).where(
+                                    Referral.referred_user_id == user_id,
+                                    Referral.affiliate_id == user.referred_by_affiliate_id
+                                )
+                                referral_result = await db.execute(referral_query)
+                                referral = referral_result.scalar_one_or_none()
+                                
+                                if referral:
+                                    # Commission based on bet amount (platform profit when user loses)
+                                    await AffiliateService.calculate_commission(
+                                        affiliate_id=user.referred_by_affiliate_id,
+                                        transaction_id=transaction.id,
+                                        transaction_type="bet_loss",
+                                        base_amount=Decimal(str(bet.bet_amount)),
+                                        db=db
+                                    )
+                            except Exception as e:
+                                # Log error but don't fail settlement
+                                print(f"Failed to calculate affiliate commission on bet loss: {e}")
+                        
                         print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction created)")
                 else:
                     print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction already exists, skipping)")
@@ -193,6 +222,19 @@ async def create_betting_record(
 ):
     """Create a new betting record"""
     try:
+        # Check compliance limits before allowing bet
+        compliance_check = await compliance_service.check_bet_limits(
+            user_id=current_user.id,
+            bet_amount=betting_record.bet_amount,
+            db=db
+        )
+        
+        if not compliance_check.get("allowed"):
+            raise HTTPException(
+                status_code=403,
+                detail=compliance_check.get("reason", "Bet limit exceeded")
+            )
+        
         db_record = BettingRecord(
             user_id=current_user.id,
             **betting_record.model_dump()
@@ -201,7 +243,7 @@ async def create_betting_record(
         await db.flush()  # Flush to get the ID
         
         # Create transaction record for the bet placement
-        await TransactionService.create_bet_placed_transaction(
+        transaction = await TransactionService.create_bet_placed_transaction(
             db=db,
             user_id=current_user.id,
             amount=betting_record.bet_amount,
@@ -218,6 +260,28 @@ async def create_betting_record(
                 "potential_win": betting_record.potential_win
             }
         )
+        
+        await db.flush()  # Flush before affiliate tracking
+        
+        # Track first bet conversion if user was referred
+        if current_user.referred_by_affiliate_id:
+            try:
+                referral_query = select(Referral).where(
+                    Referral.referred_user_id == current_user.id,
+                    Referral.affiliate_id == current_user.referred_by_affiliate_id
+                )
+                referral_result = await db.execute(referral_query)
+                referral = referral_result.scalar_one_or_none()
+                
+                if referral and not referral.first_bet_date:
+                    await AffiliateService.track_conversion(
+                        referral_id=referral.id,
+                        conversion_type="first_bet",
+                        db=db
+                    )
+            except Exception as e:
+                # Log error but don't fail bet placement
+                print(f"Failed to track first bet conversion: {e}")
         
         await db.commit()
         await db.refresh(db_record)
@@ -236,6 +300,8 @@ async def get_betting_records(
 ):
     """Get user's betting records with pagination"""
     try:
+        print(f"🔍 Fetching betting records for user {current_user.id} (page={page}, per_page={per_page})")
+        
         # 🤖 AUTOMATIC SETTLEMENT: Run settlement before fetching records
         await auto_settle_user_bets(db, current_user.id)
         
@@ -262,6 +328,8 @@ async def get_betting_records(
         # Calculate total pages
         total_pages = (total + per_page - 1) // per_page
         
+        print(f"✅ Found {len(records)} records out of {total} total for user {current_user.id}")
+        
         return BettingRecordResponse(
             records=records,
             total=total,
@@ -270,6 +338,7 @@ async def get_betting_records(
             total_pages=total_pages
         )
     except Exception as e:
+        print(f"❌ Error fetching betting records: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch betting records: {str(e)}")
 
 @router.get("/records/stats")
@@ -279,6 +348,8 @@ async def get_betting_stats(
 ):
     """Get user's betting statistics"""
     try:
+        print(f"🔍 Fetching betting stats for user {current_user.id}")
+        
         # 🤖 AUTOMATIC SETTLEMENT: Run settlement before fetching stats
         await auto_settle_user_bets(db, current_user.id)
         
@@ -286,6 +357,8 @@ async def get_betting_stats(
         query = select(BettingRecord).where(BettingRecord.user_id == current_user.id)
         result = await db.execute(query)
         records = result.scalars().all()
+        
+        print(f"📊 Found {len(records)} betting records for user {current_user.id}")
         
         total_bets = len(records)
         total_amount_bet = sum(record.bet_amount for record in records)
@@ -309,6 +382,7 @@ async def get_betting_stats(
             "win_rate": round(win_rate, 2)
         }
     except Exception as e:
+        print(f"❌ Error fetching betting stats: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch betting stats: {str(e)}")
 
 @router.post("/fix-missing-dates")
