@@ -3,7 +3,7 @@ from pydantic import model_validator
 from typing import Optional
 
 # Default localhost IP - can be overridden by environment variable
-DEFAULT_LOCALHOST_IP = "localhost"
+DEFAULT_LOCALHOST_IP = "35.159.122.94"
 DEFAULT_BACKEND_PORT = 5001
 
 class Settings(BaseSettings):

@@ -1115,12 +1115,25 @@ async def get_heatmap_data(
         # Check for conversions
         conv_count = 0
         if click.user_id:
+            # Match conversions by user_id and time window (more flexible than exact page_path match)
+            # This allows conversions to be tracked even if they happen on different pages after clicking
             conv_query = select(func.count(ConversionEvent.id)).where(
                 and_(
                     ConversionEvent.user_id == click.user_id,
-                    ConversionEvent.page_path == page_path,
                     ConversionEvent.created_at >= click.created_at,
-                    ConversionEvent.created_at <= click.created_at + timedelta(hours=1)
+                    ConversionEvent.created_at <= click.created_at + timedelta(hours=24)  # Extended to 24 hours
+                )
+            )
+            conv_result = await db.execute(conv_query)
+            conv_count = conv_result.scalar() or 0
+            coordinate_map[key]["conversions"] += conv_count
+        elif click.session_id:
+            # Also check by session_id for anonymous users
+            conv_query = select(func.count(ConversionEvent.id)).where(
+                and_(
+                    ConversionEvent.session_id == click.session_id,
+                    ConversionEvent.created_at >= click.created_at,
+                    ConversionEvent.created_at <= click.created_at + timedelta(hours=24)
                 )
             )
             conv_result = await db.execute(conv_query)
