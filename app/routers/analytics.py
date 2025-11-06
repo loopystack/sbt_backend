@@ -42,7 +42,6 @@ from app.schemas.analytics import (
     ComplianceDashboard,
     MatchCTR,
     ROIMetrics,
-    MonitoringMetrics,
     HeatmapData
 )
 
@@ -248,7 +247,8 @@ async def get_ctr_metrics(
     
     print(f"[CTR API] Found {len(clicks_data)} different element types with clicks")
     
-    # For views, we'll approximate with page views on the same pages
+    # Get page views grouped by page_path for CTR calculation
+    # We'll match clicks to views on the same pages where clicks occurred
     page_views_query = select(
         PageView.page_path,
         func.count(PageView.id).label('total_views')
@@ -258,27 +258,62 @@ async def get_ctr_metrics(
     
     views_result = await db.execute(page_views_query)
     views_data = views_result.all()
-    total_page_views = sum(v.total_views for v in views_data)
+    page_views_dict = {v.page_path: v.total_views for v in views_data}
     
-    print(f"[CTR API] Found {total_page_views} total page views")
+    # Get clicks grouped by element_type and page_path to match with views
+    clicks_by_page_query = select(
+        ClickEvent.element_type,
+        ClickEvent.page_path,
+        func.count(ClickEvent.id).label('clicks_on_page')
+    ).where(
+        ClickEvent.created_at >= start_date
+    ).group_by(ClickEvent.element_type, ClickEvent.page_path)
+    
+    if element_type:
+        clicks_by_page_query = clicks_by_page_query.where(ClickEvent.element_type == element_type)
+    
+    clicks_by_page_result = await db.execute(clicks_by_page_query)
+    clicks_by_page_data = clicks_by_page_result.all()
+    
+    # Calculate CTR metrics - match clicks to views on same pages
+    element_views = {}  # Track views per element type
+    for click_page_stat in clicks_by_page_data:
+        element = click_page_stat.element_type
+        page_path = click_page_stat.page_path
+        views_on_page = page_views_dict.get(page_path, 0)
+        
+        if element not in element_views:
+            element_views[element] = 0
+        element_views[element] += views_on_page
+    
+    print(f"[CTR API] Found page views for {len(page_views_dict)} different pages")
     
     # Calculate CTR metrics
     metrics = []
     for click_stat in clicks_data:
-        # For simplicity, use total page views as denominator for all elements
-        # This is an approximation - in a real system, you'd track element views separately
-        ctr_percentage = (click_stat.total_clicks / total_page_views * 100) if total_page_views > 0 else 0
+        element = click_stat.element_type
+        total_clicks = click_stat.total_clicks
+        total_views = element_views.get(element, 0)
+        
+        # If no views found for this element type, use total page views as fallback
+        # This handles cases where element clicks are on pages without tracked views
+        if total_views == 0:
+            total_page_views = sum(page_views_dict.values())
+            total_views = total_page_views if total_page_views > 0 else 1
+            print(f"[CTR API] Warning: No views found for element '{element}', using total page views as fallback")
+        
+        ctr_percentage = (total_clicks / total_views * 100) if total_views > 0 else 0
         
         metrics.append(CTRMetrics(
-            element_type=click_stat.element_type,
-            total_clicks=click_stat.total_clicks,
-            total_views=total_page_views,  # Use total page views as approximation
+            element_type=element,
+            total_clicks=total_clicks,
+            total_views=total_views,
             ctr_percentage=round(ctr_percentage, 2),
             unique_users=click_stat.unique_users,
             period_days=days
         ))
         
-        print(f"[CTR API] Added metric: {click_stat.element_type} - {click_stat.total_clicks} clicks")
+        print(f"[CTR API] Added metric: {element} - {total_clicks} clicks, {total_views} views, CTR: {ctr_percentage:.2f}%")
     
     print(f"[CTR API] Returning {len(metrics)} CTR metrics")
     return metrics
@@ -364,23 +399,25 @@ async def get_revenue_metrics(
     
     start_date = datetime.now() - timedelta(days=days)
     
-    # Get total deposits
-    deposits_query = select(func.sum(func.abs(Transaction.amount))).where(
+    # Get total deposits (deposits are stored as positive amounts)
+    deposits_query = select(func.sum(Transaction.amount)).where(
         and_(
             Transaction.created_at >= start_date,
             Transaction.transaction_type == 'deposit',
-            Transaction.status == 'completed'
+            Transaction.status == 'completed',
+            Transaction.amount > 0  # Ensure positive (deposits should be positive)
         )
     )
     deposits_result = await db.execute(deposits_query)
     total_deposits = float(deposits_result.scalar() or 0)
     
-    # Get total withdrawals
+    # Get total withdrawals (withdrawals are stored as negative amounts, so we take absolute value)
     withdrawals_query = select(func.sum(func.abs(Transaction.amount))).where(
         and_(
             Transaction.created_at >= start_date,
             Transaction.transaction_type == 'withdrawal',
-            Transaction.status == 'completed'
+            Transaction.status == 'completed',
+            Transaction.amount < 0  # Ensure negative (withdrawals should be negative)
         )
     )
     withdrawals_result = await db.execute(withdrawals_query)
@@ -477,8 +514,16 @@ async def get_roi_dashboard(
             # Calculate ROI for each source
             for source, revenue in source_revenue.items():
                 cost = 0  # Simplified - in production, track cost per source
-                roi = ((revenue - cost) / cost * 100) if cost > 0 else 0
-                roi_by_source[source] = round(roi, 2)
+                # Since cost tracking isn't implemented, show revenue instead of ROI
+                # ROI would be infinite/undefined when cost is 0, so we'll use revenue as a proxy
+                # In production, you'd track actual marketing costs per source
+                if cost > 0:
+                    roi = ((revenue - cost) / cost * 100)
+                    roi_by_source[source] = round(roi, 2)
+                else:
+                    # When cost is 0, we can't calculate ROI, so skip or use revenue as metric
+                    # For now, skip sources without cost tracking
+                    pass
         except Exception as e:
             print(f"Error calculating ROI by source: {e}")
             import traceback
@@ -1017,98 +1062,6 @@ async def cancel_self_exclusion(
     return {"message": "Self-exclusion cancelled successfully"}
 
 
-# ========== MONITORING ENDPOINTS ==========
-
-@router.get("/monitoring", response_model=MonitoringMetrics)
-async def get_monitoring_metrics(
-    current_user: User = Depends(get_admin_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """Get real-time monitoring metrics"""
-    
-    # Active users (logged in within last 30 minutes)
-    active_users_query = select(func.count(func.distinct(User.id))).where(
-        User.last_login >= datetime.now() - timedelta(minutes=30)
-    )
-    active_users_result = await db.execute(active_users_query)
-    active_users = active_users_result.scalar() or 0
-    
-    # Active sessions (distinct session IDs from page views in last 5 minutes)
-    active_sessions_query = select(func.count(func.distinct(PageView.session_id))).where(
-        PageView.created_at >= datetime.now() - timedelta(minutes=5)
-    )
-    active_sessions_result = await db.execute(active_sessions_query)
-    active_sessions = active_sessions_result.scalar() or 0
-    
-    # Transactions per minute (last hour average)
-    hour_ago = datetime.now() - timedelta(hours=1)
-    transactions_query = select(func.count(Transaction.id)).where(
-        Transaction.created_at >= hour_ago
-    )
-    transactions_result = await db.execute(transactions_query)
-    total_transactions = transactions_result.scalar() or 0
-    transactions_per_minute = total_transactions / 60.0
-    
-    # Error rate (failed transactions / total transactions)
-    failed_transactions_query = select(func.count(Transaction.id)).where(
-        and_(
-            Transaction.created_at >= hour_ago,
-            Transaction.status == "failed"
-        )
-    )
-    failed_result = await db.execute(failed_transactions_query)
-    failed_transactions = failed_result.scalar() or 0
-    error_rate = (failed_transactions / total_transactions * 100) if total_transactions > 0 else 0
-    
-    # Average response time (simplified - in production, use APM tool)
-    avg_response_time = 150.0  # Placeholder
-    
-    # Conversion funnel
-    funnel = {}
-    # Signups
-    signups_query = select(func.count(User.id)).where(
-        User.created_at >= datetime.now() - timedelta(days=7)
-    )
-    signups_result = await db.execute(signups_query)
-    funnel["signups"] = signups_result.scalar() or 0
-    
-    # First deposits
-    first_deposits_query = select(func.count(func.distinct(Transaction.user_id))).where(
-        and_(
-            Transaction.created_at >= datetime.now() - timedelta(days=7),
-            Transaction.transaction_type == "deposit"
-        )
-    )
-    deposits_result = await db.execute(first_deposits_query)
-    funnel["first_deposit"] = deposits_result.scalar() or 0
-    
-    # First bets
-    first_bets_query = select(func.count(func.distinct(BettingRecord.user_id))).where(
-        BettingRecord.created_at >= datetime.now() - timedelta(days=7)
-    )
-    bets_result = await db.execute(first_bets_query)
-    funnel["first_bet"] = bets_result.scalar() or 0
-    
-    # System health
-    if error_rate > 10 or transactions_per_minute == 0:
-        system_health = "critical"
-    elif error_rate > 5:
-        system_health = "degraded"
-    else:
-        system_health = "healthy"
-    
-    return MonitoringMetrics(
-        active_users=active_users,
-        active_sessions=active_sessions,
-        transactions_per_minute=round(transactions_per_minute, 2),
-        error_rate=round(error_rate, 2),
-        avg_response_time=avg_response_time,
-        conversion_funnel=funnel,
-        system_health=system_health,
-        timestamp=datetime.now()
-    )
-
-
 # ========== HEATMAP ENDPOINTS ==========
 
 @router.get("/heatmap", response_model=HeatmapData)
@@ -1160,6 +1113,7 @@ async def get_heatmap_data(
         coordinate_map[key]["clicks"] += 1
         
         # Check for conversions
+        conv_count = 0
         if click.user_id:
             conv_query = select(func.count(ConversionEvent.id)).where(
                 and_(
@@ -1181,6 +1135,7 @@ async def get_heatmap_data(
                 "ctr": 0
             }
         element_stats[element_type]["clicks"] += 1
+        element_stats[element_type]["conversions"] += conv_count
     
     # Calculate intensity (normalized clicks)
     if coordinate_map:

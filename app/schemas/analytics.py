@@ -237,18 +237,6 @@ class ROIMetrics(BaseModel):
     daily_roi_trend: List[Dict[str, Any]]  # Daily ROI over time
 
 
-class MonitoringMetrics(BaseModel):
-    """Real-time monitoring metrics"""
-    active_users: int
-    active_sessions: int
-    transactions_per_minute: float
-    error_rate: float
-    avg_response_time: float
-    conversion_funnel: Dict[str, int]  # Users at each funnel stage
-    system_health: str  # 'healthy', 'degraded', 'critical'
-    timestamp: datetime
-
-
 class HeatmapData(BaseModel):
     """Heatmap coordinate data"""
     page_path: str

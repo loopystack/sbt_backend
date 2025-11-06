@@ -61,7 +61,7 @@ allowed_origins_list = [
     f"http://{settings.LOCALHOST_IP}:8080",
     "http://localhost",
     "http://localhost:3000",
-    "http://35.159.122.94",
+    "http://localhost",
     "http://localhost:8080",
     "http://127.0.0.1",
     "http://127.0.0.1:3000",

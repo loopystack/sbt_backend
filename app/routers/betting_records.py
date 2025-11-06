@@ -11,6 +11,9 @@ from ..models.odds import Odds
 from ..models.transaction import Transaction
 from ..services.transaction_service import TransactionService
 from ..services.compliance_service import compliance_service
+from ..services.affiliate_service import AffiliateService
+from ..models.affiliate import Referral
+from decimal import Decimal
 from ..schemas.betting_record import (
     BettingRecordCreate, 
     BettingRecordResponse, 
@@ -165,6 +168,31 @@ async def auto_settle_user_bets(db: AsyncSession, user_id: int):
                             payment_method="auto_settlement"
                         )
                         db.add(transaction)
+                        await db.flush()  # Flush to get transaction ID
+                        
+                        # Calculate affiliate commission on bet loss (platform profit)
+                        if user.referred_by_affiliate_id:
+                            try:
+                                referral_query = select(Referral).where(
+                                    Referral.referred_user_id == user_id,
+                                    Referral.affiliate_id == user.referred_by_affiliate_id
+                                )
+                                referral_result = await db.execute(referral_query)
+                                referral = referral_result.scalar_one_or_none()
+                                
+                                if referral:
+                                    # Commission based on bet amount (platform profit when user loses)
+                                    await AffiliateService.calculate_commission(
+                                        affiliate_id=user.referred_by_affiliate_id,
+                                        transaction_id=transaction.id,
+                                        transaction_type="bet_loss",
+                                        base_amount=Decimal(str(bet.bet_amount)),
+                                        db=db
+                                    )
+                            except Exception as e:
+                                # Log error but don't fail settlement
+                                print(f"Failed to calculate affiliate commission on bet loss: {e}")
+                        
                         print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction created)")
                 else:
                     print(f"      ❌ LOST: ${bet.bet_amount:.2f} (Transaction already exists, skipping)")
@@ -215,7 +243,7 @@ async def create_betting_record(
         await db.flush()  # Flush to get the ID
         
         # Create transaction record for the bet placement
-        await TransactionService.create_bet_placed_transaction(
+        transaction = await TransactionService.create_bet_placed_transaction(
             db=db,
             user_id=current_user.id,
             amount=betting_record.bet_amount,
@@ -232,6 +260,28 @@ async def create_betting_record(
                 "potential_win": betting_record.potential_win
             }
         )
+        
+        await db.flush()  # Flush before affiliate tracking
+        
+        # Track first bet conversion if user was referred
+        if current_user.referred_by_affiliate_id:
+            try:
+                referral_query = select(Referral).where(
+                    Referral.referred_user_id == current_user.id,
+                    Referral.affiliate_id == current_user.referred_by_affiliate_id
+                )
+                referral_result = await db.execute(referral_query)
+                referral = referral_result.scalar_one_or_none()
+                
+                if referral and not referral.first_bet_date:
+                    await AffiliateService.track_conversion(
+                        referral_id=referral.id,
+                        conversion_type="first_bet",
+                        db=db
+                    )
+            except Exception as e:
+                # Log error but don't fail bet placement
+                print(f"Failed to track first bet conversion: {e}")
         
         await db.commit()
         await db.refresh(db_record)

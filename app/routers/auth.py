@@ -36,6 +36,8 @@ from app.schemas.user import UserCreate, UserResponse
 from app.services.email_service import email_service
 from app.services.transaction_service import TransactionService
 from app.services.recaptcha_service import recaptcha_service
+from app.services.affiliate_service import AffiliateService
+from app.models.affiliate import Affiliate
 
 router = APIRouter()
 
@@ -70,6 +72,17 @@ async def register(
                 detail="Username already taken"
             )
     
+    # Handle referral code if provided
+    referred_by_affiliate_id = None
+    if user_data.referral_code:
+        # Find affiliate by referral code
+        affiliate_query = select(Affiliate).where(Affiliate.referral_code == user_data.referral_code.upper())
+        affiliate_result = await db.execute(affiliate_query)
+        affiliate = affiliate_result.scalar_one_or_none()
+        
+        if affiliate and affiliate.status == "active":
+            referred_by_affiliate_id = affiliate.id
+    
     # Create new user
     hashed_password = get_password_hash(user_data.password)
     db_user = User(
@@ -78,10 +91,28 @@ async def register(
         full_name=user_data.full_name,
         hashed_password=hashed_password,
         is_active=True,
-        is_verified=False
+        is_verified=False,
+        referral_code_used=user_data.referral_code.upper() if user_data.referral_code else None,
+        referred_by_affiliate_id=referred_by_affiliate_id
     )
     
     db.add(db_user)
+    await db.flush()  # Flush to get user ID
+    
+    # Register referral if affiliate code was valid
+    if referred_by_affiliate_id:
+        try:
+            await AffiliateService.register_referral(
+                affiliate_id=referred_by_affiliate_id,
+                referred_user_id=db_user.id,
+                referral_code=user_data.referral_code.upper(),
+                db=db,
+                source="signup"
+            )
+        except Exception as e:
+            # Log error but don't fail registration
+            print(f"Failed to register referral: {e}")
+    
     await db.commit()
     await db.refresh(db_user)
     

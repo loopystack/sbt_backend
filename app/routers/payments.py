@@ -27,9 +27,51 @@ from app.schemas.payment import (
 )
 from app.services.blockchain_verifier import blockchain_verifier
 from app.services.transaction_service import TransactionService
+from app.services.affiliate_service import AffiliateService
+from app.models.affiliate import Referral
+from sqlalchemy import select
 
 router = APIRouter(tags=["payments"])
 logger = logging.getLogger(__name__)
+
+
+async def calculate_affiliate_commission_for_deposit(
+    user: User,
+    transaction_id: int,
+    deposit_amount: Decimal,
+    db: AsyncSession
+):
+    """Helper function to calculate affiliate commission for a deposit"""
+    if user.referred_by_affiliate_id:
+        try:
+            # Find the referral record
+            referral_query = select(Referral).where(
+                Referral.referred_user_id == user.id,
+                Referral.affiliate_id == user.referred_by_affiliate_id
+            )
+            referral_result = await db.execute(referral_query)
+            referral = referral_result.scalar_one_or_none()
+            
+            if referral:
+                # Track first deposit conversion
+                if not referral.first_deposit_date:
+                    await AffiliateService.track_conversion(
+                        referral_id=referral.id,
+                        conversion_type="first_deposit",
+                        db=db
+                    )
+                
+                # Calculate commission on deposit
+                await AffiliateService.calculate_commission(
+                    affiliate_id=user.referred_by_affiliate_id,
+                    transaction_id=transaction_id,
+                    transaction_type="deposit",
+                    base_amount=deposit_amount,
+                    db=db
+                )
+        except Exception as e:
+            # Log error but don't fail deposit
+            logger.error(f"Failed to calculate affiliate commission: {e}")
 
 # Initialize Stripe with the appropriate API key
 stripe.api_key = settings.stripe_secret_key
@@ -137,7 +179,7 @@ async def process_card_payment(
                 logger.info(f"No test token available for card {card_number}, simulating payment")
                 
                 # Create transaction record first
-                await TransactionService.create_deposit_transaction(
+                transaction = await TransactionService.create_deposit_transaction(
                     db=db,
                     user_id=current_user.id,
                     amount=payment_data.amount,
@@ -153,6 +195,16 @@ async def process_card_payment(
                 
                 # Update user funds
                 current_user.funds_usd += Decimal(str(payment_data.amount))
+                await db.flush()  # Flush before commission calculation
+                
+                # Calculate affiliate commission if user was referred
+                await calculate_affiliate_commission_for_deposit(
+                    user=current_user,
+                    transaction_id=transaction.id,
+                    deposit_amount=Decimal(str(payment_data.amount)),
+                    db=db
+                )
+                
                 await db.commit()
                 await db.refresh(current_user)
                 
@@ -172,7 +224,7 @@ async def process_card_payment(
                 logger.info(f"Stripe payment successful for user {current_user.id}, current balance: {current_user.funds_usd}")
                 
                 # Create transaction record first
-                await TransactionService.create_deposit_transaction(
+                transaction = await TransactionService.create_deposit_transaction(
                     db=db,
                     user_id=current_user.id,
                     amount=payment_data.amount,
@@ -189,6 +241,16 @@ async def process_card_payment(
                 
                 # Update user funds
                 current_user.funds_usd += Decimal(str(payment_data.amount))
+                await db.flush()  # Flush before commission calculation
+                
+                # Calculate affiliate commission if user was referred
+                await calculate_affiliate_commission_for_deposit(
+                    user=current_user,
+                    transaction_id=transaction.id,
+                    deposit_amount=Decimal(str(payment_data.amount)),
+                    db=db
+                )
+                
                 await db.commit()
                 
                 # Refresh the user object to get updated balance
@@ -274,7 +336,7 @@ async def process_bank_transfer(
         logger.info(f"Processing bank transfer for user {current_user.id}, current balance: {current_user.funds_usd}")
         
         # Create transaction record first
-        await TransactionService.create_deposit_transaction(
+        transaction = await TransactionService.create_deposit_transaction(
             db=db,
             user_id=current_user.id,
             amount=payment_data.amount,
@@ -290,6 +352,16 @@ async def process_bank_transfer(
         
         # Update user funds
         current_user.funds_usd += Decimal(str(payment_data.amount))
+        await db.flush()  # Flush before commission calculation
+        
+        # Calculate affiliate commission if user was referred
+        await calculate_affiliate_commission_for_deposit(
+            user=current_user,
+            transaction_id=transaction.id,
+            deposit_amount=Decimal(str(payment_data.amount)),
+            db=db
+        )
+        
         await db.commit()
         
         # Refresh the user object to get updated balance
@@ -346,7 +418,7 @@ async def process_paypal_payment(
         logger.info(f"Processing PayPal payment for user {current_user.id}, current balance: {current_user.funds_usd}")
         
         # Create transaction record first
-        await TransactionService.create_deposit_transaction(
+        transaction = await TransactionService.create_deposit_transaction(
             db=db,
             user_id=current_user.id,
             amount=payment_data.amount,
@@ -360,6 +432,16 @@ async def process_paypal_payment(
         
         # Update user funds
         current_user.funds_usd += Decimal(str(payment_data.amount))
+        await db.flush()  # Flush before commission calculation
+        
+        # Calculate affiliate commission if user was referred
+        await calculate_affiliate_commission_for_deposit(
+            user=current_user,
+            transaction_id=transaction.id,
+            deposit_amount=Decimal(str(payment_data.amount)),
+            db=db
+        )
+        
         await db.commit()
         
         # Refresh the user object to get updated balance
