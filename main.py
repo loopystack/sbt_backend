@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 import uvicorn
 import asyncio
 import traceback
@@ -50,61 +49,51 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Custom CORS middleware to ensure it works correctly
-class CustomCORSMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        origin = request.headers.get("origin")
-        
-        # Check if origin should be allowed
-        allowed = False
-        if origin:
-            # Check exact matches
-            allowed_origins_list = [
-                f"http://{settings.LOCALHOST_IP}",
-                f"https://{settings.LOCALHOST_IP}",
-                f"http://{settings.LOCALHOST_IP}:80",
-                f"https://{settings.LOCALHOST_IP}:443",
-            ]
-            
-            # Add production URL if it exists
-            if hasattr(settings, 'FRONTEND_PRODUCTION_URL') and settings.FRONTEND_PRODUCTION_URL:
-                allowed_origins_list.append(settings.FRONTEND_PRODUCTION_URL)
-            
-            # Check regex pattern - allow any port on the IP
-            escaped_ip = settings.LOCALHOST_IP.replace('.', r'\.')
-            pattern = re.compile(f"^(http|https)://({escaped_ip}|localhost|127\\.0\\.0\\.1)(:\\d+)?$")
-            
-            if origin in allowed_origins_list or pattern.match(origin):
-                allowed = True
-                print(f"✅ CORS allowing origin: {origin}")
-            else:
-                print(f"🔒 CORS blocked origin: {origin}")
-        
-        # Handle preflight OPTIONS request
-        if request.method == "OPTIONS":
-            response = Response()
-            if allowed and origin:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-                response.headers["Access-Control-Allow-Headers"] = "*"
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-                response.headers["Access-Control-Max-Age"] = "3600"
-            return response
-        
-        # Process the request
-        response = await call_next(request)
-        
-        # Add CORS headers to response
-        if allowed and origin:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-        
-        return response
+# CORS Configuration - Build comprehensive allowed origins list
+allowed_origins_list = [
+    f"http://{settings.LOCALHOST_IP}",
+    f"https://{settings.LOCALHOST_IP}",
+    f"http://{settings.LOCALHOST_IP}:80",
+    f"https://{settings.LOCALHOST_IP}:443",
+    f"http://{settings.LOCALHOST_IP}:3000",
+    f"http://{settings.LOCALHOST_IP}:5000",
+    f"http://{settings.LOCALHOST_IP}:5173",
+    f"http://{settings.LOCALHOST_IP}:8080",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://35.159.122.94",
+    "http://localhost:8080",
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8080",
+    "https://localhost",
+    "https://127.0.0.1",
+]
 
-# Add custom CORS middleware - handles all CORS requests
-app.add_middleware(CustomCORSMiddleware)
+# Add production URL if it exists
+if hasattr(settings, 'FRONTEND_PRODUCTION_URL') and settings.FRONTEND_PRODUCTION_URL:
+    allowed_origins_list.append(settings.FRONTEND_PRODUCTION_URL)
+
+# Build regex pattern for dynamic port matching - allows any port
+escaped_ip = settings.LOCALHOST_IP.replace('.', r'\.')
+origin_regex = f"^(http|https)://({escaped_ip}|localhost|127\\.0\\.0\\.1)(:\\d+)?$"
+
+print(f"🔧 CORS configured for IP: {settings.LOCALHOST_IP}")
+print(f"🔧 Primary allowed origin: http://{settings.LOCALHOST_IP}")
+print(f"🔧 Regex pattern: {origin_regex}")
+
+# Add CORS middleware - MUST be added before routers
+# Use allow_origins for exact matches, allow_origin_regex for dynamic ports
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins_list,  # Exact matches first
+    allow_origin_regex=origin_regex,     # Then regex for any port
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["*"], # Expose all headers
+)
 
 # Global exception handler for Rollbar error tracking
 @app.exception_handler(Exception)

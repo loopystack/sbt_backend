@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from typing import Optional
 
+# Default localhost IP - can be overridden by environment variable
+DEFAULT_LOCALHOST_IP = "localhost"
+DEFAULT_BACKEND_PORT = 5001
 
 class Settings(BaseSettings):
     # Database
@@ -22,17 +26,16 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Soccer Betting App"
     
     # IP Address Configuration
-    LOCALHOST_IP: str = "35.159.122.94"  
-    BACKEND_PORT: int = 5001  
+    LOCALHOST_IP: str = DEFAULT_LOCALHOST_IP
+    BACKEND_PORT: int = DEFAULT_BACKEND_PORT
     
     # Google OAuth
     GOOGLE_CLIENT_ID: str = "700550723594-eepho7l9d04n0im6qs04jb03gpqivk97.apps.googleusercontent.com"
     GOOGLE_CLIENT_SECRET: str = "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"
-    GOOGLE_REDIRECT_URI: str = LOCALHOST_IP  
+    GOOGLE_REDIRECT_URI: str = "http://{LOCALHOST_IP}:5001/api/auth/google/callback"
     
     # Frontend URL
-    FRONTEND_URL: str = LOCALHOST_IP
-    FRONTEND_PRODUCTION_URL: str = "https://sportsbetting-seiw.onrender.com"
+    FRONTEND_URL: str = "http://{LOCALHOST_IP}:5173"
     
     # App Configuration
     APP_NAME: str = "Soccer Betting Platform" 
@@ -64,6 +67,14 @@ class Settings(BaseSettings):
     ROLLBAR_ACCESS_TOKEN: Optional[str] = None
     ROLLBAR_ENVIRONMENT: str = "development"
     ROLLBAR_ENABLED: bool = True
+    
+    @model_validator(mode='after')
+    def sync_urls_with_localhost_ip(self):
+        """Update URLs to match LOCALHOST_IP if it was changed via environment variable"""
+        # Reconstruct URLs based on actual LOCALHOST_IP value (in case it was overridden)
+        self.GOOGLE_REDIRECT_URI = f"http://{self.LOCALHOST_IP}:{self.BACKEND_PORT}/api/auth/google/callback"
+        self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}"
+        return self
     
     @property
     def stripe_secret_key(self) -> str:

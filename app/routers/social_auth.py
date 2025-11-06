@@ -25,7 +25,7 @@ GOOGLE_CLIENT_CONFIG = {
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [settings.google_redirect_uri]
+        "redirect_uris": [settings.GOOGLE_REDIRECT_URI]
     }
 }
 
@@ -37,7 +37,7 @@ async def google_login():
         # Check if we have real Google credentials
         if settings.GOOGLE_CLIENT_ID == "your-google-client-id" or not settings.GOOGLE_CLIENT_ID:
             # Mock mode - redirect to mock callback
-            mock_url = f"{settings.frontend_url}/mock-google-login"
+            mock_url = f"{settings.FRONTEND_URL}/mock-google-login"
             return {
                 "authorization_url": mock_url,
                 "state": "mock_state",
@@ -52,7 +52,7 @@ async def google_login():
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile"
             ],
-            redirect_uri=settings.google_redirect_uri
+            redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
         
         # Generate authorization URL
@@ -167,17 +167,20 @@ async def mock_google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            settings.LOCALHOST_IP in referer.lower(),
-            settings.LOCALHOST_IP in host.lower(),
-            settings.LOCALHOST_IP in origin.lower(),
-            f"{settings.LOCALHOST_IP}:{settings.BACKEND_PORT}" in str(request.url)
+            "localhost" in referer.lower(),
+            "127.0.0.1" in referer.lower(),
+            "localhost" in host.lower(),
+            "127.0.0.1" in host.lower(),
+            "localhost" in origin.lower(),
+            "127.0.0.1" in origin.lower(),
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = settings.frontend_base_url
+            frontend_base_url = "http://35.159.122.94"
         else:
-            frontend_base_url = settings.FRONTEND_PRODUCTION_URL
+            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?message=activation_sent&mock=true",
@@ -204,17 +207,20 @@ async def mock_google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            settings.LOCALHOST_IP in referer.lower(),
-            settings.LOCALHOST_IP in host.lower(),
-            settings.LOCALHOST_IP in origin.lower(),
-            f"{settings.LOCALHOST_IP}:{settings.BACKEND_PORT}" in str(request.url)
+            "localhost" in referer.lower(),
+            "127.0.0.1" in referer.lower(),
+            "localhost" in host.lower(),
+            "127.0.0.1" in host.lower(),
+            "localhost" in origin.lower(),
+            "127.0.0.1" in origin.lower(),
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = settings.frontend_base_url
+            frontend_base_url = "http://35.159.122.94"
         else:
-            frontend_base_url = settings.FRONTEND_PRODUCTION_URL
+            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?error=mock_auth_failed",
@@ -231,20 +237,6 @@ async def google_callback(
         # Get the authorization code from the callback
         code = request.query_params.get("code")
         state = request.query_params.get("state")
-        error = request.query_params.get("error")
-        
-        print(f"🔍 Google OAuth Callback received:")
-        print(f"   Code: {code[:50] if code else None}...")
-        print(f"   State: {state}")
-        print(f"   Error: {error}")
-        
-        if error:
-            print(f"❌ OAuth error received: {error}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"OAuth error: {error}"
-            )
-            
         if not code:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -259,15 +251,11 @@ async def google_callback(
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile"
             ],
-            redirect_uri=settings.google_redirect_uri
+            redirect_uri=settings.GOOGLE_REDIRECT_URI
         )
         
         # Exchange code for token
-        try:
-            flow.fetch_token(code=code)
-        except Exception as fetch_error:
-            print(f"❌ Error fetching token: {str(fetch_error)}")
-            raise
+        flow.fetch_token(code=code)
         # Get user info from Google
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
@@ -344,17 +332,20 @@ async def google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            settings.LOCALHOST_IP in referer.lower(),
-            settings.LOCALHOST_IP in host.lower(),
-            settings.LOCALHOST_IP in origin.lower(),
-            f"{settings.LOCALHOST_IP}:{settings.BACKEND_PORT}" in str(request.url)
+            "localhost" in referer.lower(),
+            "127.0.0.1" in referer.lower(),
+            "localhost" in host.lower(),
+            "127.0.0.1" in host.lower(),
+            "localhost" in origin.lower(),
+            "127.0.0.1" in origin.lower(),
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = settings.frontend_base_url
+            frontend_base_url = "http://35.159.122.94"
         else:
-            frontend_base_url = settings.FRONTEND_PRODUCTION_URL
+            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
         print(f"🔍 OAuth Callback Debug:")
         print(f"   Referer: {referer}")
@@ -372,10 +363,7 @@ async def google_callback(
         )
         
     except Exception as e:
-        import traceback
-        print(f"❌ Google callback error: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
-        
+        print(f"Google callback error: {str(e)}")
         # Use dynamic frontend URL for error redirect too
         referer = request.headers.get("referer", "")
         host = request.headers.get("host", "")
@@ -394,17 +382,20 @@ async def google_callback(
             is_localhost = False
         # Then check for localhost indicators
         elif any([
-            settings.LOCALHOST_IP in referer.lower(),
-            settings.LOCALHOST_IP in host.lower(),
-            settings.LOCALHOST_IP in origin.lower(),
-            f"{settings.LOCALHOST_IP}:{settings.BACKEND_PORT}" in str(request.url)
+            "localhost" in referer.lower(),
+            "127.0.0.1" in referer.lower(),
+            "localhost" in host.lower(),
+            "127.0.0.1" in host.lower(),
+            "localhost" in origin.lower(),
+            "127.0.0.1" in origin.lower(),
+            "localhost:5001" in str(request.url)
         ]):
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = settings.frontend_base_url
+            frontend_base_url = "http://35.159.122.94"
         else:
-            frontend_base_url = settings.FRONTEND_PRODUCTION_URL
+            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?error=google_auth_failed",
