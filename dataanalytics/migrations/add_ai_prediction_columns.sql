@@ -32,3 +32,4 @@ COMMENT ON COLUMN odds.ai_model_version IS 'Model version/timestamp used for pre
 COMMENT ON COLUMN odds.ai_prediction_timestamp IS 'When AI prediction was made';
 
 
+

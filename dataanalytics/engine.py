@@ -21,10 +21,10 @@ from predict import predict_true_odds
 load_dotenv()
 
 # Database connection
-DB_URL = os.getenv("DB_URL", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 # Convert to sync connection for SQLAlchemy core operations
-SYNC_DB_URL = DB_URL.replace("postgresql+psycopg://", "postgresql://").replace("postgresql+asyncpg://", "postgresql://")
-engine = create_engine(SYNC_DB_URL, pool_pre_ping=True)
+SYNC_DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg://", "postgresql://").replace("postgresql+asyncpg://", "postgresql://")
+engine = create_engine(SYNC_DATABASE_URL, pool_pre_ping=True)
 
 
 class AIOddsEngine:
