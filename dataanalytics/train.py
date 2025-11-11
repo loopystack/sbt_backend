@@ -4,6 +4,7 @@ Trains XGBoost model on historical + real-time match data
 """
 import os
 import sys
+import logging
 import joblib
 import xgboost as xgb
 import pandas as pd
@@ -31,8 +32,8 @@ except ImportError:
     # Minimal implementations (you may need to adjust these)
     def load_matches():
         load_dotenv()
-        DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgresql+psycopg://", "postgresql://")
-        engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+        DB_URL = os.getenv("DB_URL", "").replace("postgresql+psycopg://", "postgresql://")
+        engine = create_engine(DB_URL, pool_pre_ping=True)
         sql = text("""
             SELECT season, date, time, home_team, away_team, result, 
                    odd_1, "odd_X" as odd_X, odd_2, bets, country, league
@@ -65,6 +66,26 @@ load_dotenv()
 
 # Ensure artifact directory exists
 os.makedirs(ARTIFACT_DIR, exist_ok=True)
+
+# Configure logging for training
+logger = logging.getLogger("ai_odds.train")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+
+    log_path = os.path.join(ARTIFACT_DIR, "training.log")
+    try:
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    except OSError:
+        logger.warning("Could not create log file at %s", log_path)
+
+    logger.propagate = False
 
 
 def cross_entropy(true_probs, pred_probs, eps=1e-15):
@@ -100,7 +121,7 @@ def load_historical_and_realtime_data(include_recent_days=7):
     Returns:
         DataFrame with all match data
     """
-    print(f"📊 Loading historical + real-time data (last {include_recent_days} days)...")
+    logger.info("Loading historical + real-time data (last %s days)...", include_recent_days)
     
     df = load_matches()
     
@@ -111,10 +132,10 @@ def load_historical_and_realtime_data(include_recent_days=7):
     if include_recent_days > 0:
         cutoff_date = datetime.now() - timedelta(days=include_recent_days)
         recent_matches = df[df['date'] >= cutoff_date]
-        print(f"   Found {len(recent_matches)} recent matches (last {include_recent_days} days)")
-    
-    print(f"   Total matches loaded: {len(df)}")
-    print(f"   Date range: {df['date'].min()} to {df['date'].max()}")
+        logger.info("Found %s recent matches (last %s days)", len(recent_matches), include_recent_days)
+
+    logger.info("Total matches loaded: %s", len(df))
+    logger.info("Date range: %s to %s", df['date'].min(), df['date'].max())
     
     return df
 
@@ -130,23 +151,23 @@ def train_ai_model(include_recent_days=7, retrain=True):
     Returns:
         Trained model and artifacts
     """
-    print("=" * 60)
-    print("🤖 AI Odds Engine - Training Module")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("🤖 AI Odds Engine - Training Module")
+    logger.info("=" * 60)
     
     if not retrain and os.path.exists(f"{ARTIFACT_DIR}/xgb_model.joblib"):
-        print("📦 Loading existing model...")
+        logger.info("Loading existing model from %s", ARTIFACT_DIR)
         return load_artifacts()
     
     # 1️⃣ Load historical + real-time data
     df = load_historical_and_realtime_data(include_recent_days=include_recent_days)
     
     # 2️⃣ Compute features
-    print("\n🔧 Computing features...")
+    logger.info("Computing features...")
     df_feats, feat_cols = compute_features(df)
     
     # 3️⃣ Encode categorical features
-    print("🔤 Encoding categorical features...")
+    logger.info("Encoding categorical features...")
     le_country = LabelEncoder()
     le_league = LabelEncoder()
     df_feats['country_enc'] = le_country.fit_transform(df_feats['country'].astype(str))
@@ -163,23 +184,23 @@ def train_ai_model(include_recent_days=7, retrain=True):
     X = df_train[used_features].fillna(0)
     y = df_train['target'].astype(int)
     
-    print(f"   Training samples: {len(X)}")
-    print(f"   Features: {len(used_features)}")
+    logger.info("Training samples: %s", len(X))
+    logger.info("Number of features: %s", len(used_features))
     
     # 5️⃣ Split chronologically (time-aware split)
     split_idx = int(len(df_train) * 0.9)
     X_train, X_val = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_val = y.iloc[:split_idx], y.iloc[split_idx:]
     
-    print(f"   Train set: {len(X_train)} samples")
-    print(f"   Validation set: {len(X_val)} samples")
+    logger.info("Train set size: %s", len(X_train))
+    logger.info("Validation set size: %s", len(X_val))
     
     # 6️⃣ Create DMatrix for XGBoost
     dtrain = xgb.DMatrix(X_train, label=y_train)
     dval = xgb.DMatrix(X_val, label=y_val)
     
     # 7️⃣ Train XGBoost model
-    print("\n🚀 Training XGBoost model...")
+    logger.info("Training XGBoost model...")
     params = {
         'objective': 'multi:softprob',
         'num_class': 3,
@@ -202,16 +223,16 @@ def train_ai_model(include_recent_days=7, retrain=True):
     )
     
     # 8️⃣ Evaluate model
-    print("\n📊 Model Evaluation:")
+    logger.info("Evaluating model...")
     preds_val = model.predict(dval)
     logloss = log_loss(y_val, preds_val)
     accuracy = accuracy_score(y_val, preds_val.argmax(axis=1))
     
-    print(f"   LogLoss: {logloss:.4f}")
-    print(f"   Accuracy: {accuracy:.4f}")
+    logger.info("Validation LogLoss: %.4f", logloss)
+    logger.info("Validation Accuracy: %.4f", accuracy)
     
     # 9️⃣ Calibrate with bookmaker odds
-    print("\n🎯 Calibrating with bookmaker odds...")
+    logger.info("Calibrating with bookmaker odds...")
     logits_val = model.predict(dval, output_margin=True)
     
     odds_cols = df_train.iloc[split_idx:][['odd_1', 'odd_X', 'odd_2']].fillna(0).to_dict(orient='records')
@@ -219,14 +240,14 @@ def train_ai_model(include_recent_days=7, retrain=True):
     
     ts = TemperatureScaler()
     ts.fit(logits_val, market_probs, initial_T=1.0)
-    print(f"   Temperature T: {ts.T:.4f}")
+    logger.info("Calibrated temperature: %.4f", ts.T)
     
     calibrated_probs = ts.transform_proba(logits_val)
     ce_market = cross_entropy(market_probs, calibrated_probs)
-    print(f"   Cross-Entropy (calibrated->market): {ce_market:.4f}")
+    logger.info("Cross-Entropy (calibrated -> market): %.4f", ce_market)
     
     # 🔟 Save artifacts
-    print(f"\n💾 Saving artifacts to {ARTIFACT_DIR}...")
+    logger.info("Saving artifacts to %s...", ARTIFACT_DIR)
     joblib.dump(model, f"{ARTIFACT_DIR}/xgb_model.joblib")
     joblib.dump(le_country, f"{ARTIFACT_DIR}/le_country.joblib")
     joblib.dump(le_league, f"{ARTIFACT_DIR}/le_league.joblib")
@@ -246,8 +267,8 @@ def train_ai_model(include_recent_days=7, retrain=True):
     }
     joblib.dump(metadata, f"{ARTIFACT_DIR}/model_metadata.joblib")
     
-    print("✅ Model training completed!")
-    print("=" * 60)
+    logger.info("Model training completed successfully")
+    logger.info("=" * 60)
     
     return model, used_features, le_country, le_league, ts
 
