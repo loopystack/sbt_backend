@@ -32,8 +32,8 @@ except ImportError:
     # Minimal implementations (you may need to adjust these)
     def load_matches():
         load_dotenv()
-        DB_URL = os.getenv("DB_URL", "").replace("postgresql+psycopg://", "postgresql://")
-        engine = create_engine(DB_URL, pool_pre_ping=True)
+        DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgresql+psycopg://", "postgresql://")
+        engine = create_engine(DATABASE_URL, pool_pre_ping=True)
         sql = text("""
             SELECT season, date, time, home_team, away_team, result, 
                    odd_1, "odd_X" as odd_X, odd_2, bets, country, league
