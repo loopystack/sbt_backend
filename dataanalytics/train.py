@@ -44,10 +44,50 @@ except ImportError:
             return pd.read_sql(sql, conn)
     
     def compute_features(df, n_last=5):
-        # Placeholder - you'll need to implement this based on your feature engineering
-        # For now, return basic features
+        """
+        Minimal feature engineering fallback.
+        Generates basic numeric features and target labels for training.
+        """
+        df = df.copy()
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        return df, ['season', 'date', 'home_team', 'away_team', 'country', 'league']
+
+        # Numeric representations
+        df['season_numeric'] = pd.to_numeric(df.get('season'), errors='coerce')
+        df['date_ordinal'] = df['date'].apply(lambda x: x.toordinal() if pd.notnull(x) else np.nan)
+
+        for col in ['odd_1', 'odd_X', 'odd_2', 'bets']:
+            df[col] = pd.to_numeric(df.get(col), errors='coerce')
+
+        # Basic bookmaker implied probabilities
+        df[['implied_prob_home', 'implied_prob_draw', 'implied_prob_away']] = df.apply(
+            lambda row: bookmaker_implied_probs_row(row),
+            axis=1,
+            result_type='expand'
+        )
+
+        # Target mapping
+        result_map = {
+            '1': 0, 'H': 0, 'HOME': 0,
+            'X': 1, 'D': 1, 'DRAW': 1,
+            '2': 2, 'A': 2, 'AWAY': 2
+        }
+        df['target'] = df['result'].astype(str).str.upper().map(result_map)
+
+        features = [
+            'season_numeric',
+            'date_ordinal',
+            'odd_1',
+            'odd_X',
+            'odd_2',
+            'bets',
+            'implied_prob_home',
+            'implied_prob_draw',
+            'implied_prob_away',
+            'country',
+            'league'
+        ]
+
+        return df, features
     
     class TemperatureScaler:
         def __init__(self):

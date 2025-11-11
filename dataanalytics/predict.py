@@ -40,8 +40,55 @@ except ImportError:
             return pd.read_sql(sql, conn)
     
     def compute_features(df, n_last=5):
+        df = df.copy()
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        return df, ['season', 'date', 'home_team', 'away_team', 'country', 'league']
+
+        df['season_numeric'] = pd.to_numeric(df.get('season'), errors='coerce')
+        df['date_ordinal'] = df['date'].apply(lambda x: x.toordinal() if pd.notnull(x) else np.nan)
+
+        for col in ['odd_1', 'odd_X', 'odd_2', 'bets']:
+            df[col] = pd.to_numeric(df.get(col), errors='coerce')
+
+        def implied_probs(row):
+            def inv(x):
+                try:
+                    return 1.0 / float(x) if x and float(x) > 0 else 0.0
+                except Exception:
+                    return 0.0
+            p1 = inv(row.get('odd_1'))
+            pX = inv(row.get('odd_X'))
+            p2 = inv(row.get('odd_2'))
+            s = p1 + pX + p2
+            if s <= 0:
+                return pd.Series([np.nan, np.nan, np.nan])
+            return pd.Series([p1 / s, pX / s, p2 / s])
+
+        df[['implied_prob_home', 'implied_prob_draw', 'implied_prob_away']] = df.apply(
+            implied_probs, axis=1
+        )
+
+        result_map = {
+            '1': 0, 'H': 0, 'HOME': 0,
+            'X': 1, 'D': 1, 'DRAW': 1,
+            '2': 2, 'A': 2, 'AWAY': 2
+        }
+        df['target'] = df['result'].astype(str).str.upper().map(result_map)
+
+        features = [
+            'season_numeric',
+            'date_ordinal',
+            'odd_1',
+            'odd_X',
+            'odd_2',
+            'bets',
+            'implied_prob_home',
+            'implied_prob_draw',
+            'implied_prob_away',
+            'country',
+            'league'
+        ]
+
+        return df, features
     
     class TemperatureScaler:
         def transform_proba(self, logits):
