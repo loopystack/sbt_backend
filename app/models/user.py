@@ -34,7 +34,9 @@ class User(Base):
 
     # Relationships
     deposit_intents = relationship("DepositIntent", back_populates="user")
+    withdrawal_intents = relationship("WithdrawalIntent", back_populates="user", foreign_keys="WithdrawalIntent.user_id")
     crypto_balances = relationship("UserCryptoBalance", back_populates="user")
+    daily_limits = relationship("UserDailyLimits", back_populates="user")
     betting_records = relationship("BettingRecord", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
     click_events = relationship("ClickEvent", back_populates="user")

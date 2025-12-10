@@ -1,4 +1,6 @@
 import asyncio
+import sys
+import selectors
 from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -6,6 +8,10 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.core.config import settings
 from app.models import Base
+
+# Fix for Windows: Use SelectorEventLoop instead of ProactorEventLoop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -80,8 +86,17 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-
-    asyncio.run(run_async_migrations())
+    # Use SelectorEventLoop for Windows compatibility with psycopg
+    if sys.platform == 'win32':
+        selector = selectors.SelectSelector()
+        loop = asyncio.SelectorEventLoop(selector)
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(run_async_migrations())
+        finally:
+            loop.close()
+    else:
+        asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():

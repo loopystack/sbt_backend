@@ -1,7 +1,9 @@
 from app.core.database import Base
 from .user import User, EmailVerification, PasswordReset
 from .odds import Odds
-from .deposit import DepositIntent, CryptoTransaction, CryptoInventory, UserCryptoBalance
+from .deposit import DepositIntent, CryptoTransaction, CryptoInventory, UserCryptoBalance, WithdrawalIntent
+from .user_limits import UserDailyLimits
+from .platform_wallet import PlatformWallet
 from .betting_record import BettingRecord
 from .transaction import Transaction
 from .affiliate import Affiliate, Referral, AffiliateCommission
@@ -21,9 +23,12 @@ __all__ = [
     "PasswordReset", 
     "Odds",
     "DepositIntent",
+    "WithdrawalIntent",
     "CryptoTransaction", 
     "CryptoInventory",
     "UserCryptoBalance",
+    "UserDailyLimits",
+    "PlatformWallet",
     "BettingRecord",
     "Transaction",
     "Affiliate",

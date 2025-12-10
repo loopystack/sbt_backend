@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Numeric, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Numeric, Text, ForeignKey, Index, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -14,7 +14,7 @@ class DepositIntent(Base):
     generated_address = Column(String(100), nullable=False)
     memo = Column(String(100), nullable=True)  # For XRP, XLM, BNB Beacon, EOS
     expires_at = Column(DateTime, nullable=False)
-    status = Column(String(20), default="pending")  # pending, confirmed, expired, failed
+    status = Column(String(20), default="pending")  # pending, confirmed, expired, failed, settled
     tx_hash = Column(String(100), nullable=True)
     confirmations = Column(Integer, default=0)
     required_confirmations = Column(Integer, nullable=False)
@@ -25,12 +25,20 @@ class DepositIntent(Base):
     # Relationships
     user = relationship("User", back_populates="deposit_intents")
     transactions = relationship("CryptoTransaction", back_populates="deposit_intent")
+    
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_deposit_user_status', 'user_id', 'status'),
+        Index('idx_deposit_expires_at', 'expires_at'),
+        Index('idx_deposit_tx_hash', 'tx_hash'),
+    )
 
 class CryptoTransaction(Base):
     __tablename__ = "crypto_transactions"
     
     id = Column(Integer, primary_key=True, index=True)
-    deposit_intent_id = Column(Integer, ForeignKey("deposit_intents.id"), nullable=False)
+    deposit_intent_id = Column(Integer, ForeignKey("deposit_intents.id"), nullable=True)  # Nullable for withdrawals
+    withdrawal_intent_id = Column(Integer, ForeignKey("withdrawal_intents.id"), nullable=True)  # For withdrawals
     tx_hash = Column(String(100), nullable=False, unique=True)
     from_address = Column(String(100), nullable=True)
     to_address = Column(String(100), nullable=False)
@@ -46,6 +54,15 @@ class CryptoTransaction(Base):
     
     # Relationships
     deposit_intent = relationship("DepositIntent", back_populates="transactions")
+    withdrawal_intent = relationship("WithdrawalIntent", back_populates="transactions")
+    
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_crypto_tx_deposit_intent', 'deposit_intent_id'),
+        Index('idx_crypto_tx_withdrawal_intent', 'withdrawal_intent_id'),
+        Index('idx_crypto_tx_status', 'status'),
+        Index('idx_crypto_tx_created_at', 'created_at'),
+    )
 
 class CryptoInventory(Base):
     __tablename__ = "crypto_inventory"
@@ -73,7 +90,59 @@ class UserCryptoBalance(Base):
     
     # Relationships
     user = relationship("User", back_populates="crypto_balances")
+    
+    # Unique constraint: one balance per user per asset
+    __table_args__ = (
+        Index('idx_user_asset_balance', 'user_id', 'asset', unique=True),
+    )
 
-# Add relationships to existing User model
-# User.deposit_intents = relationship("DepositIntent", back_populates="user")
-# User.crypto_balances = relationship("UserCryptoBalance", back_populates="user")
+
+class WithdrawalIntent(Base):
+    __tablename__ = "withdrawal_intents"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    asset = Column(String(10), nullable=False, default="USDT")
+    network = Column(String(20), nullable=False)  # TRC20, ERC20, BEP20, etc.
+    amount_crypto = Column(Numeric(20, 8), nullable=False)  # Crypto amount
+    amount_usd = Column(Numeric(10, 2), nullable=False)  # USD equivalent
+    to_address = Column(String(100), nullable=False)  # User's external wallet address
+    memo = Column(String(100), nullable=True)  # For XRP, XLM, BNB Beacon, etc.
+    
+    # Status tracking
+    status = Column(String(20), default="pending")  # pending, approved, processing, completed, failed, cancelled
+    tx_hash = Column(String(100), nullable=True)  # Our outgoing transaction hash
+    confirmations = Column(Integer, default=0)
+    
+    # Fees
+    network_fee = Column(Numeric(20, 8), nullable=True)  # Blockchain network fee
+    platform_fee = Column(Numeric(10, 2), default=0)  # Platform service fee (if any)
+    
+    # Admin fields
+    admin_notes = Column(Text, nullable=True)  # Internal admin notes
+    approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Admin user who approved
+    approved_at = Column(DateTime, nullable=True)
+    rejection_reason = Column(Text, nullable=True)  # If rejected, reason
+    
+    # Compliance
+    kyc_required = Column(Boolean, default=False)
+    kyc_verified = Column(Boolean, default=False)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    processed_at = Column(DateTime, nullable=True)  # When transaction was sent
+    completed_at = Column(DateTime, nullable=True)  # When confirmations reached
+    
+    # Relationships
+    user = relationship("User", back_populates="withdrawal_intents", foreign_keys=[user_id])
+    approver = relationship("User", foreign_keys=[approved_by])
+    transactions = relationship("CryptoTransaction", back_populates="withdrawal_intent")
+    
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_withdrawal_user_status', 'user_id', 'status'),
+        Index('idx_withdrawal_status', 'status'),
+        Index('idx_withdrawal_tx_hash', 'tx_hash'),
+        Index('idx_withdrawal_created_at', 'created_at'),
+    )
