@@ -45,3 +45,9 @@ class CryptoTransactionCreate(BaseModel):
     block_number: Optional[int] = None
     confirmations: int = 0
     fee: Optional[Decimal] = None
+
+class DepositConfirmRequest(BaseModel):
+    deposit_id: int = Field(..., description="Deposit intent ID")
+    tx_hash: str = Field(..., description="Transaction hash")
+    amount_crypto: Decimal = Field(..., description="Amount in crypto")
+    amount_usd: Decimal = Field(..., description="Amount in USD")

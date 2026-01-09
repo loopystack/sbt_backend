@@ -61,6 +61,7 @@ var/
 # PyInstaller
 *.manifest
 *.spec
+*.md
 
 # Installer logs
 pip-log.txt
@@ -124,3 +125,4 @@ dmypy.json
 # Mac / Windows system files
 .DS_Store
 Thumbs.db
+

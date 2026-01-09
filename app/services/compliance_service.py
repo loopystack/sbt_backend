@@ -5,7 +5,8 @@ Handles all responsible gaming and regional restrictions enforcement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
+from decimal import Decimal
 from fastapi import HTTPException, status
 
 from app.models.analytics import UserCompliance, ComplianceAlert, RegionalRestriction
@@ -47,10 +48,13 @@ class ComplianceService:
     @staticmethod
     async def check_deposit_limits(
         user_id: int,
-        deposit_amount: float,
+        deposit_amount: Union[float, Decimal],
         db: AsyncSession
     ) -> Dict[str, Any]:
         """Check if deposit amount violates limits"""
+        # Convert deposit_amount to Decimal for consistent calculations
+        deposit_amount_decimal = Decimal(str(deposit_amount))
+        
         compliance = await ComplianceService.get_user_compliance(user_id, db)
         
         if not compliance:
@@ -80,22 +84,28 @@ class ComplianceService:
             )
         )
         daily_deposits_result = await db.execute(daily_deposits_query)
-        daily_deposits = daily_deposits_result.scalar() or 0.0
+        daily_deposits_raw = daily_deposits_result.scalar() or 0.0
+        # Convert to Decimal for consistent calculations
+        daily_deposits = Decimal(str(daily_deposits_raw))
+        
+        # Convert limit to Decimal
+        daily_limit = Decimal(str(compliance.daily_deposit_limit))
         
         # Check daily limit
-        if daily_deposits + deposit_amount > compliance.daily_deposit_limit:
+        total_deposits = daily_deposits + deposit_amount_decimal
+        if total_deposits > daily_limit:
             await ComplianceService.create_alert(
                 user_id=user_id,
                 alert_type="deposit_limit_exceeded",
                 severity="warning",
-                message=f"Daily deposit limit exceeded. Limit: ${compliance.daily_deposit_limit}, Attempted: ${daily_deposits + deposit_amount:.2f}",
+                message=f"Daily deposit limit exceeded. Limit: ${daily_limit}, Attempted: ${total_deposits:.2f}",
                 db=db
             )
             return {
                 "allowed": False,
-                "reason": f"Exceeds daily deposit limit of ${compliance.daily_deposit_limit:.2f}",
-                "current_usage": daily_deposits,
-                "limit": compliance.daily_deposit_limit
+                "reason": f"Exceeds daily deposit limit of ${daily_limit:.2f}",
+                "current_usage": float(daily_deposits),
+                "limit": float(daily_limit)
             }
         
         return {"allowed": True, "reason": None}
@@ -103,28 +113,35 @@ class ComplianceService:
     @staticmethod
     async def check_bet_limits(
         user_id: int,
-        bet_amount: float,
+        bet_amount: Union[float, Decimal],
         db: AsyncSession
     ) -> Dict[str, Any]:
         """Check if bet amount violates limits"""
+        # Convert bet_amount to Decimal for consistent calculations
+        bet_amount_decimal = Decimal(str(bet_amount))
+        
         compliance = await ComplianceService.get_user_compliance(user_id, db)
         
         if not compliance:
             return {"allowed": True, "reason": None}
         
+        # Convert limits to Decimal
+        max_bet_limit = Decimal(str(compliance.max_bet_amount))
+        max_daily_bet_limit = Decimal(str(compliance.max_daily_bet_limit))
+        
         # Check max bet amount
-        if bet_amount > compliance.max_bet_amount:
+        if bet_amount_decimal > max_bet_limit:
             await ComplianceService.create_alert(
                 user_id=user_id,
                 alert_type="bet_limit_exceeded",
                 severity="warning",
-                message=f"Bet amount exceeds limit. Limit: ${compliance.max_bet_amount:.2f}, Attempted: ${bet_amount:.2f}",
+                message=f"Bet amount exceeds limit. Limit: ${max_bet_limit:.2f}, Attempted: ${bet_amount_decimal:.2f}",
                 db=db
             )
             return {
                 "allowed": False,
-                "reason": f"Exceeds maximum bet limit of ${compliance.max_bet_amount:.2f}",
-                "limit": compliance.max_bet_amount
+                "reason": f"Exceeds maximum bet limit of ${max_bet_limit:.2f}",
+                "limit": float(max_bet_limit)
             }
         
         # Check daily betting limit
@@ -137,21 +154,24 @@ class ComplianceService:
             )
         )
         daily_bets_result = await db.execute(daily_bets_query)
-        daily_bets = daily_bets_result.scalar() or 0.0
+        daily_bets_raw = daily_bets_result.scalar() or 0.0
+        # Convert to Decimal for consistent calculations
+        daily_bets = Decimal(str(daily_bets_raw))
         
-        if daily_bets + bet_amount > compliance.max_daily_bet_limit:
+        total_bets = daily_bets + bet_amount_decimal
+        if total_bets > max_daily_bet_limit:
             await ComplianceService.create_alert(
                 user_id=user_id,
                 alert_type="daily_bet_limit_exceeded",
                 severity="warning",
-                message=f"Daily bet limit exceeded. Limit: ${compliance.max_daily_bet_limit:.2f}, Current: ${daily_bets:.2f}",
+                message=f"Daily bet limit exceeded. Limit: ${max_daily_bet_limit:.2f}, Current: ${total_bets:.2f}",
                 db=db
             )
             return {
                 "allowed": False,
-                "reason": f"Exceeds daily bet limit of ${compliance.max_daily_bet_limit:.2f}",
-                "current_usage": daily_bets,
-                "limit": compliance.max_daily_bet_limit
+                "reason": f"Exceeds daily bet limit of ${max_daily_bet_limit:.2f}",
+                "current_usage": float(daily_bets),
+                "limit": float(max_daily_bet_limit)
             }
         
         return {"allowed": True, "reason": None}

@@ -514,3 +514,187 @@ async def adjust_user_funds(
         "new_balance": float(user.funds_usd),
         "adjustment": amount
     }
+
+
+# Admin Deposit Management Endpoints
+@router.get("/deposits")
+async def get_admin_deposits(
+    status: Optional[str] = Query(None, description="Filter by status (pending, detected, confirmed, settled, expired, failed)"),
+    network: Optional[str] = Query(None, description="Filter by network (TRC20, etc.)"),
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all deposits with optional filtering
+    Admin endpoint for operational support
+    """
+    try:
+        offset = (page - 1) * size
+        
+        query = select(DepositIntent)
+        
+        # Apply filters
+        conditions = []
+        if status:
+            conditions.append(DepositIntent.status == status)
+        if network:
+            conditions.append(DepositIntent.network == network)
+        
+        if conditions:
+            query = query.where(and_(*conditions))
+        
+        # Get total count
+        count_stmt = select(func.count()).select_from(query.subquery())
+        count_result = await db.execute(count_stmt)
+        total = count_result.scalar() or 0
+        
+        # Get paginated results
+        query = query.order_by(DepositIntent.created_at.desc()).offset(offset).limit(size)
+        result = await db.execute(query)
+        deposits = result.scalars().all()
+        
+        return {
+            "total": total,
+            "page": page,
+            "size": size,
+            "deposits": [
+                {
+                    "id": deposit.id,
+                    "user_id": deposit.user_id,
+                    "asset": deposit.asset,
+                    "network": deposit.network,
+                    "address": deposit.generated_address,
+                    "amount_usd": float(deposit.amount_quote_fiat),
+                    "amount_crypto": float(deposit.amount_crypto) if deposit.amount_crypto else None,
+                    "status": deposit.status,
+                    "tx_hash": deposit.tx_hash,
+                    "confirmations": deposit.confirmations,
+                    "required_confirmations": deposit.required_confirmations,
+                    "created_at": deposit.created_at.isoformat() if deposit.created_at else None,
+                    "detected_at": deposit.detected_at.isoformat() if deposit.detected_at else None,
+                    "confirmed_at": deposit.confirmed_at.isoformat() if deposit.confirmed_at else None,
+                    "settled_at": deposit.settled_at.isoformat() if deposit.settled_at else None,
+                    "expires_at": deposit.expires_at.isoformat() if deposit.expires_at else None
+                }
+                for deposit in deposits
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching deposits: {str(e)}"
+        )
+
+
+@router.post("/deposits/{deposit_id}/retry")
+async def admin_retry_deposit(
+    deposit_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retry processing a stuck deposit intent
+    Admin endpoint for operational support
+    """
+    try:
+        from app.services.deposit_settlement_service import deposit_settlement_service
+        
+        stmt = select(DepositIntent).where(DepositIntent.id == deposit_id)
+        result = await db.execute(stmt)
+        deposit_intent = result.scalar_one_or_none()
+        
+        if not deposit_intent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Deposit intent {deposit_id} not found"
+            )
+        
+        # If status is confirmed, try to settle
+        if deposit_intent.status == "confirmed":
+            try:
+                result = await deposit_settlement_service.settle_deposit_intent(
+                    deposit_intent_id=deposit_id,
+                    db=db
+                )
+                return {
+                    "message": "Deposit settlement retried successfully",
+                    "deposit_id": deposit_id,
+                    "result": result
+                }
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error retrying settlement: {str(e)}"
+                )
+        elif deposit_intent.status in ["pending", "detected"]:
+            # For pending/detected, the worker will pick it up on next scan
+            return {
+                "message": f"Deposit intent {deposit_id} will be processed by worker on next scan",
+                "deposit_id": deposit_id,
+                "status": deposit_intent.status
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot retry deposit with status: {deposit_intent.status}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrying deposit: {str(e)}"
+        )
+
+
+@router.post("/deposits/{deposit_id}/mark_failed")
+async def admin_mark_deposit_failed(
+    deposit_id: int,
+    reason: Optional[str] = Query(None, description="Reason for marking as failed"),
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Manually mark a deposit intent as failed
+    Admin endpoint for operational support
+    """
+    try:
+        stmt = select(DepositIntent).where(DepositIntent.id == deposit_id)
+        result = await db.execute(stmt)
+        deposit_intent = result.scalar_one_or_none()
+        
+        if not deposit_intent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Deposit intent {deposit_id} not found"
+            )
+        
+        # Only allow marking as failed if not already settled
+        if deposit_intent.status == "settled":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot mark settled deposit as failed"
+            )
+        
+        deposit_intent.status = "failed"
+        await db.commit()
+        await db.refresh(deposit_intent)
+        
+        return {
+            "message": f"Deposit intent {deposit_id} marked as failed",
+            "deposit_id": deposit_id,
+            "status": deposit_intent.status,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error marking deposit as failed: {str(e)}"
+        )

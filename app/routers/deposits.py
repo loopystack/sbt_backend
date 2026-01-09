@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import datetime, timedelta
 import secrets
@@ -11,16 +11,20 @@ import hmac
 import hashlib
 
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, get_current_superuser
 from app.models.deposit import DepositIntent, CryptoInventory, UserCryptoBalance
 from app.schemas.deposit import (
     DepositIntentCreate, 
     DepositIntentResponse, 
     DepositStatusResponse,
-    CryptoAsset
+    CryptoAsset,
+    DepositConfirmRequest
 )
 from app.services.address_generator import AddressGenerator
 from app.services.compliance_service import compliance_service
+from app.services.deposit_service import deposit_service
+from decimal import Decimal
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/deposits", tags=["deposits"])
 
@@ -56,7 +60,7 @@ SUPPORTED_ASSETS = {
 @router.post("/initiate", response_model=DepositIntentResponse)
 async def initiate_deposit(
     deposit_data: DepositIntentCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
@@ -93,7 +97,8 @@ async def initiate_deposit(
     generated_address, memo = await address_generator.generate_address(
         asset=deposit_data.asset,
         network=deposit_data.network,
-        user_id=current_user.id
+        user_id=current_user.id,
+        db=db
     )
     
     # Create deposit intent
@@ -110,8 +115,8 @@ async def initiate_deposit(
     )
     
     db.add(deposit_intent)
-    db.commit()
-    db.refresh(deposit_intent)
+    await db.commit()
+    await db.refresh(deposit_intent)
     
     # Generate QR code
     qr_data = f"{generated_address}"
@@ -144,10 +149,48 @@ async def initiate_deposit(
         status=deposit_intent.status
     )
 
+
+@router.post("/confirm")
+async def confirm_deposit(
+    confirm_data: DepositConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_superuser)  # Admin/internal endpoint
+):
+    """
+    Confirm a deposit and credit user balance
+    Internal/admin endpoint for testing or manual confirmation
+    Idempotent: same tx_hash will not credit twice
+    
+    Expected JSON body:
+    {
+        "deposit_id": 1,
+        "tx_hash": "abc123...",
+        "amount_crypto": 100.00,
+        "amount_usd": 100.00
+    }
+    """
+    try:
+        result = await deposit_service.confirm_deposit(
+            deposit_intent_id=confirm_data.deposit_id,
+            tx_hash=confirm_data.tx_hash,
+            amount_crypto=confirm_data.amount_crypto,
+            amount_usd=confirm_data.amount_usd,
+            db=db
+        )
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to confirm deposit: {str(e)}"
+        )
+
+
 @router.get("/status/{deposit_id}", response_model=DepositStatusResponse)
 async def get_deposit_status(
     deposit_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
@@ -191,30 +234,42 @@ async def get_supported_assets():
 
 @router.get("/history")
 async def get_deposit_history(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user),
     limit: int = 50,
     offset: int = 0
 ):
     """
     Get user's deposit history
+    Returns: amount, tx_hash, status, created_at, updated_at, network, address
     """
-    deposits = db.query(DepositIntent).filter(
+    from sqlalchemy import select, and_
+    
+    stmt = select(DepositIntent).where(
         DepositIntent.user_id == current_user.id
-    ).order_by(DepositIntent.created_at.desc()).offset(offset).limit(limit).all()
+    ).order_by(DepositIntent.created_at.desc()).offset(offset).limit(limit)
+    
+    result = await db.execute(stmt)
+    deposits = result.scalars().all()
     
     return [
         {
             "id": deposit.id,
             "asset": deposit.asset,
             "network": deposit.network,
+            "address": deposit.generated_address,
             "amount_usd": float(deposit.amount_quote_fiat),
+            "amount_crypto": float(deposit.amount_crypto) if deposit.amount_crypto else None,
             "status": deposit.status,
             "confirmations": deposit.confirmations,
             "required_confirmations": deposit.required_confirmations,
             "tx_hash": deposit.tx_hash,
-            "created_at": deposit.created_at,
-            "settled_at": deposit.settled_at
+            "created_at": deposit.created_at.isoformat() if deposit.created_at else None,
+            "updated_at": deposit.updated_at.isoformat() if deposit.updated_at else None,
+            "detected_at": deposit.detected_at.isoformat() if deposit.detected_at else None,
+            "confirmed_at": deposit.confirmed_at.isoformat() if deposit.confirmed_at else None,
+            "settled_at": deposit.settled_at.isoformat() if deposit.settled_at else None,
+            "expires_at": deposit.expires_at.isoformat() if deposit.expires_at else None
         }
         for deposit in deposits
     ]
@@ -275,7 +330,7 @@ def verify_cryptomus_signature(payload: str, signature: str) -> bool:
 @router.post("/cryptomus/create-payment")
 async def create_cryptomus_payment(
     request_data: dict,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
@@ -357,7 +412,7 @@ async def create_cryptomus_payment(
 @router.post("/coinbase/create-payment")
 async def create_coinbase_payment(
     request_data: dict,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
@@ -427,7 +482,7 @@ async def create_coinbase_payment(
 @router.get("/coinbase/payment-status/{payment_id}")
 async def get_coinbase_payment_status(
     payment_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """
@@ -468,7 +523,7 @@ async def get_coinbase_payment_status(
 @router.post("/coinbase/webhook")
 async def coinbase_webhook(
     request: Request,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Handle Coinbase Commerce webhook notifications
@@ -502,7 +557,7 @@ async def coinbase_webhook(
         )
 
 @router.post("/cryptomus/callback")
-async def cryptomus_callback(request: Request, db: Session = Depends(get_db)):
+async def cryptomus_callback(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Handle Cryptomus payment callback/webhook
     """

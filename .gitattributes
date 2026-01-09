@@ -1,1 +1,17 @@
+# Python files - use LF line endings
 *.py text eol=lf
+
+# Config files - use LF line endings
+*.ini text eol=lf
+*.txt text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+
+# Scripts - use LF line endings (will be converted on Windows checkout if needed)
+*.sh text eol=lf
+*.ps1 text eol=crlf
+
+# Ensure all text files use LF in repository (CRLF will be converted on Windows checkout)
+* text=auto eol=lf

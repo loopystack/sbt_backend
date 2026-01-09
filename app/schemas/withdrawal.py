@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
@@ -22,7 +22,8 @@ class WithdrawalIntentCreate(BaseModel):
     to_address: str = Field(..., min_length=26, max_length=100, description="Destination wallet address")
     memo: Optional[str] = Field(None, max_length=100, description="Memo/tag if required (XRP, XLM, etc.)")
     
-    @validator('to_address')
+    @field_validator('to_address')
+    @classmethod
     def validate_address(cls, v):
         """Basic address validation - should be alphanumeric"""
         if not v.replace('-', '').replace('_', '').isalnum():
@@ -59,6 +60,9 @@ class WithdrawalStatusResponse(BaseModel):
     created_at: datetime
     processed_at: Optional[datetime]
     completed_at: Optional[datetime]
+    failed_at: Optional[datetime] = None
+    failure_reason: Optional[str] = None
+    network_fee: Optional[Decimal] = None
     
     class Config:
         from_attributes = True

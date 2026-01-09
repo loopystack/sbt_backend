@@ -1,8 +1,8 @@
 import asyncio
 import logging
 from typing import Dict, Optional, Tuple
-from sqlalchemy.orm import Session
-from app.core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.deposit import CryptoInventory, DepositIntent
 from app.services.blockchain_watcher import BlockchainWatcher
 from app.services.crypto_service import CryptoService
@@ -22,7 +22,8 @@ class AddressGenerator:
         self, 
         asset: str, 
         network: str, 
-        user_id: int
+        user_id: int,
+        db: AsyncSession
     ) -> Tuple[str, Optional[str]]:
         """
         Generate a unique address for the user's deposit
@@ -31,13 +32,13 @@ class AddressGenerator:
         try:
             # For memo-based chains (XRP, XLM, BNB Beacon), use single address + unique memo
             if self._is_memo_required(asset, network):
-                address = await self._get_or_create_memo_address(asset, network)
+                address = await self._get_or_create_memo_address(asset, network, db)
                 memo = await self._generate_unique_memo(user_id, asset)
                 return address, memo
             
             # For other chains, generate unique address per user
             else:
-                address = await self._generate_unique_address(asset, network, user_id)
+                address = await self._generate_unique_address(asset, network, user_id, db)
                 return address, None
                 
         except Exception as e:
@@ -49,16 +50,17 @@ class AddressGenerator:
         memo_required_assets = ["XRP", "XLM", "BNB"]
         return asset in memo_required_assets
     
-    async def _get_or_create_memo_address(self, asset: str, network: str) -> str:
+    async def _get_or_create_memo_address(self, asset: str, network: str, db: AsyncSession) -> str:
         """Get or create a single address for memo-based chains"""
-        db = next(get_db())
         try:
             # Check if we already have an active address for this asset/network
-            inventory = db.query(CryptoInventory).filter(
+            stmt = select(CryptoInventory).where(
                 CryptoInventory.asset == asset,
                 CryptoInventory.network == network,
                 CryptoInventory.is_active == True
-            ).first()
+            )
+            result = await db.execute(stmt)
+            inventory = result.scalar_one_or_none()
             
             if inventory:
                 return inventory.address
@@ -75,12 +77,15 @@ class AddressGenerator:
                 is_active=True
             )
             db.add(new_inventory)
-            db.commit()
+            await db.commit()
+            await db.refresh(new_inventory)
             
             return address
             
-        finally:
-            db.close()
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"Error getting or creating memo address: {e}")
+            raise
     
     async def _generate_unique_memo(self, user_id: int, asset: str) -> str:
         """Generate a unique memo for the user"""
@@ -90,9 +95,8 @@ class AddressGenerator:
         memo = f"{user_id:06d}{random_suffix}"
         return memo.upper()  # XRP/XLM memos are typically uppercase
     
-    async def _generate_unique_address(self, asset: str, network: str, user_id: int) -> str:
+    async def _generate_unique_address(self, asset: str, network: str, user_id: int, db: AsyncSession) -> str:
         """Generate a unique address for non-memo chains"""
-        db = next(get_db())
         try:
             # Generate new address
             address = await self.crypto_service.generate_address(asset, network)
@@ -106,12 +110,15 @@ class AddressGenerator:
                 is_active=True
             )
             db.add(new_inventory)
-            db.commit()
+            await db.commit()
+            await db.refresh(new_inventory)
             
             return address
             
-        finally:
-            db.close()
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"Error generating unique address: {e}")
+            raise
 
 class CryptoService:
     """

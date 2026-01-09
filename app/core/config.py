@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import model_validator
 from typing import Optional
+from decimal import Decimal
 
 # Default localhost IP - can be overridden by environment variable
 DEFAULT_LOCALHOST_IP = "35.159.122.94"
@@ -67,6 +68,24 @@ class Settings(BaseSettings):
     ROLLBAR_ACCESS_TOKEN: Optional[str] = None
     ROLLBAR_ENVIRONMENT: str = "development"
     ROLLBAR_ENABLED: bool = True
+    
+    # TRON API Configuration
+    TRON_API_BASE_URL: str = "https://api.trongrid.io"  # TronGrid API base URL
+    TRON_API_KEY: Optional[str] = None  # Optional API key for higher rate limits
+    TRON_USDT_CONTRACT: str = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"  # USDT TRC20 contract address
+    TRON_CONFIRMATIONS_REQUIRED: int = 2  # Required confirmations for deposits
+    DEPOSIT_SCAN_INTERVAL_SECONDS: int = 60  # How often to scan for deposits
+    DEPOSIT_INTENT_EXPIRY_HOURS: int = 24  # Deposit intent expiry time
+    
+    # TRON Hot Wallet Configuration (Week 4 - Withdrawal Execution)
+    TRON_HOT_WALLET_ADDRESS: Optional[str] = None  # Hot wallet address for withdrawals
+    TRON_HOT_WALLET_PRIVATE_KEY: Optional[str] = None  # Private key (hex format) - NEVER LOG THIS
+    TRON_WITHDRAW_CONFIRMATIONS_REQUIRED: int = 2  # Required confirmations for withdrawals
+    TRON_WITHDRAW_MIN_AMOUNT: Optional[Decimal] = None  # Minimum withdrawal amount (optional)
+    TRON_WITHDRAW_MAX_AMOUNT: Optional[Decimal] = None  # Maximum withdrawal amount (optional)
+    WITHDRAW_EXECUTION_INTERVAL_SECONDS: int = 60  # How often to process withdrawals
+    WITHDRAWAL_AUTO_EXECUTE: bool = False  # Auto-execute approved withdrawals (default: manual)
+    WITHDRAWAL_CONFIRM_TIMEOUT_MINUTES: int = 60  # Timeout for stuck transactions
     
     @model_validator(mode='after')
     def sync_urls_with_localhost_ip(self):

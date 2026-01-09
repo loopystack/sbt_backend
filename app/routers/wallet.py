@@ -3,18 +3,107 @@ Wallet Management API endpoints
 Handles crypto wallet operations and fund aggregation
 """
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
-from typing import Dict, List, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Dict, List, Any, Optional
+from decimal import Decimal
 import logging
 
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.services.wallet_sweeper import wallet_sweeper
+from app.services.wallet_service import wallet_service
 from app.schemas.deposit import DepositIntentResponse
 from app.models.deposit import DepositIntent, CryptoTransaction
+from app.models.user import User
 
-router = APIRouter()
+router = APIRouter(prefix="/api/wallet", tags=["wallet"])
 logger = logging.getLogger(__name__)
+
+@router.get("/balance")
+async def get_wallet_balance(
+    asset: Optional[str] = Query(None, description="Filter by asset (e.g., USDT)"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user's wallet balance(s)
+    Returns available, reserved, and total balance for each asset
+    """
+    if asset:
+        # Get balance for specific asset
+        balance_info = await wallet_service.get_balance(
+            user_id=current_user.id,
+            asset=asset,
+            db=db
+        )
+        return {
+            "asset": asset,
+            "available": str(balance_info["available"]),
+            "reserved": str(balance_info["reserved"]),
+            "total": str(balance_info["total"])
+        }
+    else:
+        # Get balances for all assets (you may want to limit this)
+        # For now, return USDT as default
+        balance_info = await wallet_service.get_balance(
+            user_id=current_user.id,
+            asset="USDT",
+            db=db
+        )
+        return {
+            "USDT": {
+                "available": str(balance_info["available"]),
+                "reserved": str(balance_info["reserved"]),
+                "total": str(balance_info["total"])
+            }
+        }
+
+
+@router.get("/transactions")
+async def get_wallet_transactions(
+    asset: Optional[str] = Query(None, description="Filter by asset"),
+    limit: int = Query(100, ge=1, le=500, description="Number of transactions to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user's wallet transaction history (ledger)
+    Returns all balance changes with full audit trail
+    """
+    transactions = await wallet_service.get_transactions(
+        user_id=current_user.id,
+        asset=asset,
+        limit=limit,
+        offset=offset,
+        db=db
+    )
+    
+    return {
+        "transactions": [
+            {
+                "id": tx.id,
+                "type": tx.type.value,
+                "asset": tx.asset,
+                "amount": str(tx.amount),
+                "balance_before": str(tx.balance_before),
+                "balance_after": str(tx.balance_after),
+                "reserved_before": str(tx.reserved_before),
+                "reserved_after": str(tx.reserved_after),
+                "reference_type": tx.reference_type.value if tx.reference_type else None,
+                "reference_id": tx.reference_id,
+                "description": tx.description,
+                "created_at": tx.created_at.isoformat()
+            }
+            for tx in transactions
+        ],
+        "count": len(transactions),
+        "limit": limit,
+        "offset": offset
+    }
+
 
 @router.post("/sweep/{asset}/{network}")
 async def sweep_deposits(

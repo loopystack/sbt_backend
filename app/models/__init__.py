@@ -4,6 +4,7 @@ from .odds import Odds
 from .deposit import DepositIntent, CryptoTransaction, CryptoInventory, UserCryptoBalance, WithdrawalIntent
 from .user_limits import UserDailyLimits
 from .platform_wallet import PlatformWallet
+from .wallet_transaction import WalletTransaction, WalletTransactionType, ReferenceType
 from .betting_record import BettingRecord
 from .transaction import Transaction
 from .affiliate import Affiliate, Referral, AffiliateCommission
@@ -29,6 +30,9 @@ __all__ = [
     "UserCryptoBalance",
     "UserDailyLimits",
     "PlatformWallet",
+    "WalletTransaction",
+    "WalletTransactionType",
+    "ReferenceType",
     "BettingRecord",
     "Transaction",
     "Affiliate",

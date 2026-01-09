@@ -19,6 +19,8 @@ from selenium.common.exceptions import (
     StaleElementReferenceException,
     ElementClickInterceptedException,
 )
+import subprocess
+import platform
 
 import psycopg
 from psycopg.sql import SQL, Identifier
@@ -96,6 +98,98 @@ LEAGUES: List[LeagueConfig] = [
     RUSSIA, UKRAINE, POLAND, AUSTRIA, SWITZERLAND, 
 ]
 
+# -------------------- Chrome Version Detection --------------------
+def get_chrome_version() -> Optional[int]:
+    """
+    Detect Chrome browser version automatically.
+    Returns the major version number (e.g., 143) or None if detection fails.
+    """
+    try:
+        system = platform.system()
+        
+        if system == "Windows":
+            # Try common Chrome installation paths on Windows
+            chrome_paths = [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                os.path.expanduser(r"~\AppData\Local\Google\Chrome\Application\chrome.exe"),
+            ]
+            
+            for chrome_path in chrome_paths:
+                if os.path.exists(chrome_path):
+                    # Get version using PowerShell
+                    try:
+                        # Use PowerShell to get file version (escape quotes properly)
+                        ps_cmd = f'(Get-Item "{chrome_path}").VersionInfo.FileVersion'
+                        cmd = ['powershell', '-Command', ps_cmd]
+                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            version_str = result.stdout.strip()
+                            # Extract major version (e.g., "143.0.7499.41" -> 143)
+                            version_parts = version_str.split('.')
+                            if version_parts and version_parts[0].isdigit():
+                                return int(version_parts[0])
+                    except Exception:
+                        # Fallback: try chrome --version if available
+                        try:
+                            result = subprocess.run(
+                                [chrome_path, "--version"],
+                                capture_output=True,
+                                text=True,
+                                timeout=5
+                            )
+                            if result.returncode == 0:
+                                version_str = result.stdout.strip()
+                                match = re.search(r'(\d+)\.', version_str)
+                                if match:
+                                    return int(match.group(1))
+                        except Exception:
+                            continue
+        
+        elif system == "Linux":
+            # Try chrome --version command
+            try:
+                result = subprocess.run(
+                    ["google-chrome", "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0:
+                    # Output format: "Google Chrome 143.0.7499.41"
+                    version_str = result.stdout.strip()
+                    match = re.search(r'(\d+)\.', version_str)
+                    if match:
+                        return int(match.group(1))
+            except Exception:
+                pass
+        
+        elif system == "Darwin":  # macOS
+            # Try /Applications/Google Chrome.app
+            chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            if os.path.exists(chrome_path):
+                try:
+                    result = subprocess.run(
+                        [chrome_path, "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        version_str = result.stdout.strip()
+                        match = re.search(r'(\d+)\.', version_str)
+                        if match:
+                            return int(match.group(1))
+                except Exception:
+                    pass
+        
+        print("⚠️ Could not auto-detect Chrome version, will let undetected-chromedriver handle it")
+        return None
+        
+    except Exception as e:
+        print(f"⚠️ Error detecting Chrome version: {e}")
+        return None
+
 # -------------------- Selenium setup --------------------
 def make_driver(headless: bool = True) -> uc.Chrome:
     chrome_opts = Options()
@@ -137,15 +231,25 @@ def make_driver(headless: bool = True) -> uc.Chrome:
     max_retries = 3
     retry_delay = 2  # seconds
     
+    # Auto-detect Chrome version
+    chrome_version = get_chrome_version()
+    if chrome_version:
+        print(f"🔍 Detected Chrome version: {chrome_version}")
+    else:
+        print("🔍 Chrome version auto-detection failed, using automatic driver selection")
+    
     for attempt in range(max_retries):
         try:
-            # Specify Chrome version to match installed browser (141)
-            # This forces undetected-chromedriver to download matching ChromeDriver
             if attempt > 0:
                 print(f"🔄 Retry attempt {attempt + 1}/{max_retries}...")
                 time.sleep(retry_delay * attempt)  # Exponential backoff
             
-            driver = uc.Chrome(options=chrome_opts, version_main=141)
+            # Use detected version if available, otherwise let uc auto-detect
+            if chrome_version:
+                driver = uc.Chrome(options=chrome_opts, version_main=chrome_version)
+            else:
+                # Let undetected-chromedriver auto-detect and download matching driver
+                driver = uc.Chrome(options=chrome_opts)
             driver.set_page_load_timeout(60)
             
             # Additional anti-detection via JS
@@ -723,17 +827,63 @@ def build_insert_values(rows: List[MatchRow]) -> List[Tuple]:
     return vals
 
 def insert_rows(conn, values: List[Tuple]):
+    """
+    Insert rows into odds table, skipping duplicates based on match identity.
+    Note: Since there's no unique constraint on the match columns, we check for
+    existing rows before inserting to avoid duplicates.
+    """
     if not values:
         return
+    
+    # Filter out rows that already exist using a single query for better performance
+    filtered_values = []
+    with conn.cursor() as check_cur:
+        # Build a query to check all rows at once using VALUES
+        # This is more efficient than checking one by one
+        for val in values:
+            # val structure: (country, league, season, date, time, home_team, away_team, result, odd_1, odd_X, odd_2, bets)
+            check_sql = SQL("""
+                SELECT COUNT(*) FROM {table}
+                WHERE country = %s 
+                  AND league = %s 
+                  AND season = %s 
+                  AND date = %s 
+                  AND (time = %s OR (time IS NULL AND %s IS NULL))
+                  AND home_team = %s 
+                  AND away_team = %s
+            """).format(table=Identifier(TABLE))
+            
+            check_cur.execute(check_sql, (
+                val[0],  # country
+                val[1],  # league
+                val[2],  # season
+                val[3],  # date
+                val[4],  # time
+                val[4],  # time (for NULL check)
+                val[5],  # home_team
+                val[6],  # away_team
+            ))
+            exists = check_cur.fetchone()[0] > 0
+            
+            if not exists:
+                filtered_values.append(val)
+    
+    if not filtered_values:
+        print(f"   ⏭️  All {len(values)} rows already exist, skipping insert")
+        return
+    
+    if len(filtered_values) < len(values):
+        print(f"   📝 Inserting {len(filtered_values)} new rows (skipped {len(values) - len(filtered_values)} duplicates)")
+    
     sql = f"""
     INSERT INTO {TABLE}
     (country, league, season, "date", "time", home_team, away_team, result, odd_1, "odd_X", odd_2, bets)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    ON CONFLICT (country, league, season, "date", "time", home_team, away_team) DO NOTHING;
     """
     with conn.cursor() as cur:
-        cur.executemany(sql, values)
+        cur.executemany(sql, filtered_values)
     conn.commit()
+    print(f"   ✅ Inserted {len(filtered_values)} rows")
 
 # -------------------- Orchestration --------------------
 SCRAPE_RESULTS = True

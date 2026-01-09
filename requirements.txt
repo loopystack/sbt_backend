@@ -58,3 +58,10 @@ selenium==4.27.0
 
 # QR Code generation
 qrcode[pil]>=7.4.2
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+
+# TRON blockchain integration (Week 4)
+tronpy>=0.4.0  # Python TRON SDK for signing and broadcasting transactions
