@@ -169,7 +169,7 @@ def upgrade() -> None:
     
     # Modify odds if it exists
     if table_exists('odds'):
-            op.add_column('odds', sa.Column('ai_true_odd_X', sa.Numeric(), nullable=True))
+        op.add_column('odds', sa.Column('ai_true_odd_X', sa.Numeric(), nullable=True))
         op.add_column('odds', sa.Column('ai_true_odd_2', sa.Numeric(), nullable=True))
         op.add_column('odds', sa.Column('ai_prob_home', sa.Float(), nullable=True))
         op.add_column('odds', sa.Column('ai_prob_draw', sa.Float(), nullable=True))
