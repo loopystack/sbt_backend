@@ -3,6 +3,21 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 
+# Week 6 Day 1: Standardized deposit status constants
+class DepositStatus:
+    PENDING = "pending"
+    DETECTED = "detected"
+    CONFIRMING = "confirming"  # Optional intermediate state
+    CONFIRMED = "confirmed"
+    SETTLED = "settled"
+    FAILED = "failed"
+    EXPIRED = "expired"
+    
+    @classmethod
+    def all(cls):
+        """Return all valid status values"""
+        return [cls.PENDING, cls.DETECTED, cls.CONFIRMING, cls.CONFIRMED, cls.SETTLED, cls.FAILED, cls.EXPIRED]
+
 class DepositIntent(Base):
     __tablename__ = "deposit_intents"
     
@@ -15,15 +30,18 @@ class DepositIntent(Base):
     generated_address = Column(String(100), nullable=False)
     memo = Column(String(100), nullable=True)  # For XRP, XLM, BNB Beacon, EOS
     expires_at = Column(DateTime, nullable=False)
-    status = Column(String(20), default="pending")  # pending, detected, confirmed, settled, expired, failed
+    status = Column(String(20), default=DepositStatus.PENDING)  # pending, detected, confirming, confirmed, settled, expired, failed
     tx_hash = Column(String(100), nullable=True)  # Nullable until detected
     confirmations = Column(Integer, default=0)
     required_confirmations = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    # Week 6 Day 1: Lifecycle timestamps
     detected_at = Column(DateTime, nullable=True)  # When transaction was first detected
     confirmed_at = Column(DateTime, nullable=True)  # When confirmations reached threshold
     settled_at = Column(DateTime, nullable=True)  # When wallet was credited
+    failed_at = Column(DateTime, nullable=True)  # When deposit failed
+    failure_reason = Column(Text, nullable=True)  # Reason for failure
     
     # Relationships
     user = relationship("User", back_populates="deposit_intents")

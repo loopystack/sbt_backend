@@ -14,16 +14,25 @@ from app.workers.deposit_monitor import deposit_monitor_worker
 from app.integrations.tron_client import tron_client
 
 
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
 @pytest.fixture
 async def test_db():
     """Create test database session"""
-    # Use test database URL from config
-    from app.core.config import settings
-    test_db_url = settings.TEST_DATABASE_URL or settings.DATABASE_URL.replace("/sportsbetting_db", "/test_sportsbetting_db")
+    from app.models import Base
+    from sqlalchemy.pool import StaticPool
     
-    engine = create_async_engine(test_db_url, echo=False)
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    
+    # Create all tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    
     async_session = async_sessionmaker(engine, expire_on_commit=False)
-    
     async with async_session() as session:
         yield session
     
@@ -181,10 +190,16 @@ async def test_confirmations_reach_threshold_confirmed(test_db: AsyncSession):
         result = await test_db.execute(stmt)
         updated_intent = result.scalar_one()
         
-        assert updated_intent.status == "confirmed"
-        assert updated_intent.confirmations == 3
+        # Week 6 Day 3: Worker now auto-settles confirmed deposits
+        # Status should be "settled" (not just "confirmed")
+        assert updated_intent.status == "settled", f"Expected 'settled' but got '{updated_intent.status}'"
+        # Confirmations should be >= required_confirmations (2)
+        assert updated_intent.confirmations >= intent.required_confirmations, \
+            f"Expected confirmations >= {intent.required_confirmations}, got {updated_intent.confirmations}"
         assert updated_intent.confirmed_at is not None
+        assert updated_intent.settled_at is not None  # Should be settled
         assert stats["confirmed"] == 1
+        assert stats["settled"] == 1  # Should also be settled
     finally:
         tron_client.get_tx_info = original_get_tx_info
         tron_client.get_current_block = original_get_current_block

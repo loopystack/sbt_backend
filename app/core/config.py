@@ -4,7 +4,7 @@ from typing import Optional
 from decimal import Decimal
 
 # Default localhost IP - can be overridden by environment variable
-DEFAULT_LOCALHOST_IP = "35.159.122.94"
+DEFAULT_LOCALHOST_IP = "152.42.167.41"
 DEFAULT_BACKEND_PORT = 5001
 
 class Settings(BaseSettings):
