@@ -68,6 +68,11 @@ allowed_origins_list = [
     "http://127.0.0.1:8080",
     "https://localhost",
     "https://127.0.0.1",
+    # Production domain
+    "https://probetflow.com",
+    "http://probetflow.com",
+    "https://www.probetflow.com",
+    "http://www.probetflow.com",
 ]
 
 # Add production URL if it exists
