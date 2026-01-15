@@ -91,7 +91,7 @@ class DepositSettlementService:
                 f"tx_hash={intent.tx_hash}, amount={intent.amount_crypto} {intent.asset}"
             )
             
-            # Call existing Week 2 deposit service to credit wallet
+            # Call existing deposit service to credit wallet
             # This handles:
             # - Creating CryptoTransaction record
             # - Crediting user balance via wallet_service

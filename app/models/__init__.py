@@ -6,6 +6,7 @@ from .user_limits import UserDailyLimits
 from .platform_wallet import PlatformWallet
 from .wallet_transaction import WalletTransaction, WalletTransactionType, ReferenceType
 from .betting_record import BettingRecord
+from .bet import Bet, BetStatus
 from .transaction import Transaction
 from .affiliate import Affiliate, Referral, AffiliateCommission
 from .analytics import (
@@ -34,6 +35,8 @@ __all__ = [
     "WalletTransactionType",
     "ReferenceType",
     "BettingRecord",
+    "Bet",
+    "BetStatus",
     "Transaction",
     "Affiliate",
     "Referral",

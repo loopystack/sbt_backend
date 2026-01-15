@@ -12,10 +12,12 @@ import enum
 class WalletTransactionType(str, enum.Enum):
     """Types of wallet transactions"""
     DEPOSIT_CREDIT = "DEPOSIT_CREDIT"
-    BET_LOCK = "BET_LOCK"
-    BET_UNLOCK = "BET_UNLOCK"
-    BET_WIN = "BET_WIN"
-    BET_LOSS = "BET_LOSS"
+    BET_LOCK = "BET_LOCK"  # Lock stake when bet is placed
+    BET_UNLOCK = "BET_UNLOCK"  # Unlock stake (void/cancel)
+    BET_DEBIT = "BET_DEBIT"  # Deduct reserved stake (loss)
+    BET_PAYOUT = "BET_PAYOUT"  # Credit profit/payout (win)
+    BET_WIN = "BET_WIN"  # Legacy: use BET_PAYOUT instead
+    BET_LOSS = "BET_LOSS"  # Legacy: use BET_DEBIT instead
     WITHDRAWAL_LOCK = "WITHDRAWAL_LOCK"
     WITHDRAWAL_UNLOCK = "WITHDRAWAL_UNLOCK"
     WITHDRAWAL_DEBIT = "WITHDRAWAL_DEBIT"

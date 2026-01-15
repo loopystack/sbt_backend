@@ -39,6 +39,7 @@ class User(Base):
     daily_limits = relationship("UserDailyLimits", back_populates="user")
     wallet_transactions = relationship("WalletTransaction", back_populates="user")
     betting_records = relationship("BettingRecord", back_populates="user")
+    bets = relationship("Bet", back_populates="user")  # Internal wallet betting model
     transactions = relationship("Transaction", back_populates="user")
     click_events = relationship("ClickEvent", back_populates="user")
     page_views = relationship("PageView", back_populates="user")

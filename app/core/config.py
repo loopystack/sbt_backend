@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     DEPOSIT_SCAN_INTERVAL_SECONDS: int = 60  # How often to scan for deposits
     DEPOSIT_INTENT_EXPIRY_HOURS: int = 24  # Deposit intent expiry time
     
-    # TRON Hot Wallet Configuration (Week 4 - Withdrawal Execution)
+    # TRON Hot Wallet Configuration (Withdrawal Execution)
     TRON_HOT_WALLET_ADDRESS: Optional[str] = None  # Hot wallet address for withdrawals
     TRON_HOT_WALLET_PRIVATE_KEY: Optional[str] = None  # Private key (hex format) - NEVER LOG THIS
     TRON_WITHDRAW_CONFIRMATIONS_REQUIRED: int = 2  # Required confirmations for withdrawals

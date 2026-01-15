@@ -70,10 +70,10 @@ class WithdrawalExecutionService:
                 f"status is '{withdrawal.status}', expected 'approved'"
             )
         
-        # Network check: only TRC20 supported in Week 4
+        # Network check: only TRC20 supported
         if withdrawal.network != "TRC20":
             raise ValueError(
-                f"Network {withdrawal.network} not supported. Only TRC20 is supported in Week 4."
+                f"Network {withdrawal.network} not supported. Only TRC20 is supported."
             )
         
         # Asset check: only USDT supported

@@ -533,7 +533,7 @@ async def admin_execute_withdrawal(
 ):
     """
     Admin: Execute an approved withdrawal (send on-chain)
-    Week 4: Real on-chain sending for USDT TRC20
+    Real on-chain sending for USDT TRC20
     """
     from app.services.withdrawal_execution_service import WithdrawalExecutionService
     
@@ -598,7 +598,7 @@ async def admin_list_withdrawals(
 ):
     """
     Admin: List all withdrawals with optional filtering
-    Enhanced for Week 4 with tx_hash, confirmations, failure_reason
+    Enhanced with tx_hash, confirmations, failure_reason
     """
     offset = (page - 1) * size
     

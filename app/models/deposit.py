@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 
-# Week 6 Day 1: Standardized deposit status constants
+# Standardized deposit status constants
 class DepositStatus:
     PENDING = "pending"
     DETECTED = "detected"
@@ -36,7 +36,7 @@ class DepositIntent(Base):
     required_confirmations = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    # Week 6 Day 1: Lifecycle timestamps
+    # Lifecycle timestamps
     detected_at = Column(DateTime, nullable=True)  # When transaction was first detected
     confirmed_at = Column(DateTime, nullable=True)  # When confirmations reached threshold
     settled_at = Column(DateTime, nullable=True)  # When wallet was credited
