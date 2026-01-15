@@ -150,7 +150,7 @@ class BlockchainWatcher:
         db = next(get_db())
         try:
             tron_deposits = db.query(DepositIntent).filter(
-                DepositIntent.network == "TRON",
+                DepositIntent.network.in_(["TRC20", "TRON"]),  # Support both TRC20 and TRON network names
                 DepositIntent.status.in_(["pending", "confirmed"])
             ).all()
             

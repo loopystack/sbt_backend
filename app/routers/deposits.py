@@ -31,8 +31,8 @@ router = APIRouter(prefix="/api/deposits", tags=["deposits"])
 # Supported crypto assets and their networks
 SUPPORTED_ASSETS = {
     "USDT": {
-        "networks": ["Ethereum", "TRON", "Polygon", "BSC"],
-        "required_confirmations": 12,
+        "networks": ["TRC20"],  # Only TRC20 is supported for USDT deposits
+        "required_confirmations": 2,  # TRC20 requires 2 confirmations
         "memo_required": False
     },
     "USDC": {
@@ -46,7 +46,7 @@ SUPPORTED_ASSETS = {
         "memo_required": False
     },
     "TRX": {
-        "networks": ["TRON"],
+        "networks": ["TRC20"],  # TRX uses TRC20 network (TRON blockchain)
         "required_confirmations": 1,
         "memo_required": False
     },

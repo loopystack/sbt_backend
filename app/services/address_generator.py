@@ -153,8 +153,8 @@ class CryptoService:
             # USDT on ETH/Polygon uses same address format as ETH
             return self._generate_ethereum_address()
         
-        elif asset == "USDT" and network == "TRON":
-            # TRON address generation
+        elif asset == "USDT" and network in ["TRC20", "TRON"]:
+            # TRON address generation (TRC20 is the token standard on TRON network)
             return self._generate_tron_address()
         
         elif asset == "XRP" and network == "XRP Ledger":
