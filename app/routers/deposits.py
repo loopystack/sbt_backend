@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 import qrcode
 import io
@@ -109,7 +109,7 @@ async def initiate_deposit(
         amount_quote_fiat=deposit_data.amount_usd,
         generated_address=generated_address,
         memo=memo,
-        expires_at=datetime.utcnow() + timedelta(hours=24),  # 24 hour expiry
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),  # 24 hour expiry
         required_confirmations=SUPPORTED_ASSETS[deposit_data.asset]["required_confirmations"],
         status="pending"
     )

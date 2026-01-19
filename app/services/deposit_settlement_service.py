@@ -97,6 +97,7 @@ class DepositSettlementService:
             # - Crediting user balance via wallet_service
             # - Creating wallet ledger entry
             # - Idempotency checks (checks for existing tx_hash)
+            # Note: confirm_deposit() commits the transaction, so row lock is released
             result = await deposit_service.confirm_deposit(
                 deposit_intent_id=deposit_intent_id,
                 tx_hash=intent.tx_hash,
@@ -105,9 +106,11 @@ class DepositSettlementService:
                 db=db
             )
             
-            # deposit_service.confirm_deposit() already marks as 'settled' and sets settled_at
-            # But we'll refresh to ensure we have the latest state
-            await db.refresh(intent)
+            # deposit_service.confirm_deposit() already commits and marks as 'settled'
+            # Re-query to get the latest state after commit (row lock is released)
+            stmt_refresh = select(DepositIntent).where(DepositIntent.id == deposit_intent_id)
+            result_refresh = await db.execute(stmt_refresh)
+            intent = result_refresh.scalar_one_or_none()
             
             logger.info(
                 f"Successfully settled deposit intent {deposit_intent_id}: "

@@ -121,7 +121,11 @@ class WithdrawalMonitorWorker:
         
         # Check for timeout
         if withdrawal.processed_at:
-            timeout_threshold = withdrawal.processed_at + timedelta(minutes=self.confirm_timeout_minutes)
+            # Ensure processed_at is timezone-aware
+            processed_at_aware = withdrawal.processed_at
+            if processed_at_aware.tzinfo is None:
+                processed_at_aware = processed_at_aware.replace(tzinfo=timezone.utc)
+            timeout_threshold = processed_at_aware + timedelta(minutes=self.confirm_timeout_minutes)
             if datetime.now(timezone.utc) > timeout_threshold:
                 logger.warning(
                     f"Withdrawal {withdrawal.id} tx {withdrawal.tx_hash} has timed out "

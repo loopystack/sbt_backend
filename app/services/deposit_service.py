@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from decimal import Decimal
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 import logging
 
@@ -41,7 +41,7 @@ class DepositService:
                 DepositIntent.asset == asset,
                 DepositIntent.network == network,
                 DepositIntent.status == "pending",
-                DepositIntent.expires_at > datetime.utcnow()
+                DepositIntent.expires_at > datetime.now(timezone.utc)
             )
         ).order_by(DepositIntent.created_at.desc())
         
@@ -61,7 +61,7 @@ class DepositService:
         )
         
         # Calculate expiration (24 hours from now)
-        expires_at = datetime.utcnow() + timedelta(hours=24)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
         
         # Get required confirmations based on network
         required_confirmations = DepositService._get_required_confirmations(network)
@@ -145,7 +145,11 @@ class DepositService:
                 }
         
         # Check if deposit is expired
-        if deposit_intent.expires_at < datetime.utcnow():
+        # Handle both timezone-aware and timezone-naive expires_at
+        expires_at_aware = deposit_intent.expires_at
+        if expires_at_aware.tzinfo is None:
+            expires_at_aware = expires_at_aware.replace(tzinfo=timezone.utc)
+        if expires_at_aware < datetime.now(timezone.utc):
             deposit_intent.status = "expired"
             await db.commit()
             raise HTTPException(
@@ -200,7 +204,7 @@ class DepositService:
             
             # Mark deposit as settled
             deposit_intent.status = "settled"
-            deposit_intent.settled_at = datetime.utcnow()
+            deposit_intent.settled_at = datetime.now(timezone.utc)
             
             await db.commit()
             

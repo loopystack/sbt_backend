@@ -4,7 +4,7 @@ Polls TRON blockchain for USDT TRC20 deposits and updates DepositIntent status
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
@@ -44,7 +44,7 @@ class DepositMonitorWorker:
         
         try:
             # Fetch all pending/detected intents for TRC20 that haven't expired
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             stmt = select(DepositIntent).where(
                 and_(
                     DepositIntent.network == self.network,
@@ -171,7 +171,7 @@ class DepositMonitorWorker:
                 intent.tx_hash = tx_hash
                 intent.amount_crypto = amount_crypto
                 intent.status = "detected"
-                intent.detected_at = datetime.utcnow()
+                intent.detected_at = datetime.now(timezone.utc)
                 intent.confirmations = confirmations  # Set initial confirmations if available
                 
                 await db.flush()
@@ -217,7 +217,7 @@ class DepositMonitorWorker:
             if current_confirmations >= self.confirmations_required:
                 # Transition to confirmed
                 intent.status = "confirmed"
-                intent.confirmed_at = datetime.utcnow()
+                intent.confirmed_at = datetime.now(timezone.utc)
                 
                 await db.flush()
                 
