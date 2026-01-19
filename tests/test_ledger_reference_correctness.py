@@ -4,9 +4,9 @@ Verifies:
 1. Every ledger entry related to bet has reference_type = BET and reference_id = bet.id
 2. Complete ledger chain for each outcome:
    - Bet placed → BET_LOCK exists
-   - WIN: BET_UNLOCK + BET_PAYOUT
-   - LOSS: BET_DEBIT
-   - VOID: BET_UNLOCK
+   - WIN: BET_WIN_DEDUCT_STAKE + BET_WIN_PAYOUT_CREDIT
+   - LOSS: BET_LOSS_DEDUCT
+   - VOID: BET_VOID_UNLOCK
 3. Auditability: Can trace all money movements for any bet
 """
 import pytest
@@ -193,17 +193,17 @@ async def test_win_settlement_creates_complete_ledger_chain(
     
     # Verify entry types in order
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK, "Second entry should be BET_UNLOCK"
-    assert entries[2].type == WalletTransactionType.BET_PAYOUT, "Third entry should be BET_PAYOUT"
+    assert entries[1].type == WalletTransactionType.BET_WIN_DEDUCT_STAKE, "Second entry should be BET_WIN_DEDUCT_STAKE"
+    assert entries[2].type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT, "Third entry should be BET_WIN_PAYOUT_CREDIT"
     
     # Verify complete chain
     lock_entry = entries[0]
-    unlock_entry = entries[1]
+    deduct_entry = entries[1]
     payout_entry = entries[2]
     
     assert lock_entry.amount == Decimal("10.00"), "BET_LOCK should lock stake"
-    assert unlock_entry.amount == Decimal("10.00"), "BET_UNLOCK should unlock stake"
-    assert payout_entry.amount == Decimal("15.00"), "BET_PAYOUT should credit profit (10 * 1.5)"
+    assert deduct_entry.amount == Decimal("10.00"), "BET_WIN_DEDUCT_STAKE should deduct reserved stake"
+    assert payout_entry.amount == Decimal("25.00"), "BET_WIN_PAYOUT_CREDIT should credit full payout (stake + profit = 10 + 15)"
 
 
 @pytest.mark.asyncio
@@ -248,7 +248,7 @@ async def test_loss_settlement_creates_complete_ledger_chain(
     
     # Verify entry types
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_DEBIT, "Second entry should be BET_DEBIT"
+    assert entries[1].type == WalletTransactionType.BET_LOSS_DEDUCT, "Second entry should be BET_LOSS_DEDUCT"
     
     # Verify complete chain
     lock_entry = entries[0]
@@ -300,7 +300,7 @@ async def test_void_settlement_creates_complete_ledger_chain(
     
     # Verify entry types
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK, "Second entry should be BET_UNLOCK"
+    assert entries[1].type == WalletTransactionType.BET_VOID_UNLOCK, "Second entry should be BET_VOID_UNLOCK"
     
     # Verify complete chain
     lock_entry = entries[0]
@@ -310,8 +310,8 @@ async def test_void_settlement_creates_complete_ledger_chain(
     assert unlock_entry.amount == Decimal("10.00"), "BET_UNLOCK should unlock stake"
     
     # Verify NO BET_PAYOUT for VOID
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
-    assert len(payout_entries) == 0, "VOID should NOT have BET_PAYOUT entry"
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
+    assert len(payout_entries) == 0, "VOID should NOT have BET_WIN_PAYOUT_CREDIT entry"
 
 
 @pytest.mark.asyncio
@@ -356,14 +356,22 @@ async def test_auditability_trace_all_money_movements(
     for entry in entries:
         if entry.type == WalletTransactionType.BET_LOCK:
             net_change -= entry.amount  # Locked (decreased available)
-        elif entry.type == WalletTransactionType.BET_UNLOCK:
+        elif entry.type == WalletTransactionType.BET_VOID_UNLOCK:
             net_change += entry.amount  # Unlocked (increased available)
-        elif entry.type == WalletTransactionType.BET_PAYOUT:
-            net_change += entry.amount  # Profit credited (increased available)
-        elif entry.type == WalletTransactionType.BET_DEBIT:
-            net_change -= entry.amount  # Debit (decreased reserved)
+        elif entry.type == WalletTransactionType.BET_CANCEL_UNLOCK:
+            net_change += entry.amount  # Unlocked (increased available)
+        elif entry.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT:
+            net_change += entry.amount  # Payout credited (increased available)
+        # BET_WIN_DEDUCT_STAKE and BET_LOSS_DEDUCT don't affect available balance (only reserved)
+        # They are excluded from net_change calculation
+        elif entry.type == WalletTransactionType.BET_UNLOCK:  # Legacy
+            net_change += entry.amount
+        elif entry.type == WalletTransactionType.BET_PAYOUT:  # Legacy
+            net_change += entry.amount
+        elif entry.type == WalletTransactionType.BET_DEBIT:  # Legacy
+            net_change -= entry.amount
     
-    # For WIN: -10 (lock) + 10 (unlock) + 15 (payout) = +15 (profit)
+    # For WIN: -10 (lock) - 10 (deduct stake) + 25 (payout credit) = +15 (profit)
     expected_net = Decimal("15.00")
     assert net_change == expected_net, (
         f"Net balance change from audit trail should be {expected_net}, got {net_change}"

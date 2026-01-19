@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from decimal import Decimal
@@ -18,8 +18,7 @@ class PlatformWalletResponse(BaseModel):
     wallet_name: Optional[str]
     last_balance_check: Optional[datetime]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlatformWalletCreate(BaseModel):

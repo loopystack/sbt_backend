@@ -1,6 +1,6 @@
 """
 Standalone script to run the withdrawal monitor worker
-Week 4: Withdrawal Execution
+Withdrawal Execution Monitor
 """
 import asyncio
 import logging

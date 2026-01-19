@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import date
 from decimal import Decimal
@@ -15,8 +15,7 @@ class UserDailyLimitsResponse(BaseModel):
     bets_count: int
     bets_amount_usd: Decimal
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserLimitsSummary(BaseModel):

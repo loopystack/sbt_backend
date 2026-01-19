@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 
@@ -21,8 +21,7 @@ class ClickEventResponse(ClickEventBase):
     user_id: Optional[int] = None
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PageViewBase(BaseModel):
@@ -44,8 +43,7 @@ class PageViewResponse(PageViewBase):
     user_id: Optional[int] = None
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConversionEventBase(BaseModel):
@@ -65,8 +63,7 @@ class ConversionEventResponse(ConversionEventBase):
     user_id: Optional[int] = None
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RegionalRestrictionBase(BaseModel):
@@ -94,8 +91,7 @@ class RegionalRestrictionResponse(RegionalRestrictionBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserComplianceBase(BaseModel):
@@ -133,8 +129,7 @@ class UserComplianceResponse(UserComplianceBase):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ComplianceAlertBase(BaseModel):
@@ -154,8 +149,7 @@ class ComplianceAlertResponse(ComplianceAlertBase):
     acknowledged: bool
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Analytics aggregation models

@@ -190,7 +190,7 @@ async def test_confirmations_reach_threshold_confirmed(test_db: AsyncSession):
         result = await test_db.execute(stmt)
         updated_intent = result.scalar_one()
         
-        # Week 6 Day 3: Worker now auto-settles confirmed deposits
+        # Worker now auto-settles confirmed deposits
         # Status should be "settled" (not just "confirmed")
         assert updated_intent.status == "settled", f"Expected 'settled' but got '{updated_intent.status}'"
         # Confirmations should be >= required_confirmations (2)

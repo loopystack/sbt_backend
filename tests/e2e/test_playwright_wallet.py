@@ -1,5 +1,5 @@
 """
-Playwright E2E tests for wallet, deposit, and withdrawal UI flows (Week 1-4, Week 6 Day 7)
+Playwright E2E tests for wallet, deposit, and withdrawal UI flows
 Requires frontend to be running and Playwright installed
 
 To run these tests:
@@ -84,7 +84,7 @@ async def test_wallet_balance_display(page: Page, base_url: str):
 @pytest.mark.asyncio
 async def test_deposit_flow(page: Page, base_url: str):
     """
-    Week 6 Day 7: Test deposit flow from UI
+    Test deposit flow from UI
     Verifies deposit address, QR code, and form elements
     """
     # Ensure base_url is set
@@ -107,7 +107,7 @@ async def test_deposit_flow(page: Page, base_url: str):
     # Verify page loaded
     assert len(page_text) > 0 or len(title) > 0, "Deposit page should load"
     
-    # Week 6 Day 7: Check for deposit form elements
+    # Check for deposit form elements
     # Look for amount input, asset selection, network selection
     amount_input = await page.locator('input[type="number"], input[placeholder*="amount" i], input[placeholder*="USD" i]').count()
     asset_buttons = await page.locator('button:has-text("USDT"), button:has-text("BTC"), button:has-text("ETH")').count()
@@ -123,7 +123,7 @@ async def test_deposit_flow(page: Page, base_url: str):
 @pytest.mark.asyncio
 async def test_deposit_address_and_qr_display(page: Page, base_url: str):
     """
-    Week 6 Day 7: Test that deposit address and QR code are displayed
+    Test that deposit address and QR code are displayed
     Note: This test verifies UI elements exist, actual address generation requires API call
     """
     # Ensure base_url is set
@@ -139,7 +139,7 @@ async def test_deposit_address_and_qr_display(page: Page, base_url: str):
     if "signin" in current_url.lower() or "login" in current_url.lower():
         pytest.skip("User not authenticated - skipping deposit address test")
     
-    # Week 6 Day 7: Look for deposit address section
+    # Look for deposit address section
     # This might appear after generating an address, so we check for the section structure
     page_text = await page.text_content("body") or ""
     
@@ -156,7 +156,7 @@ async def test_deposit_address_and_qr_display(page: Page, base_url: str):
 @pytest.mark.asyncio
 async def test_deposit_history_table(page: Page, base_url: str):
     """
-    Week 6 Day 7: Test that deposit history table renders correctly
+    Test that deposit history table renders correctly
     Verifies table structure and columns
     """
     # Ensure base_url is set
@@ -172,7 +172,7 @@ async def test_deposit_history_table(page: Page, base_url: str):
     if "signin" in current_url.lower() or "login" in current_url.lower():
         pytest.skip("User not authenticated - skipping deposit history test")
     
-    # Week 6 Day 7: Look for deposit history section
+    # Look for deposit history section
     page_text = await page.text_content("body") or ""
     
     # Check for history table indicators
@@ -199,7 +199,7 @@ async def test_deposit_history_table(page: Page, base_url: str):
 @pytest.mark.asyncio
 async def test_deposit_status_tracker(page: Page, base_url: str):
     """
-    Week 6 Day 7: Test deposit status tracker displays correctly
+    Test deposit status tracker displays correctly
     Verifies status badges and confirmation progress
     """
     # Ensure base_url is set
@@ -215,7 +215,7 @@ async def test_deposit_status_tracker(page: Page, base_url: str):
     if "signin" in current_url.lower() or "login" in current_url.lower():
         pytest.skip("User not authenticated - skipping deposit status test")
     
-    # Week 6 Day 7: Look for status-related elements
+    # Look for status-related elements
     page_text = await page.text_content("body") or ""
     
     # Check for status indicators (might be visible after deposit is created)

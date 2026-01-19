@@ -47,6 +47,13 @@ class Bet(Base):
     # Settlement tracking
     settle_version = Column(Integer, nullable=False, default=0)  # For idempotency checks
     
+    # Additional fields for betting integration requirements
+    client_bet_id = Column(String(100), nullable=True, unique=False)  # Client-side idempotency key (per user)
+    payout = Column(Numeric(20, 8), nullable=True)  # Actual payout if won
+    profit = Column(Numeric(20, 8), nullable=True)  # Actual profit if won
+    result_source = Column(String(50), nullable=True)  # e.g., "manual", "oddsprovider"
+    notes = Column(String(500), nullable=True)  # Additional notes
+    
     # Timestamps
     placed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     settled_at = Column(DateTime(timezone=True), nullable=True)
@@ -63,6 +70,9 @@ class Bet(Base):
         Index('idx_bet_user_status', 'user_id', 'status'),
         Index('idx_bet_match', 'match_id'),
         Index('idx_bet_user_match_market_selection', 'user_id', 'match_id', 'market_key', 'selection_key', 'status'),
+        Index('idx_bet_user_created', 'user_id', 'placed_at'),  # For history queries
+        # Unique constraint for client_bet_id per user (idempotency)
+        # Note: Using unique=False since we want to allow same client_bet_id for different users
     )
     
     def __repr__(self):

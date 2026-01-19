@@ -149,7 +149,7 @@ async def test_place_bet_uses_bet_lock(test_user_with_balance: User, test_match:
 
 @pytest.mark.asyncio
 async def test_win_uses_unlock_and_payout_only_profit(test_user_with_balance: User, test_match: Odds, test_db: AsyncSession):
-    """Test: WIN uses BET_UNLOCK (stake) + BET_PAYOUT (profit only) - NO double credit"""
+    """Test: WIN uses BET_WIN_DEDUCT_STAKE + BET_WIN_PAYOUT_CREDIT (full payout) - NO double credit"""
     user_id = test_user_with_balance.id
     match = test_match
     stake = Decimal("10.00")
@@ -177,38 +177,41 @@ async def test_win_uses_unlock_and_payout_only_profit(test_user_with_balance: Us
     # Get ledger entries
     entries = await get_ledger_entries(test_db, user_id, "USDT", bet.id)
     
-    # Should have 3 entries: BET_LOCK, BET_UNLOCK, BET_PAYOUT
+    # Should have 3 entries: BET_LOCK, BET_WIN_DEDUCT_STAKE, BET_WIN_PAYOUT_CREDIT
     assert len(entries) == 3, f"Expected 3 ledger entries, got {len(entries)}"
     
     # Verify entry types
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK, "Second entry should be BET_UNLOCK"
-    assert entries[2].type == WalletTransactionType.BET_PAYOUT, "Third entry should be BET_PAYOUT"
+    assert entries[1].type == WalletTransactionType.BET_WIN_DEDUCT_STAKE, "Second entry should be BET_WIN_DEDUCT_STAKE"
+    assert entries[2].type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT, "Third entry should be BET_WIN_PAYOUT_CREDIT"
     
-    # Verify BET_UNLOCK returns stake
+    # Verify BET_WIN_DEDUCT_STAKE deducts reserved stake
     assert entries[1].amount == stake, (
-        f"BET_UNLOCK should return stake {stake}, got {entries[1].amount}"
+        f"BET_WIN_DEDUCT_STAKE should deduct stake {stake}, got {entries[1].amount}"
     )
     
-    # Verify BET_PAYOUT credits ONLY profit (not full payout)
-    assert entries[2].amount == expected_profit, (
-        f"BET_PAYOUT should credit profit {expected_profit}, got {entries[2].amount}. "
-        f"CRITICAL: Should NOT credit full payout {expected_payout}"
+    # Verify BET_WIN_PAYOUT_CREDIT credits full payout (stake + profit)
+    assert entries[2].amount == expected_payout, (
+        f"BET_WIN_PAYOUT_CREDIT should credit full payout {expected_payout}, got {entries[2].amount}"
     )
     
     # Verify final balance
     balance_after_win = await WalletService.get_balance(user_id, "USDT", test_db)
-    expected_available = available_after_place + stake + expected_profit
+    # After WIN: 
+    # - Place bet: available decreased by stake (10), reserved increased by stake (10)
+    # - WIN settlement: reserved decreased by stake (10) via BET_WIN_DEDUCT_STAKE, available increased by full payout (25) via BET_WIN_PAYOUT_CREDIT
+    # Net: available = available_after_place + payout = 90 + 25 = 115
+    # Or: available = initial - stake + payout = 100 - 10 + 25 = 115
+    expected_available = available_after_place + expected_payout
     assert balance_after_win["available"] == expected_available, (
-        f"Final available should be {expected_available} (initial + stake + profit), "
-        f"got {balance_after_win['available']}. "
-        f"If this is {available_after_place + expected_payout}, there's a DOUBLE CREDIT BUG!"
+        f"Final available should be {expected_available} (available_after_place + payout), "
+        f"got {balance_after_win['available']}"
     )
     
-    # Calculate total credited from BET_PAYOUT entries
-    payout_sum = sum(e.amount for e in entries if e.type == WalletTransactionType.BET_PAYOUT)
-    assert payout_sum == expected_profit, (
-        f"Total BET_PAYOUT should be profit {expected_profit}, got {payout_sum}"
+    # Calculate total credited from BET_WIN_PAYOUT_CREDIT entries
+    payout_sum = sum(e.amount for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT)
+    assert payout_sum == expected_payout, (
+        f"Total BET_WIN_PAYOUT_CREDIT should be full payout {expected_payout}, got {payout_sum}"
     )
 
 
@@ -261,12 +264,14 @@ async def test_profit_formula_correct(test_user_with_balance: User, test_db: Asy
         # Settle as WIN
         await BetService.settle_bet(bet.id, "WIN", db=test_db)
         
-        # Get BET_PAYOUT entry
+        # Get BET_WIN_PAYOUT_CREDIT entry
         entries = await get_ledger_entries(test_db, user_id, "USDT", bet.id)
-        payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
+        payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
         
-        assert len(payout_entries) == 1, f"Expected 1 BET_PAYOUT entry, got {len(payout_entries)}"
-        actual_profit = payout_entries[0].amount
+        assert len(payout_entries) == 1, f"Expected 1 BET_WIN_PAYOUT_CREDIT entry, got {len(payout_entries)}"
+        actual_payout = payout_entries[0].amount
+        # Payout = stake + profit, so profit = payout - stake
+        actual_profit = actual_payout - stake
         
         assert actual_profit == expected_profit, (
             f"Profit formula incorrect! "
@@ -284,7 +289,7 @@ async def test_profit_formula_correct(test_user_with_balance: User, test_db: Asy
 
 @pytest.mark.asyncio
 async def test_loss_uses_bet_debit(test_user_with_balance: User, test_match: Odds, test_db: AsyncSession):
-    """Test: LOSS uses BET_DEBIT (reserved decreases)"""
+    """Test: LOSS uses BET_LOSS_DEDUCT (reserved decreases)"""
     user_id = test_user_with_balance.id
     match = test_match
     stake = Decimal("10.00")
@@ -306,16 +311,16 @@ async def test_loss_uses_bet_debit(test_user_with_balance: User, test_match: Odd
     # Get ledger entries
     entries = await get_ledger_entries(test_db, user_id, "USDT", bet.id)
     
-    # Should have 2 entries: BET_LOCK, BET_DEBIT
+    # Should have 2 entries: BET_LOCK, BET_LOSS_DEDUCT
     assert len(entries) == 2, f"Expected 2 ledger entries, got {len(entries)}"
     
     # Verify entry types
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_DEBIT, "Second entry should be BET_DEBIT"
+    assert entries[1].type == WalletTransactionType.BET_LOSS_DEDUCT, "Second entry should be BET_LOSS_DEDUCT"
     
-    # Verify BET_DEBIT deducts stake from reserved
+    # Verify BET_LOSS_DEDUCT deducts stake from reserved
     assert entries[1].amount == stake, (
-        f"BET_DEBIT should deduct stake {stake}, got {entries[1].amount}"
+        f"BET_LOSS_DEDUCT should deduct stake {stake}, got {entries[1].amount}"
     )
     
     # Verify reserved decreased, available unchanged
@@ -329,7 +334,7 @@ async def test_loss_uses_bet_debit(test_user_with_balance: User, test_match: Odd
 
 @pytest.mark.asyncio
 async def test_void_uses_bet_unlock_only(test_user_with_balance: User, test_match: Odds, test_db: AsyncSession):
-    """Test: VOID uses BET_UNLOCK only"""
+    """Test: VOID uses BET_VOID_UNLOCK only"""
     user_id = test_user_with_balance.id
     match = test_match
     stake = Decimal("10.00")
@@ -351,22 +356,22 @@ async def test_void_uses_bet_unlock_only(test_user_with_balance: User, test_matc
     # Get ledger entries
     entries = await get_ledger_entries(test_db, user_id, "USDT", bet.id)
     
-    # Should have 2 entries: BET_LOCK, BET_UNLOCK
+    # Should have 2 entries: BET_LOCK, BET_VOID_UNLOCK
     assert len(entries) == 2, f"Expected 2 ledger entries, got {len(entries)}"
     
     # Verify entry types
     assert entries[0].type == WalletTransactionType.BET_LOCK, "First entry should be BET_LOCK"
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK, "Second entry should be BET_UNLOCK"
+    assert entries[1].type == WalletTransactionType.BET_VOID_UNLOCK, "Second entry should be BET_VOID_UNLOCK"
     
-    # Verify NO BET_PAYOUT entry
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
+    # Verify NO BET_WIN_PAYOUT_CREDIT entry
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
     assert len(payout_entries) == 0, (
-        f"VOID should NOT have BET_PAYOUT entry, got {len(payout_entries)}"
+        f"VOID should NOT have BET_WIN_PAYOUT_CREDIT entry, got {len(payout_entries)}"
     )
     
-    # Verify BET_UNLOCK returns stake
+    # Verify BET_VOID_UNLOCK returns stake
     assert entries[1].amount == stake, (
-        f"BET_UNLOCK should return stake {stake}, got {entries[1].amount}"
+        f"BET_VOID_UNLOCK should return stake {stake}, got {entries[1].amount}"
     )
     
     # Verify reserved decreased, available increased
@@ -421,17 +426,13 @@ async def test_win_no_double_credit_bug(test_user_with_balance: User, test_match
         f"If got {expected_payout + stake} = {expected_payout + stake}, full payout was credited AND stake unlocked (DOUBLE CREDIT BUG)"
     )
     
-    # Verify BET_PAYOUT is profit only, not full payout
+    # Verify BET_WIN_PAYOUT_CREDIT is full payout (stake + profit)
     entries = await get_ledger_entries(test_db, user_id, "USDT", bet.id)
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
     
-    assert len(payout_entries) == 1, "Should have exactly 1 BET_PAYOUT entry"
+    assert len(payout_entries) == 1, "Should have exactly 1 BET_WIN_PAYOUT_CREDIT entry"
     payout_amount = payout_entries[0].amount
     
-    assert payout_amount == expected_profit, (
-        f"BET_PAYOUT should be profit {expected_profit}, got {payout_amount}. "
-        f"If got {expected_payout}, full payout was credited (BUG)"
-    )
-    assert payout_amount != expected_payout, (
-        f"CRITICAL: BET_PAYOUT should NOT be full payout {expected_payout}, got {payout_amount}"
+    assert payout_amount == expected_payout, (
+        f"BET_WIN_PAYOUT_CREDIT should be full payout {expected_payout} (stake + profit), got {payout_amount}"
     )

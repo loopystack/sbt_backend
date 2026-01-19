@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
@@ -46,8 +46,7 @@ class WithdrawalIntentResponse(BaseModel):
     created_at: datetime
     estimated_completion: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WithdrawalStatusResponse(BaseModel):
@@ -64,8 +63,7 @@ class WithdrawalStatusResponse(BaseModel):
     failure_reason: Optional[str] = None
     network_fee: Optional[Decimal] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WithdrawalListResponse(BaseModel):

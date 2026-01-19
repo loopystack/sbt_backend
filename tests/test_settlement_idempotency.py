@@ -117,6 +117,7 @@ async def test_settle_win_twice_profit_credited_once(test_user_with_balance: Use
     stake = Decimal("10.00")
     odds = Decimal("2.50")
     expected_profit = stake * (odds - Decimal("1"))  # 10 * 1.5 = 15
+    expected_payout = stake * odds  # 10 * 2.5 = 25
     
     # Place bet
     bet = await BetService.place_bet(
@@ -141,15 +142,19 @@ async def test_settle_win_twice_profit_credited_once(test_user_with_balance: Use
     balance_after_first = await WalletService.get_balance(user_id, "USDT", test_db)
     available_after_first = balance_after_first["available"]
     
-    # Verify profit was credited
-    expected_available_after_first = available_after_place + stake + expected_profit
+    # Verify payout was credited
+    # After WIN: 
+    # - Place bet: available decreased by stake (10), reserved increased by stake (10)
+    # - WIN settlement: reserved decreased by stake (10), available increased by full payout (25)
+    # Net: available = available_after_place + payout
+    expected_available_after_first = available_after_place + expected_payout
     assert balance_after_first["available"] == expected_available_after_first, (
         f"After first WIN: Expected available {expected_available_after_first}, got {balance_after_first['available']}"
     )
     
-    # Count BET_PAYOUT entries (should be 1)
-    payout_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_PAYOUT)
-    assert payout_count_1 == 1, f"Expected 1 BET_PAYOUT entry after first settlement, got {payout_count_1}"
+    # Count BET_WIN_PAYOUT_CREDIT entries (should be 1)
+    payout_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_WIN_PAYOUT_CREDIT)
+    assert payout_count_1 == 1, f"Expected 1 BET_WIN_PAYOUT_CREDIT entry after first settlement, got {payout_count_1}"
     
     # Settle as WIN (second time) - should be idempotent
     settled_bet2 = await BetService.settle_bet(bet.id, "WIN", db=test_db)
@@ -159,27 +164,27 @@ async def test_settle_win_twice_profit_credited_once(test_user_with_balance: Use
     balance_after_second = await WalletService.get_balance(user_id, "USDT", test_db)
     available_after_second = balance_after_second["available"]
     
-    # Balance should be unchanged (profit credited only once)
+    # Balance should be unchanged (payout credited only once)
     assert balance_after_second["available"] == balance_after_first["available"], (
         f"After second WIN: Balance changed! First: {balance_after_first['available']}, Second: {balance_after_second['available']}"
     )
     
-    # Count BET_PAYOUT entries (should still be 1, not 2)
-    payout_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_PAYOUT)
-    assert payout_count_2 == 1, f"Expected 1 BET_PAYOUT entry after second settlement (idempotent), got {payout_count_2}"
+    # Count BET_WIN_PAYOUT_CREDIT entries (should still be 1, not 2)
+    payout_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_WIN_PAYOUT_CREDIT)
+    assert payout_count_2 == 1, f"Expected 1 BET_WIN_PAYOUT_CREDIT entry after second settlement (idempotent), got {payout_count_2}"
     
-    # Verify total profit credited matches expected (not doubled)
+    # Verify total payout credited matches expected (not doubled)
     stmt = select(func.sum(WalletTransaction.amount)).where(
         WalletTransaction.user_id == user_id,
         WalletTransaction.asset == "USDT",
         WalletTransaction.reference_type == ReferenceType.BET,
         WalletTransaction.reference_id == bet.id,
-        WalletTransaction.type == WalletTransactionType.BET_PAYOUT
+        WalletTransaction.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT
     )
     result = await test_db.execute(stmt)
-    total_profit_credited = result.scalar() or Decimal("0")
-    assert total_profit_credited == expected_profit, (
-        f"Total profit credited should be {expected_profit}, got {total_profit_credited}"
+    total_payout_credited = result.scalar() or Decimal("0")
+    assert total_payout_credited == expected_payout, (
+        f"Total payout credited should be {expected_payout}, got {total_payout_credited}"
     )
 
 
@@ -222,9 +227,9 @@ async def test_settle_loss_twice_stake_deducted_once(test_user_with_balance: Use
     assert balance_after_first["reserved"] == reserved_after_place - stake, "Reserved should decrease by stake"
     assert balance_after_first["total"] == total_after_place - stake, "Total should decrease by stake"
     
-    # Count BET_DEBIT entries (should be 1)
-    debit_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_DEBIT)
-    assert debit_count_1 == 1, f"Expected 1 BET_DEBIT entry after first settlement, got {debit_count_1}"
+    # Count BET_LOSS_DEDUCT entries (should be 1)
+    debit_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_LOSS_DEDUCT)
+    assert debit_count_1 == 1, f"Expected 1 BET_LOSS_DEDUCT entry after first settlement, got {debit_count_1}"
     
     # Settle as LOSS (second time) - should be idempotent
     settled_bet2 = await BetService.settle_bet(bet.id, "LOSS", db=test_db)
@@ -247,9 +252,9 @@ async def test_settle_loss_twice_stake_deducted_once(test_user_with_balance: Use
         f"After second LOSS: Total changed! First: {balance_after_first['total']}, Second: {balance_after_second['total']}"
     )
     
-    # Count BET_DEBIT entries (should still be 1, not 2)
-    debit_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_DEBIT)
-    assert debit_count_2 == 1, f"Expected 1 BET_DEBIT entry after second settlement (idempotent), got {debit_count_2}"
+    # Count BET_LOSS_DEDUCT entries (should still be 1, not 2)
+    debit_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_LOSS_DEDUCT)
+    assert debit_count_2 == 1, f"Expected 1 BET_LOSS_DEDUCT entry after second settlement (idempotent), got {debit_count_2}"
     
     # Verify total stake deducted matches expected (not doubled)
     stmt = select(func.sum(WalletTransaction.amount)).where(
@@ -257,7 +262,7 @@ async def test_settle_loss_twice_stake_deducted_once(test_user_with_balance: Use
         WalletTransaction.asset == "USDT",
         WalletTransaction.reference_type == ReferenceType.BET,
         WalletTransaction.reference_id == bet.id,
-        WalletTransaction.type == WalletTransactionType.BET_DEBIT
+        WalletTransaction.type == WalletTransactionType.BET_LOSS_DEDUCT
     )
     result = await test_db.execute(stmt)
     total_stake_deducted = result.scalar() or Decimal("0")
@@ -305,9 +310,9 @@ async def test_settle_void_twice_stake_returned_once(test_user_with_balance: Use
     assert balance_after_first["reserved"] == reserved_after_place - stake, "Reserved should decrease by stake"
     assert balance_after_first["total"] == total_after_place, "Total should remain unchanged"
     
-    # Count BET_UNLOCK entries (should be 1)
-    unlock_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_UNLOCK)
-    assert unlock_count_1 == 1, f"Expected 1 BET_UNLOCK entry after first settlement, got {unlock_count_1}"
+    # Count BET_VOID_UNLOCK entries (should be 1)
+    unlock_count_1 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_VOID_UNLOCK)
+    assert unlock_count_1 == 1, f"Expected 1 BET_VOID_UNLOCK entry after first settlement, got {unlock_count_1}"
     
     # Settle as VOID (second time) - should be idempotent
     settled_bet2 = await BetService.settle_bet(bet.id, "VOID", db=test_db)
@@ -330,9 +335,9 @@ async def test_settle_void_twice_stake_returned_once(test_user_with_balance: Use
         f"After second VOID: Total changed! First: {balance_after_first['total']}, Second: {balance_after_second['total']}"
     )
     
-    # Count BET_UNLOCK entries (should still be 1, not 2)
-    unlock_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_UNLOCK)
-    assert unlock_count_2 == 1, f"Expected 1 BET_UNLOCK entry after second settlement (idempotent), got {unlock_count_2}"
+    # Count BET_VOID_UNLOCK entries (should still be 1, not 2)
+    unlock_count_2 = await count_ledger_entries_by_type(test_db, user_id, "USDT", bet.id, WalletTransactionType.BET_VOID_UNLOCK)
+    assert unlock_count_2 == 1, f"Expected 1 BET_VOID_UNLOCK entry after second settlement (idempotent), got {unlock_count_2}"
     
     # Verify total stake unlocked matches expected (not doubled)
     stmt = select(func.sum(WalletTransaction.amount)).where(
@@ -340,7 +345,7 @@ async def test_settle_void_twice_stake_returned_once(test_user_with_balance: Use
         WalletTransaction.asset == "USDT",
         WalletTransaction.reference_type == ReferenceType.BET,
         WalletTransaction.reference_id == bet.id,
-        WalletTransaction.type == WalletTransactionType.BET_UNLOCK
+        WalletTransaction.type == WalletTransactionType.BET_VOID_UNLOCK
     )
     result = await test_db.execute(stmt)
     total_stake_unlocked = result.scalar() or Decimal("0")

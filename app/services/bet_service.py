@@ -8,7 +8,7 @@ from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 from decimal import Decimal
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.models.bet import Bet, BetStatus
@@ -223,37 +223,41 @@ class BetService:
         
         try:
             if outcome_upper == "WIN":
-                # Calculate profit
+                # Calculate profit and payout
                 profit = bet.stake * (bet.odds_decimal - Decimal("1"))
+                payout = bet.stake * bet.odds_decimal
                 
-                # Unlock stake first
-                unlock_entry = await WalletService.unlock_balance(
+                # Step 1: Deduct reserved stake (BET_WIN_DEDUCT_STAKE)
+                deduct_entry = await WalletService.deduct_reserved_balance(
                     user_id=bet.user_id,
                     asset=bet.currency,
                     amount=bet.stake,
                     db=db,
                     reference_type=ReferenceType.BET,
                     reference_id=bet.id,
-                    description=f"Bet unlock (win): stake returned for bet {bet_id}"
+                    description=f"Bet win: deduct reserved stake for bet {bet_id}"
                 )
-                unlock_entry.type = WalletTransactionType.BET_UNLOCK
+                deduct_entry.type = WalletTransactionType.BET_WIN_DEDUCT_STAKE
                 await db.flush()
                 
-                # Credit profit
+                # Step 2: Credit full payout (BET_WIN_PAYOUT_CREDIT)
                 payout_entry = await WalletService.credit_balance(
                     user_id=bet.user_id,
                     asset=bet.currency,
-                    amount=profit,
+                    amount=payout,
                     db=db,
                     reference_type=ReferenceType.BET,
                     reference_id=bet.id,
-                    description=f"Bet payout (win): profit {profit} {bet.currency} for bet {bet_id}"
+                    description=f"Bet win: payout {payout} {bet.currency} for bet {bet_id}"
                 )
-                payout_entry.type = WalletTransactionType.BET_PAYOUT
+                payout_entry.type = WalletTransactionType.BET_WIN_PAYOUT_CREDIT
                 await db.flush()
                 
+                # Update bet with actual payout and profit
                 bet.status = BetStatus.WON
-                bet.settled_at = datetime.utcnow()
+                bet.payout = payout
+                bet.profit = profit
+                bet.settled_at = datetime.now(timezone.utc)
                 
                 logger.info(
                     f"Bet {bet_id} settled as WIN: user={bet.user_id}, "
@@ -261,7 +265,7 @@ class BetService:
                 )
                 
             elif outcome_upper == "LOSS":
-                # Deduct reserved stake directly
+                # Deduct reserved stake (BET_LOSS_DEDUCT)
                 debit_entry = await WalletService.deduct_reserved_balance(
                     user_id=bet.user_id,
                     asset=bet.currency,
@@ -269,20 +273,21 @@ class BetService:
                     db=db,
                     reference_type=ReferenceType.BET,
                     reference_id=bet.id,
-                    description=f"Bet debit (loss): stake deducted for bet {bet_id}"
+                    description=f"Bet loss: stake deducted for bet {bet_id}"
                 )
-                debit_entry.type = WalletTransactionType.BET_DEBIT
+                debit_entry.type = WalletTransactionType.BET_LOSS_DEDUCT
                 await db.flush()
                 
                 bet.status = BetStatus.LOST
-                bet.settled_at = datetime.utcnow()
+                bet.profit = Decimal("0")  # No profit on loss
+                bet.settled_at = datetime.now(timezone.utc)
                 
                 logger.info(
                     f"Bet {bet_id} settled as LOSS: user={bet.user_id}, stake={bet.stake}"
                 )
                 
             elif outcome_upper == "VOID":
-                # Unlock stake back to available
+                # Unlock stake back to available (BET_VOID_UNLOCK)
                 unlock_entry = await WalletService.unlock_balance(
                     user_id=bet.user_id,
                     asset=bet.currency,
@@ -290,13 +295,14 @@ class BetService:
                     db=db,
                     reference_type=ReferenceType.BET,
                     reference_id=bet.id,
-                    description=f"Bet unlock (void): stake returned for bet {bet_id}"
+                    description=f"Bet void: stake returned for bet {bet_id}"
                 )
-                unlock_entry.type = WalletTransactionType.BET_UNLOCK
+                unlock_entry.type = WalletTransactionType.BET_VOID_UNLOCK
                 await db.flush()
                 
                 bet.status = BetStatus.VOID
-                bet.settled_at = datetime.utcnow()
+                bet.profit = Decimal("0")  # No profit on void
+                bet.settled_at = datetime.now(timezone.utc)
                 
                 logger.info(
                     f"Bet {bet_id} settled as VOID: user={bet.user_id}, stake={bet.stake}"
@@ -352,3 +358,76 @@ class BetService:
         
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
+    
+    @staticmethod
+    async def cancel_bet(
+        bet_id: int,
+        user_id: int,
+        db: AsyncSession = None
+    ) -> Bet:
+        """
+        Cancel a bet (unlock reserved funds)
+        
+        Only allows cancellation if:
+        - Bet belongs to user
+        - Bet status is PENDING
+        - Match has not started (if match start logic exists)
+        
+        Args:
+            bet_id: Bet ID to cancel
+            user_id: User ID (must own the bet)
+            db: Database session
+            
+        Returns:
+            Updated Bet object
+            
+        Raises:
+            ValueError: If bet not found, not owned by user, or cannot be cancelled
+        """
+        if not db:
+            raise ValueError("Database session required")
+        
+        # Fetch bet and ensure it belongs to user
+        stmt = select(Bet).where(
+            Bet.id == bet_id,
+            Bet.user_id == user_id
+        ).with_for_update()
+        result = await db.execute(stmt)
+        bet = result.scalar_one_or_none()
+        
+        if not bet:
+            raise ValueError(f"Bet {bet_id} not found or does not belong to user")
+        
+        # Only allow cancel if status is PENDING
+        if bet.status != BetStatus.PENDING:
+            raise ValueError(f"Cannot cancel bet {bet_id}: status is {bet.status}, must be pending")
+        
+        # Check if match has started (basic check - can be enhanced)
+        match = await db.get(Odds, bet.match_id)
+        if match and match.result:
+            raise ValueError(f"Cannot cancel bet {bet_id}: match has already finished")
+        
+        # Unlock stake
+        unlock_entry = await WalletService.unlock_balance(
+            user_id=user_id,
+            asset=bet.currency,
+            amount=bet.stake,
+            db=db,
+            reference_type=ReferenceType.BET,
+            reference_id=bet.id,
+            description=f"Bet cancel: stake returned for bet {bet_id}"
+        )
+        unlock_entry.type = WalletTransactionType.BET_CANCEL_UNLOCK
+        await db.flush()
+        
+        # Update bet status
+        bet.status = BetStatus.CANCELLED
+        bet.settled_at = datetime.now(timezone.utc)
+        
+        await db.commit()
+        
+        logger.info(
+            f"Bet {bet_id} cancelled: user={user_id}, stake={bet.stake} {bet.currency} unlocked"
+        )
+        
+        return bet

@@ -290,15 +290,15 @@ async def test_concurrent_settle_bet_row_lock_prevents_duplicate(
     result = await test_db.execute(stmt)
     entries = list(result.scalars().all())
     
-    # Should have: BET_LOCK, BET_UNLOCK, BET_PAYOUT (only one of each)
-    unlock_entries = [e for e in entries if e.type == WalletTransactionType.BET_UNLOCK]
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
+    # Should have: BET_LOCK, BET_WIN_DEDUCT_STAKE, BET_WIN_PAYOUT_CREDIT (only one of each)
+    deduct_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_DEDUCT_STAKE]
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
     
-    assert len(unlock_entries) == 1, (
-        f"Should have exactly 1 BET_UNLOCK entry (idempotency). Got {len(unlock_entries)}"
+    assert len(deduct_entries) == 1, (
+        f"Should have exactly 1 BET_WIN_DEDUCT_STAKE entry (idempotency). Got {len(deduct_entries)}"
     )
     assert len(payout_entries) == 1, (
-        f"Should have exactly 1 BET_PAYOUT entry (idempotency). Got {len(payout_entries)}"
+        f"Should have exactly 1 BET_WIN_PAYOUT_CREDIT entry (idempotency). Got {len(payout_entries)}"
     )
 
 
@@ -453,8 +453,8 @@ async def test_concurrent_settle_different_outcomes_prevented(
     result = await test_db.execute(stmt)
     entries = list(result.scalars().all())
     
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
-    debit_entries = [e for e in entries if e.type == WalletTransactionType.BET_DEBIT]
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
+    debit_entries = [e for e in entries if e.type == WalletTransactionType.BET_LOSS_DEDUCT]
     
-    assert len(payout_entries) == 1, "Should have BET_PAYOUT (WIN outcome)"
-    assert len(debit_entries) == 0, "Should NOT have BET_DEBIT (LOSS outcome prevented)"
+    assert len(payout_entries) == 1, "Should have BET_WIN_PAYOUT_CREDIT (WIN outcome)"
+    assert len(debit_entries) == 0, "Should NOT have BET_LOSS_DEDUCT (LOSS outcome prevented)"

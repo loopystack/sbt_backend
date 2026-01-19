@@ -239,12 +239,13 @@ async def test_settle_bet_win(
     result = await test_db.execute(stmt)
     entries = result.scalars().all()
     
-    # Should have 3 entries: LOCK, UNLOCK, PAYOUT
+    # Should have 3 entries: LOCK, WIN_DEDUCT_STAKE, WIN_PAYOUT_CREDIT
     assert len(entries) == 3
     assert entries[0].type == WalletTransactionType.BET_LOCK
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK
-    assert entries[2].type == WalletTransactionType.BET_PAYOUT
-    assert entries[2].amount == Decimal("15.00")  # Profit
+    assert entries[1].type == WalletTransactionType.BET_WIN_DEDUCT_STAKE
+    assert entries[2].type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT
+    # WIN_PAYOUT_CREDIT should be full payout (stake + profit = 25.00)
+    assert entries[2].amount == Decimal("25.00")  # Full payout (stake + profit)
 
 
 @pytest.mark.asyncio
@@ -294,10 +295,10 @@ async def test_settle_bet_loss(
     result = await test_db.execute(stmt)
     entries = result.scalars().all()
     
-    # Should have 2 entries: LOCK, DEBIT
+    # Should have 2 entries: LOCK, LOSS_DEDUCT
     assert len(entries) == 2
     assert entries[0].type == WalletTransactionType.BET_LOCK
-    assert entries[1].type == WalletTransactionType.BET_DEBIT
+    assert entries[1].type == WalletTransactionType.BET_LOSS_DEDUCT
 
 
 @pytest.mark.asyncio
@@ -347,10 +348,10 @@ async def test_settle_bet_void(
     result = await test_db.execute(stmt)
     entries = result.scalars().all()
     
-    # Should have 2 entries: LOCK, UNLOCK
+    # Should have 2 entries: LOCK, VOID_UNLOCK
     assert len(entries) == 2
     assert entries[0].type == WalletTransactionType.BET_LOCK
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK
+    assert entries[1].type == WalletTransactionType.BET_VOID_UNLOCK
 
 
 @pytest.mark.asyncio

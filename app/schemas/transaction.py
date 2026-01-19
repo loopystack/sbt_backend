@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 import json
 
 class TransactionBase(BaseModel):
@@ -30,8 +30,7 @@ class Transaction(TransactionBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     @property
     def parsed_extra_data(self) -> Dict[str, Any]:
@@ -50,8 +49,7 @@ class TransactionResponse(BaseModel):
     per_page: int
     total_pages: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionSummary(BaseModel):
     """Summary of transaction statistics"""

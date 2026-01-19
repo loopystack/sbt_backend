@@ -2,7 +2,7 @@
 Bet Schemas
 Pydantic schemas for bet API requests and responses
 """
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from decimal import Decimal
 from datetime import datetime
 from typing import Optional
@@ -18,7 +18,8 @@ class BetPlaceRequest(BaseModel):
     stake: Decimal = Field(..., gt=0, description="Stake amount in USDT")
     currency: str = Field(default="USDT", description="Currency (default USDT)")
     
-    @validator('stake')
+    @field_validator('stake')
+    @classmethod
     def validate_stake(cls, v):
         if v < Decimal("1.00"):
             raise ValueError("Stake must be at least 1.00 USDT")
@@ -43,9 +44,10 @@ class BetResponse(BaseModel):
     settled_at: Optional[datetime] = None
     potential_profit: Decimal
     potential_payout: Decimal
+    profit: Optional[Decimal] = None  # Actual profit if settled
+    payout: Optional[Decimal] = None  # Actual payout if settled
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BetWithMatchResponse(BetResponse):
@@ -60,7 +62,8 @@ class BetSettleRequest(BaseModel):
     """Request to settle a bet (admin only)"""
     outcome: str = Field(..., description="Outcome: WIN, LOSS, or VOID")
     
-    @validator('outcome')
+    @field_validator('outcome')
+    @classmethod
     def validate_outcome(cls, v):
         v_upper = v.upper()
         if v_upper not in ["WIN", "LOSS", "VOID"]:

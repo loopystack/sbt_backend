@@ -1,6 +1,6 @@
 from typing import Optional, Union
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 class BettingRecordBase(BaseModel):
     bet_amount: float
@@ -61,8 +61,7 @@ class BettingRecord(BettingRecordBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BettingRecordResponse(BaseModel):
     records: list[BettingRecord]
@@ -71,5 +70,4 @@ class BettingRecordResponse(BaseModel):
     per_page: int
     total_pages: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

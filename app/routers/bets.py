@@ -72,7 +72,9 @@ async def place_bet(
             placed_at=bet.placed_at,
             settled_at=bet.settled_at,
             potential_profit=bet.potential_profit,
-            potential_payout=bet.potential_payout
+            potential_payout=bet.potential_payout,
+            profit=bet.profit,
+            payout=bet.payout
         )
         
         return bet_response
@@ -125,7 +127,9 @@ async def get_user_bets(
                 placed_at=bet.placed_at,
                 settled_at=bet.settled_at,
                 potential_profit=bet.potential_profit,
-                potential_payout=bet.potential_payout
+                potential_payout=bet.potential_payout,
+                profit=bet.profit,
+                payout=bet.payout
             )
             for bet in bets
         ]
@@ -193,6 +197,61 @@ async def get_bet(
         raise HTTPException(status_code=500, detail=f"Failed to get bet: {str(e)}")
 
 
+@router.post("/{bet_id}/cancel", response_model=BetResponse)
+async def cancel_bet(
+    bet_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Cancel a pending bet (unlock reserved funds)
+    
+    Only allows cancellation if:
+    - Bet belongs to user
+    - Bet status is pending
+    - Match has not started
+    """
+    try:
+        bet = await BetService.cancel_bet(
+            bet_id=bet_id,
+            user_id=current_user.id,
+            db=db
+        )
+        
+        # Get wallet balance snapshot
+        wallet_balance = await WalletService.get_balance(
+            user_id=current_user.id,
+            asset=bet.currency,
+            db=db
+        )
+        
+        bet_response = BetResponse(
+            id=bet.id,
+            user_id=bet.user_id,
+            match_id=bet.match_id,
+            market_key=bet.market_key,
+            selection_key=bet.selection_key,
+            odds_decimal=bet.odds_decimal,
+            stake=bet.stake,
+            currency=bet.currency,
+            status=bet.status,
+            settle_version=bet.settle_version,
+            placed_at=bet.placed_at,
+            settled_at=bet.settled_at,
+            potential_profit=bet.potential_profit,
+            potential_payout=bet.potential_payout,
+            profit=bet.profit,
+            payout=bet.payout
+        )
+        
+        return bet_response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel bet: {str(e)}")
+
+
 @router.post("/{bet_id}/settle", response_model=BetResponse)
 async def settle_bet_admin(
     bet_id: int,
@@ -231,7 +290,9 @@ async def settle_bet_admin(
             placed_at=bet.placed_at,
             settled_at=bet.settled_at,
             potential_profit=bet.potential_profit,
-            potential_payout=bet.potential_payout
+            potential_payout=bet.potential_payout,
+            profit=bet.profit,
+            payout=bet.payout
         )
         
         return bet_response

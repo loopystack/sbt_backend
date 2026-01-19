@@ -13,11 +13,16 @@ class WalletTransactionType(str, enum.Enum):
     """Types of wallet transactions"""
     DEPOSIT_CREDIT = "DEPOSIT_CREDIT"
     BET_LOCK = "BET_LOCK"  # Lock stake when bet is placed
-    BET_UNLOCK = "BET_UNLOCK"  # Unlock stake (void/cancel)
-    BET_DEBIT = "BET_DEBIT"  # Deduct reserved stake (loss)
-    BET_PAYOUT = "BET_PAYOUT"  # Credit profit/payout (win)
-    BET_WIN = "BET_WIN"  # Legacy: use BET_PAYOUT instead
-    BET_LOSS = "BET_LOSS"  # Legacy: use BET_DEBIT instead
+    BET_UNLOCK = "BET_UNLOCK"  # Generic unlock (legacy, use specific types)
+    BET_CANCEL_UNLOCK = "BET_CANCEL_UNLOCK"  # Unlock stake when bet is cancelled
+    BET_VOID_UNLOCK = "BET_VOID_UNLOCK"  # Unlock stake when bet is voided
+    BET_DEBIT = "BET_DEBIT"  # Generic debit (legacy, use BET_LOSS_DEDUCT)
+    BET_LOSS_DEDUCT = "BET_LOSS_DEDUCT"  # Deduct reserved stake (loss)
+    BET_PAYOUT = "BET_PAYOUT"  # Generic payout (legacy, use specific types)
+    BET_WIN_DEDUCT_STAKE = "BET_WIN_DEDUCT_STAKE"  # Deduct reserved stake on win
+    BET_WIN_PAYOUT_CREDIT = "BET_WIN_PAYOUT_CREDIT"  # Credit payout on win
+    BET_WIN = "BET_WIN"  # Legacy: use BET_WIN_PAYOUT_CREDIT instead
+    BET_LOSS = "BET_LOSS"  # Legacy: use BET_LOSS_DEDUCT instead
     WITHDRAWAL_LOCK = "WITHDRAWAL_LOCK"
     WITHDRAWAL_UNLOCK = "WITHDRAWAL_UNLOCK"
     WITHDRAWAL_DEBIT = "WITHDRAWAL_DEBIT"

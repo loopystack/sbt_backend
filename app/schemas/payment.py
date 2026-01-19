@@ -2,7 +2,7 @@
 Payment schemas for request/response models
 """
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, Literal
 from decimal import Decimal
 from enum import Enum
@@ -34,7 +34,8 @@ class CardPaymentRequest(BaseModel):
     cardholder_name: str = Field(..., min_length=2, max_length=100)
     amount: float = Field(..., gt=0, le=10000)
     
-    @validator('card_number')
+    @field_validator('card_number')
+    @classmethod
     def validate_card_number(cls, v):
         # Remove spaces and dashes
         cleaned = v.replace(' ', '').replace('-', '')
@@ -42,7 +43,8 @@ class CardPaymentRequest(BaseModel):
             raise ValueError('Card number must contain only digits')
         return cleaned
     
-    @validator('cvv')
+    @field_validator('cvv')
+    @classmethod
     def validate_cvv(cls, v):
         if not v.isdigit():
             raise ValueError('CVV must contain only digits')
@@ -55,13 +57,15 @@ class BankTransferRequest(BaseModel):
     bank_name: str = Field(..., min_length=2, max_length=100)
     amount: float = Field(..., gt=0, le=50000)
     
-    @validator('account_number')
+    @field_validator('account_number')
+    @classmethod
     def validate_account_number(cls, v):
         if not v.isdigit():
             raise ValueError('Account number must contain only digits')
         return v
     
-    @validator('routing_number')
+    @field_validator('routing_number')
+    @classmethod
     def validate_routing_number(cls, v):
         if not v.isdigit():
             raise ValueError('Routing number must contain only digits')

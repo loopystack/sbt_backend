@@ -243,8 +243,8 @@ async def test_settle_bet_atomic_success_win(test_user_with_balance: User, test_
     
     assert len(entries) == 3, "Should have 3 ledger entries (LOCK, UNLOCK, PAYOUT)"
     assert entries[0].type == WalletTransactionType.BET_LOCK
-    assert entries[1].type == WalletTransactionType.BET_UNLOCK
-    assert entries[2].type == WalletTransactionType.BET_PAYOUT
+    assert entries[1].type == WalletTransactionType.BET_WIN_DEDUCT_STAKE
+    assert entries[2].type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT
 
 
 @pytest.mark.asyncio

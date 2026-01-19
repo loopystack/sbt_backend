@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Week 6: Production Testing Script
+# Production Testing Script
 # This script runs all tests in the correct order for production verification
 
 set -e  # Exit on error
 
 echo "=========================================="
-echo "Week 6: Production Testing Suite"
+echo "Production Testing Suite"
 echo "=========================================="
 echo ""
 
