@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.database import engine
 from app.core.rollbar_setup import init_rollbar, report_error
 from app.models import Base
-from app.routers import auth, odds, payments, deposits, withdrawals, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement, match_result_update, admin, analytics, affiliates, wallet, bets, admin_withdrawals
+from app.routers import auth, odds, payments, deposits, withdrawals, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement, match_result_update, admin, analytics, affiliates, wallet, bets, admin_withdrawals, admin_system
 # from app.services.scheduler import start_crypto_scheduler, stop_crypto_scheduler
 
 
@@ -139,6 +139,7 @@ app.include_router(transactions.router, tags=["Transactions"])
 app.include_router(betting_settlement.router, prefix="/api/betting", tags=["Betting Settlement"])
 app.include_router(bulletproof_settlement.router, prefix="/api/settlement", tags=["Bulletproof Settlement"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
+app.include_router(admin_system.router, tags=["Admin System"])
 app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
 app.include_router(affiliates.router, prefix="/api", tags=["Affiliates"])
 

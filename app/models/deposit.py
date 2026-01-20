@@ -172,7 +172,7 @@ class WithdrawalIntent(Base):
     __table_args__ = (
         Index('idx_withdrawal_user_status', 'user_id', 'status'),
         Index('idx_withdrawal_status_created', 'status', 'created_at'),  # For worker queries
-        Index('idx_withdrawal_user_status_created', 'user_id', 'status', 'created_at'),  # Week 8 requirement
+        Index('idx_withdrawal_user_status_created', 'user_id', 'status', 'created_at'),  # For efficient admin filtering
         Index('idx_withdrawal_tx_hash', 'tx_hash'),
         Index('idx_withdrawal_created_at', 'created_at'),
         Index('idx_withdrawal_client_request_id', 'user_id', 'client_request_id'),  # Idempotency lookup

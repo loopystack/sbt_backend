@@ -1,5 +1,6 @@
 """
-Week 8 - API tests (Withdrawal Request System)
+Withdrawal Request System - API Integration Tests
+Tests withdrawal request API endpoints including authentication and validation
 
 Covers:
 - Auth enforcement (401/403)

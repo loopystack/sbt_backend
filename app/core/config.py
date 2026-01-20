@@ -85,7 +85,23 @@ class Settings(BaseSettings):
     TRON_WITHDRAW_MAX_AMOUNT: Optional[Decimal] = None  # Maximum withdrawal amount (optional)
     WITHDRAW_EXECUTION_INTERVAL_SECONDS: int = 60  # How often to process withdrawals
     WITHDRAWAL_AUTO_EXECUTE: bool = False  # Auto-execute approved withdrawals (default: manual)
-    WITHDRAWAL_CONFIRM_TIMEOUT_MINUTES: int = 60  # Timeout for stuck transactions (Week 9)
+    WITHDRAWAL_CONFIRM_TIMEOUT_MINUTES: int = 60  # Timeout for stuck transactions (On-Chain Execution)
+
+    # Monitoring & Alerting (Production Monitoring)
+    ALERTS_ENABLED: bool = True
+    ALERT_EMAIL_TO: Optional[str] = None  # Email address for alerts
+    ALERT_WEBHOOK_URL: Optional[str] = None  # Webhook URL for alerts
+
+    MONITORING_INTERVAL_SECONDS: int = 60  # How often monitoring worker runs
+    HEARTBEAT_STALE_THRESHOLD_MINUTES: int = 5  # When to alert on stale heartbeats
+
+    DEPOSIT_STUCK_THRESHOLD_MINUTES: int = 30  # Alert on deposits stuck longer than this
+    WITHDRAWAL_STUCK_THRESHOLD_MINUTES: int = 30  # Alert on stuck withdrawals
+
+    HOT_WALLET_USDT_THRESHOLD: Decimal = Decimal("100.0")  # Alert when USDT balance below this
+    HOT_WALLET_TRX_THRESHOLD: Decimal = Decimal("1000.0")  # Alert when TRX balance below this
+
+    RECON_TOLERANCE_USDT: Decimal = Decimal("1.0")  # Reconciliation tolerance (ok if delta <= this)
     
     @model_validator(mode='after')
     def sync_urls_with_localhost_ip(self):

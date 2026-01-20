@@ -1,5 +1,6 @@
 """
-Week 8 - Integration tests (DB + wallet + withdrawal flows)
+Withdrawal Request System - Integration Tests
+Tests end-to-end withdrawal request flows including database operations and wallet locking
 
 Focus:
 - Money-safe balance invariants across flows

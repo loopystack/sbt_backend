@@ -23,7 +23,7 @@ def upgrade() -> None:
     # Add client_request_id for idempotency (optional, allows client to prevent duplicate requests)
     op.add_column('withdrawal_intents', sa.Column('client_request_id', sa.String(length=100), nullable=True))
     
-    # Create combined index for (user_id, status, created_at) as required by Week 8
+    # Create combined index for (user_id, status, created_at) for efficient admin filtering
     op.create_index(
         'idx_withdrawal_user_status_created',
         'withdrawal_intents',

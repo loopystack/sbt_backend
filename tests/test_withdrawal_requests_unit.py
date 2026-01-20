@@ -1,5 +1,6 @@
 """
-Week 8 - Unit tests (Withdrawal Request System)
+Withdrawal Request System - Unit Tests
+Tests withdrawal request business logic, validation, and wallet operations
 
 Focus:
 - WalletService lock/unlock correctness + ledger snapshots
@@ -391,7 +392,7 @@ async def test_admin_approve_pending_sets_approved_keeps_reserved(test_db: Async
     bal_after = await get_bal(test_db, user.id)
     ledger_after = await ledger_count(test_db, user.id)
     assert bal_after == bal_before
-    assert ledger_after == ledger_before  # no unlock / extra ledger in Week 8 approve
+    assert ledger_after == ledger_before  # no unlock / extra ledger in request-only approval
 
 
 @pytest.mark.asyncio

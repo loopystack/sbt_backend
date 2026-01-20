@@ -17,8 +17,8 @@ class WithdrawalStatus(str, Enum):
 
 class WithdrawalIntentCreate(BaseModel):
     """Request schema for creating a withdrawal"""
-    asset: str = Field(default="USDT", description="Crypto asset (USDT only for Week 8)")
-    network: str = Field(..., description="Blockchain network (TRC20 only for Week 8)")
+    asset: str = Field(default="USDT", description="Crypto asset (USDT only in initial implementation)")
+    network: str = Field(..., description="Blockchain network (TRC20 only in initial implementation)")
     amount_crypto: Decimal = Field(..., gt=0, description="Amount in crypto (USDT) to withdraw")
     to_address: str = Field(..., min_length=26, max_length=100, description="Destination wallet address")
     memo: Optional[str] = Field(None, max_length=100, description="Memo/tag if required (XRP, XLM, etc.)")
@@ -35,7 +35,7 @@ class WithdrawalIntentCreate(BaseModel):
     @field_validator('asset')
     @classmethod
     def validate_asset(cls, v):
-        """Week 8: Only USDT allowed"""
+        """Initial Implementation: Only USDT allowed"""
         if v != "USDT":
             raise ValueError('Only USDT is supported for withdrawals')
         return v
@@ -43,7 +43,7 @@ class WithdrawalIntentCreate(BaseModel):
     @field_validator('network')
     @classmethod
     def validate_network(cls, v):
-        """Week 8: Only TRC20 allowed"""
+        """Initial Implementation: Only TRC20 allowed"""
         if v != "TRC20":
             raise ValueError('Only TRC20 network is supported for withdrawals')
         return v
@@ -110,12 +110,12 @@ class WithdrawalListResponse(BaseModel):
 
 
 class WithdrawalAdminApproveRequest(BaseModel):
-    """Request schema for admin approve (Week 8)"""
+    """Request schema for admin approve"""
     admin_notes: Optional[str] = None
 
 
 class WithdrawalAdminRejectRequest(BaseModel):
-    """Request schema for admin reject (Week 8)"""
+    """Request schema for admin reject"""
     rejection_reason: str = Field(..., min_length=1, max_length=500)
     admin_notes: Optional[str] = None
 

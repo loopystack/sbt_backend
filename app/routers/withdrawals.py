@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/withdrawals", tags=["withdrawals"])
 
-# Supported networks (Week 8)
+# Supported networks (Initial Implementation)
 SUPPORTED_NETWORKS = {
     "TRC20": {"asset": "USDT", "network_name": "TRON", "validator_name": "TRC20"},
 }
 
-# Network fee estimates (in crypto units; Week 8 placeholder)
+# Network fee estimates (in crypto units; placeholder for future implementation)
 NETWORK_FEES = {
     "TRC20": Decimal("1.00"),
 }
@@ -51,9 +51,9 @@ async def initiate_withdrawal(
     """
     Create a new withdrawal request
     
-    Week 8: TRC20 and USDT only. No on-chain execution.
+    Initial Phase: TRC20 and USDT only. No on-chain execution.
     """
-    # Week 8: Restrict to TRC20 and USDT only
+    # Initial Phase: Restrict to TRC20 and USDT only
     if withdrawal_data.network != "TRC20":
         raise HTTPException(
             status_code=400,
@@ -126,7 +126,7 @@ async def initiate_withdrawal(
         validator_network
     )
     
-    # Week 8: amount is in USDT crypto units (no price-feed dependency)
+    # Initial Phase: amount is in USDT crypto units (no price-feed dependency)
     amount_crypto = withdrawal_data.amount_crypto
     amount_usd = withdrawal_data.amount_crypto  # USDT ~= 1 USD for limits accounting
     
@@ -172,7 +172,7 @@ async def initiate_withdrawal(
             detail=limits_check.get("reason", "Withdrawal limit exceeded")
         )
     
-    # Fees (Week 8 placeholder; no on-chain execution)
+    # Fees (placeholder; no on-chain execution in initial phase)
     network_fee_crypto = NETWORK_FEES.get(withdrawal_data.network, Decimal("1.00"))
     platform_fee_usd = Decimal("0.00")
     
@@ -257,7 +257,7 @@ async def get_withdrawal_detail(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get withdrawal detail by ID (Week 8: includes admin notes + timestamps)
+    Get withdrawal detail by ID (includes admin notes + timestamps)
     """
     stmt = select(WithdrawalIntent).where(
         and_(
@@ -423,7 +423,7 @@ async def cancel_withdrawal(
     return {"message": "Withdrawal cancelled successfully", "withdrawal_id": withdrawal_id}
 
 
-# Admin endpoints (Week 8: request + tracking only; NO on-chain execution)
+# Admin endpoints (request + tracking only; NO on-chain execution)
 @router.get("/admin/all", response_model=WithdrawalAdminListResponse)
 async def admin_list_all_withdrawals(
     skip: int = Query(0, ge=0),
@@ -438,7 +438,7 @@ async def admin_list_all_withdrawals(
     """
     Admin: List all withdrawals with filtering
     
-    Week 8: Supports filtering by status, user_id, and date range
+    Supports filtering by status, user_id, and date range
     """
     stmt = select(WithdrawalIntent)
     
@@ -498,7 +498,7 @@ async def admin_approve_withdrawal(
             detail="Withdrawal not found"
         )
     
-    # Week 8: Only approve if status is pending
+    # Validation: Only approve if status is pending
     # Idempotency: If already approved, return success without changes
     if withdrawal.status == "approved":
         await db.refresh(withdrawal)
