@@ -11,6 +11,8 @@ import pytest
 from playwright.async_api import Page, Browser, BrowserContext
 from typing import AsyncGenerator
 import os
+import urllib.request
+import urllib.error
 
 
 @pytest.fixture(scope="function")
@@ -46,12 +48,26 @@ async def page(context: BrowserContext) -> AsyncGenerator[Page, None]:
 # 2. Run tests with: pytest tests/e2e/ --base-url http://localhost:5173
 # Or set FRONTEND_URL environment variable
 
+def _ensure_frontend_reachable(base_url: str) -> None:
+    """Skip E2E tests if frontend isn't running."""
+    url = (base_url or "").rstrip("/")
+    if not url or url.startswith("/"):
+        url = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+    try:
+        with urllib.request.urlopen(url, timeout=2) as resp:
+            if getattr(resp, "status", 200) >= 400:
+                pytest.skip(f"Frontend not reachable (HTTP {resp.status}) at {url}")
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        pytest.skip(f"Frontend not reachable at {url}. Start frontend (npm run dev) then re-run.")
+
 @pytest.mark.asyncio
 async def test_wallet_balance_display(page: Page, base_url: str):
     """Test that wallet balance is displayed correctly on Profile page"""
     # Ensure base_url is set, default to localhost:5173 if not provided
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to profile page (where balance is displayed)
     await page.goto(f"{base_url}/profile", wait_until="domcontentloaded")
@@ -90,6 +106,8 @@ async def test_deposit_flow(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to deposit page
     await page.goto(f"{base_url}/deposit", wait_until="domcontentloaded")
@@ -129,6 +147,8 @@ async def test_deposit_address_and_qr_display(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to deposit page
     await page.goto(f"{base_url}/deposit", wait_until="domcontentloaded")
@@ -162,6 +182,8 @@ async def test_deposit_history_table(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to deposit page
     await page.goto(f"{base_url}/deposit", wait_until="domcontentloaded")
@@ -205,6 +227,8 @@ async def test_deposit_status_tracker(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to deposit page
     await page.goto(f"{base_url}/deposit", wait_until="domcontentloaded")
@@ -246,6 +270,8 @@ async def test_withdrawal_flow(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to profile page (withdrawals might be handled there)
     await page.goto(f"{base_url}/profile", wait_until="domcontentloaded")
@@ -296,6 +322,8 @@ async def test_transaction_history(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to profile page (where transaction history is shown)
     await page.goto(f"{base_url}/profile", wait_until="domcontentloaded")
@@ -330,6 +358,8 @@ async def test_deposit_status_check(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to deposit page (status might be shown there)
     await page.goto(f"{base_url}/deposit", wait_until="domcontentloaded")
@@ -363,6 +393,8 @@ async def test_withdrawal_status_check(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Navigate to profile page (withdrawal status might be shown there)
     await page.goto(f"{base_url}/profile", wait_until="domcontentloaded")
@@ -395,6 +427,8 @@ async def test_authentication_required(page: Page, base_url: str):
     # Ensure base_url is set
     if not base_url or base_url.startswith('/'):
         base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+    _ensure_frontend_reachable(base_url)
     
     # Try to access profile page without authentication
     await page.goto(f"{base_url}/profile", wait_until="domcontentloaded")

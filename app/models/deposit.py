@@ -133,6 +133,7 @@ class WithdrawalIntent(Base):
     amount_usd = Column(Numeric(10, 2), nullable=False)  # USD equivalent
     to_address = Column(String(100), nullable=False)  # User's external wallet address
     memo = Column(String(100), nullable=True)  # For XRP, XLM, BNB Beacon, etc.
+    client_request_id = Column(String(100), nullable=True)  # Client-side idempotency key (optional)
     
     # Status tracking
     status = Column(String(20), default="pending")  # pending, approved, processing, completed, failed, cancelled
@@ -147,6 +148,7 @@ class WithdrawalIntent(Base):
     admin_notes = Column(Text, nullable=True)  # Internal admin notes
     approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Admin user who approved
     approved_at = Column(DateTime, nullable=True)
+    rejected_at = Column(DateTime, nullable=True)  # When withdrawal was rejected
     rejection_reason = Column(Text, nullable=True)  # If rejected, reason
     
     # Compliance
@@ -170,8 +172,10 @@ class WithdrawalIntent(Base):
     __table_args__ = (
         Index('idx_withdrawal_user_status', 'user_id', 'status'),
         Index('idx_withdrawal_status_created', 'status', 'created_at'),  # For worker queries
+        Index('idx_withdrawal_user_status_created', 'user_id', 'status', 'created_at'),  # Week 8 requirement
         Index('idx_withdrawal_tx_hash', 'tx_hash'),
         Index('idx_withdrawal_created_at', 'created_at'),
+        Index('idx_withdrawal_client_request_id', 'user_id', 'client_request_id'),  # Idempotency lookup
         # Unique constraint on (network, tx_hash) where tx_hash is not null - prevents double sending
         # Note: PostgreSQL doesn't support partial unique constraints directly in SQLAlchemy
         # We'll handle this in the migration with a unique index

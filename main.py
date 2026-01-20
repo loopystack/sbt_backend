@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.database import engine
 from app.core.rollbar_setup import init_rollbar, report_error
 from app.models import Base
-from app.routers import auth, odds, payments, deposits, withdrawals, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement, match_result_update, admin, analytics, affiliates, wallet, bets
+from app.routers import auth, odds, payments, deposits, withdrawals, social_auth, betting_records, transactions, betting_settlement, bulletproof_settlement, match_result_update, admin, analytics, affiliates, wallet, bets, admin_withdrawals
 # from app.services.scheduler import start_crypto_scheduler, stop_crypto_scheduler
 
 
@@ -131,6 +131,7 @@ app.include_router(odds.router, prefix="/api/odds", tags=["Odds"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(deposits.router, tags=["Deposits"])
 app.include_router(withdrawals.router, tags=["Withdrawals"])
+app.include_router(admin_withdrawals.router, tags=["Admin Withdrawals"])
 app.include_router(wallet.router, tags=["Wallet"])
 app.include_router(betting_records.router, tags=["Betting Records"])
 app.include_router(bets.router, tags=["Bets"])  # Internal wallet betting API

@@ -136,7 +136,7 @@ async def test_win_settlement_no_double_stake_credit(
     match = test_match
     stake = Decimal("10.00")
     odds = Decimal("2.00")
-    expected_profit = stake * (odds - Decimal("1"))  # 10
+    expected_payout = stake * odds  # 20
     
     # Place bet
     bet = await BetService.place_bet(
@@ -166,37 +166,30 @@ async def test_win_settlement_no_double_stake_credit(
     result = await test_db.execute(stmt)
     entries = list(result.scalars().all())
     
-    # Verify: Should have BET_UNLOCK (stake) and BET_PAYOUT (profit only)
-    unlock_entries = [e for e in entries if e.type == WalletTransactionType.BET_UNLOCK]
-    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
-    
-    assert len(unlock_entries) == 1, "Should have exactly 1 BET_UNLOCK entry"
-    assert len(payout_entries) == 1, "Should have exactly 1 BET_PAYOUT entry"
-    
-    # Verify BET_UNLOCK returns stake
-    assert unlock_entries[0].amount == stake, "BET_UNLOCK should return stake"
-    
-    # Verify BET_PAYOUT is profit ONLY (not stake + profit)
-    assert payout_entries[0].amount == expected_profit, (
-        f"BET_PAYOUT should be profit only ({expected_profit}), not stake + profit ({stake + expected_profit}). "
-        f"Got: {payout_entries[0].amount}"
-    )
-    
-    # Verify total increase = stake (unlocked) + profit (credited) = 10 + 10 = 20
-    expected_increase = stake + expected_profit
+    # New accounting: BET_WIN_DEDUCT_STAKE + BET_WIN_PAYOUT_CREDIT
+    deduct_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_DEDUCT_STAKE]
+    payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_WIN_PAYOUT_CREDIT]
+    legacy_unlock_entries = [e for e in entries if e.type == WalletTransactionType.BET_UNLOCK]
+    legacy_payout_entries = [e for e in entries if e.type == WalletTransactionType.BET_PAYOUT]
+
+    assert len(legacy_unlock_entries) == 0, "Should not use legacy BET_UNLOCK for WIN settlement"
+    assert len(legacy_payout_entries) == 0, "Should not use legacy BET_PAYOUT for WIN settlement"
+
+    assert len(deduct_entries) == 1, "Should have exactly 1 BET_WIN_DEDUCT_STAKE entry"
+    assert len(payout_entries) == 1, "Should have exactly 1 BET_WIN_PAYOUT_CREDIT entry"
+
+    assert deduct_entries[0].amount == stake, "BET_WIN_DEDUCT_STAKE should remove reserved stake"
+    assert payout_entries[0].amount == expected_payout, "BET_WIN_PAYOUT_CREDIT should credit full payout"
+
+    # Verify total increase in available = payout (since available_before is after place_bet)
+    expected_increase = expected_payout
     actual_increase = available_after - available_before
     
     assert actual_increase == expected_increase, (
-        f"Total increase should be stake + profit = {expected_increase}, got {actual_increase}. "
-        f"If got {stake + expected_profit + stake} = {stake + expected_profit + stake}, stake was credited twice (BUG)!"
+        f"Total increase should be payout = {expected_increase}, got {actual_increase}. "
+        f"If larger than payout, stake may have been credited twice (BUG)!"
     )
-    
-    # Verify payout is NOT full payout (stake + profit)
-    full_payout = stake + expected_profit
-    assert payout_entries[0].amount != full_payout, (
-        f"CRITICAL: BET_PAYOUT should NOT be full payout {full_payout}. "
-        f"This would indicate double credit bug (unlock stake + credit full payout)."
-    )
+
 
 
 @pytest.mark.asyncio

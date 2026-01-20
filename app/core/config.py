@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     TRON_WITHDRAW_MAX_AMOUNT: Optional[Decimal] = None  # Maximum withdrawal amount (optional)
     WITHDRAW_EXECUTION_INTERVAL_SECONDS: int = 60  # How often to process withdrawals
     WITHDRAWAL_AUTO_EXECUTE: bool = False  # Auto-execute approved withdrawals (default: manual)
-    WITHDRAWAL_CONFIRM_TIMEOUT_MINUTES: int = 60  # Timeout for stuck transactions
+    WITHDRAWAL_CONFIRM_TIMEOUT_MINUTES: int = 60  # Timeout for stuck transactions (Week 9)
     
     @model_validator(mode='after')
     def sync_urls_with_localhost_ip(self):

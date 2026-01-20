@@ -197,7 +197,10 @@ class WithdrawalMonitorWorker:
             
             # Check if it's been too long since processed_at
             if withdrawal.processed_at:
-                time_since_processed = datetime.now(timezone.utc) - withdrawal.processed_at
+                processed_at_aware = withdrawal.processed_at
+                if processed_at_aware.tzinfo is None:
+                    processed_at_aware = processed_at_aware.replace(tzinfo=timezone.utc)
+                time_since_processed = datetime.now(timezone.utc) - processed_at_aware
                 if time_since_processed > timedelta(minutes=self.confirm_timeout_minutes):
                     logger.warning(
                         f"Withdrawal {withdrawal.id} tx not found after timeout, marking as failed"

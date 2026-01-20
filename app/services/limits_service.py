@@ -5,7 +5,7 @@ Handles daily limits checking and updating for deposits, withdrawals, and bets
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Dict, Any, Optional
 from fastapi import HTTPException, status
@@ -245,7 +245,7 @@ class LimitsService:
         
         limits.deposits_count += 1
         limits.deposits_amount_usd += amount_usd
-        limits.updated_at = datetime.utcnow()
+        limits.updated_at = datetime.now(timezone.utc)
         
         await db.commit()
     
@@ -261,7 +261,7 @@ class LimitsService:
         
         limits.withdrawals_count += 1
         limits.withdrawals_amount_usd += amount_usd
-        limits.updated_at = datetime.utcnow()
+        limits.updated_at = datetime.now(timezone.utc)
         
         await db.commit()
     
@@ -277,7 +277,7 @@ class LimitsService:
         
         limits.bets_count += 1
         limits.bets_amount_usd += amount_usd
-        limits.updated_at = datetime.utcnow()
+        limits.updated_at = datetime.now(timezone.utc)
         
         await db.commit()
     
