@@ -5,7 +5,7 @@
 
 set -e
 
-SERVICES=("sportsbet-api" "sportsbet-deposit-monitor" "sportsbet-withdrawal-monitor")
+SERVICES=("sbt-backend" "sbt-deposit-monitor" "sbt-withdrawal-monitor")
 ACTION="${1:-status}"
 SERVICE="${2:-all}"
 
@@ -42,35 +42,35 @@ show_help() {
     echo "  disable   Disable services from starting on boot"
     echo ""
     echo "Services:"
-    echo "  api                    API service only"
+    echo "  api/backend            API service only"
     echo "  deposit-monitor        Deposit monitor only"
     echo "  withdrawal-monitor     Withdrawal monitor only"
     echo "  all                    All services (default)"
     echo ""
     echo "Examples:"
     echo "  $0 start all           # Start all services"
-    echo "  $0 restart api         # Restart API service"
+    echo "  $0 restart backend     # Restart API service"
     echo "  $0 logs deposit-monitor # Show deposit monitor logs"
     echo "  $0 status              # Show status of all services"
 }
 
 get_services_to_manage() {
     case "$SERVICE" in
-        "api")
-            echo "sportsbet-api"
+        "api"|"backend")
+            echo "sbt-backend"
             ;;
         "deposit-monitor")
-            echo "sportsbet-deposit-monitor"
+            echo "sbt-deposit-monitor"
             ;;
         "withdrawal-monitor")
-            echo "sportsbet-withdrawal-monitor"
+            echo "sbt-withdrawal-monitor"
             ;;
         "all")
             printf '%s\n' "${SERVICES[@]}"
             ;;
         *)
             log_error "Unknown service: $SERVICE"
-            echo "Use 'api', 'deposit-monitor', 'withdrawal-monitor', or 'all'"
+            echo "Use 'api', 'backend', 'deposit-monitor', 'withdrawal-monitor', or 'all'"
             exit 1
             ;;
     esac

@@ -1,23 +1,21 @@
 [Unit]
-Description=Sports Betting Daily Reconciliation Service
-After=network.target postgresql.service sportsbet-api.service
-Requires=postgresql.service
+Description=Sportsbet Daily Reconciliation Job
+After=network.target postgresql.service
 
 [Service]
-Type=oneshot
-User=sportsbet
-Group=sportsbet
-WorkingDirectory=/opt/sportsbet/backend
-Environment=PATH=/opt/sportsbet/backend/venv/bin
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/sbt_backend
 EnvironmentFile=/etc/sportsbet/env
-ExecStart=/opt/sportsbet/backend/venv/bin/python scripts/run_daily_reconciliation.py
+ExecStart=/home/deploy/sbt_backend/venv/bin/python scripts/run_daily_reconciliation.py
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sbt-reconciliation
 
-# Security settings
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ReadWritePaths=/opt/sportsbet/backend /var/log/sportsbet /tmp
-ProtectHome=yes
-
-[Install]
-WantedBy=multi-user.target
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+LimitNOFILE=512
+LimitNPROC=256

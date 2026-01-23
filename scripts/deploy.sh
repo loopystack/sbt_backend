@@ -35,10 +35,10 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if running as sportsbet user (or root for initial setup)
+# Check if running as deploy user (or root for initial setup)
 check_permissions() {
-    if [[ "$ENVIRONMENT" == "production" && "$EUID" -ne 0 && "$USER" != "sportsbet" ]]; then
-        log_error "Production deployment must be run as root or sportsbet user"
+    if [[ "$ENVIRONMENT" == "production" && "$EUID" -ne 0 && "$USER" != "deploy" ]]; then
+        log_error "Production deployment must be run as root or deploy user"
         exit 1
     fi
 }
@@ -94,10 +94,10 @@ setup_database() {
     # Run migrations
     log_info "Running database migrations"
     cd "$PROJECT_ROOT"
-    if [[ "$USER" == "sportsbet" ]]; then
+    if [[ "$USER" == "deploy" ]]; then
         ./venv/bin/alembic upgrade head
     else
-        sudo -u sportsbet ./venv/bin/alembic upgrade head
+        sudo -u deploy ./venv/bin/alembic upgrade head
     fi
 
     log_success "Database setup completed"
@@ -108,27 +108,27 @@ deploy_application() {
     log_info "Deploying application for $ENVIRONMENT"
 
     # Create necessary directories
-    sudo mkdir -p /opt/sportsbet/{backend,frontend,logs,backups}
-    sudo chown -R sportsbet:sportsbet /opt/sportsbet
+    sudo mkdir -p /home/deploy/sbt_backend
+    sudo chown -R deploy:deploy /home/deploy/sbt_backend
 
     # Copy backend code
     log_info "Copying backend code"
     sudo rsync -av --delete --exclude='.git' --exclude='__pycache__' \
-        "$PROJECT_ROOT/" /opt/sportsbet/backend/
+        "$PROJECT_ROOT/" /home/deploy/sbt_backend/
 
     # Setup Python virtual environment
     log_info "Setting up Python environment"
-    cd /opt/sportsbet/backend
-    sudo -u sportsbet python3 -m venv venv
-    sudo -u sportsbet ./venv/bin/pip install --upgrade pip
-    sudo -u sportsbet ./venv/bin/pip install -r requirements.txt
+    cd /home/deploy/sbt_backend
+    sudo -u deploy python3 -m venv venv
+    sudo -u deploy ./venv/bin/pip install --upgrade pip
+    sudo -u deploy ./venv/bin/pip install -r requirements.txt
 
     # Copy environment configuration
     log_info "Installing environment configuration"
     sudo mkdir -p /etc/sportsbet
     sudo cp "$PROJECT_ROOT/config.${ENVIRONMENT}.env" /etc/sportsbet/env
     sudo chmod 600 /etc/sportsbet/env
-    sudo chown sportsbet:sportsbet /etc/sportsbet/env
+    sudo chown deploy:deploy /etc/sportsbet/env
 
     log_success "Application deployment completed"
 }
@@ -140,7 +140,7 @@ manage_services() {
     log_info "$action services for $ENVIRONMENT"
 
     # Install systemd services if not already installed
-    if [[ ! -f "/etc/systemd/system/sportsbet-api.service" ]]; then
+    if [[ ! -f "/etc/systemd/system/sbt-backend.service" ]]; then
         log_info "Installing systemd services"
         sudo cp "$PROJECT_ROOT/systemd/"*.service /etc/systemd/system/
         sudo cp "$PROJECT_ROOT/systemd/"*.timer /etc/systemd/system/
@@ -158,13 +158,13 @@ manage_services() {
 
     case "$action" in
         "start")
-            sudo ./opt/sportsbet/backend/scripts/manage_services.sh start all
+            sudo /home/deploy/sbt_backend/scripts/manage_services.sh start all
             ;;
         "stop")
-            sudo ./opt/sportsbet/backend/scripts/manage_services.sh stop all
+            sudo /home/deploy/sbt_backend/scripts/manage_services.sh stop all
             ;;
         "restart")
-            sudo ./opt/sportsbet/backend/scripts/manage_services.sh restart all
+            sudo /home/deploy/sbt_backend/scripts/manage_services.sh restart all
             ;;
     esac
 
@@ -240,7 +240,7 @@ verify_deployment() {
     sleep 10
 
     # Check service status
-    if ./opt/sportsbet/backend/scripts/manage_services.sh status > /dev/null 2>&1; then
+    if /home/deploy/sbt_backend/scripts/manage_services.sh status > /dev/null 2>&1; then
         log_success "Services are running"
     else
         log_error "Services are not running properly"
@@ -277,10 +277,10 @@ rollback() {
     manage_services "stop"
 
     # Restore previous backup (if exists)
-    if [[ -f "/opt/sportsbet/backup.tar.gz" ]]; then
+    if [[ -f "/home/deploy/sbt_backend/backup.tar.gz" ]]; then
         log_info "Restoring from backup"
-        cd /opt/sportsbet
-        sudo tar -xzf backup.tar.gz
+        cd /home/deploy
+        sudo tar -xzf sbt_backend/backup.tar.gz
     else
         log_error "No backup found for rollback"
         exit 1
@@ -304,10 +304,10 @@ main() {
             log_info "Performing full deployment"
 
             # Create backup before deployment
-            if [[ -d "/opt/sportsbet/backend" ]]; then
+            if [[ -d "/home/deploy/sbt_backend" ]]; then
                 log_info "Creating backup before deployment"
-                cd /opt
-                sudo tar -czf sportsbet_backup_$(date +%Y%m%d_%H%M%S).tar.gz sportsbet/
+                cd /home/deploy
+                sudo tar -czf sbt_backend_backup_$(date +%Y%m%d_%H%M%S).tar.gz sbt_backend/
             fi
 
             deploy_application

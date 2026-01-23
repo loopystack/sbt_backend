@@ -1,33 +1,28 @@
 [Unit]
-Description=Sports Betting Deposit Monitor Worker
-After=network.target postgresql.service sportsbet-api.service
-Requires=postgresql.service
-PartOf=sportsbet-api.service
+Description=Sportsbet Deposit Monitor Worker
+After=network.target postgresql.service sbt-backend.service
 
 [Service]
-Type=simple
-User=sportsbet
-Group=sportsbet
-WorkingDirectory=/opt/sportsbet/backend
-Environment=PATH=/opt/sportsbet/backend/venv/bin
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/sbt_backend
 EnvironmentFile=/etc/sportsbet/env
-ExecStart=/opt/sportsbet/backend/venv/bin/python run_deposit_monitor.py
+ExecStart=/home/deploy/sbt_backend/venv/bin/python scripts/run_deposit_monitor.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=sportsbet-deposit-monitor
+SyslogIdentifier=sbt-deposit-monitor
 
-# Security settings
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ReadWritePaths=/opt/sportsbet/backend /var/log/sportsbet /tmp
-ProtectHome=yes
-
-# Resource limits
-LimitNOFILE=1024
-MemoryLimit=512M
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/log/sportsbet
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+LimitNOFILE=512
+LimitNPROC=256
 
 [Install]
 WantedBy=multi-user.target
