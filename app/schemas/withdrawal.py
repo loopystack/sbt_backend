@@ -19,7 +19,7 @@ class WithdrawalIntentCreate(BaseModel):
     """Request schema for creating a withdrawal"""
     asset: str = Field(default="USDT", description="Crypto asset (USDT only in initial implementation)")
     network: str = Field(..., description="Blockchain network (TRC20 only in initial implementation)")
-    amount_crypto: Decimal = Field(..., gt=0, description="Amount in crypto (USDT) to withdraw")
+    amount_crypto: Decimal = Field(..., gt=0, le=Decimal('1000000'), description="Amount in crypto (USDT) to withdraw")
     to_address: str = Field(..., min_length=26, max_length=100, description="Destination wallet address")
     memo: Optional[str] = Field(None, max_length=100, description="Memo/tag if required (XRP, XLM, etc.)")
     client_request_id: Optional[str] = Field(None, max_length=100, description="Client-side idempotency key (optional)")
@@ -27,9 +27,20 @@ class WithdrawalIntentCreate(BaseModel):
     @field_validator('to_address')
     @classmethod
     def validate_address(cls, v):
-        """Basic address validation - should be alphanumeric"""
-        if not v.replace('-', '').replace('_', '').isalnum():
-            raise ValueError('Invalid address format')
+        """Basic address validation - should be alphanumeric with allowed special chars"""
+        # TRC20 addresses are base58 encoded, should be ~34 chars, start with T
+        if not v or len(v) < 26 or len(v) > 100:
+            raise ValueError('Address must be between 26 and 100 characters')
+
+        # Basic character validation for TRC20 addresses
+        allowed_chars = set('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz')
+        if not all(c in allowed_chars for c in v):
+            raise ValueError('Invalid characters in address')
+
+        # TRC20 addresses typically start with 'T'
+        if not v.startswith('T'):
+            raise ValueError('TRC20 addresses must start with T')
+
         return v
     
     @field_validator('asset')
@@ -46,6 +57,19 @@ class WithdrawalIntentCreate(BaseModel):
         """Initial Implementation: Only TRC20 allowed"""
         if v != "TRC20":
             raise ValueError('Only TRC20 network is supported for withdrawals')
+        return v
+
+    @field_validator('amount_crypto')
+    @classmethod
+    def validate_amount_precision(cls, v):
+        """Validate USDT amount has maximum 6 decimal places"""
+        if v is None:
+            return v
+
+        # Check decimal places (USDT has 6 decimal places)
+        if v.as_tuple().exponent < -6:
+            raise ValueError('USDT amounts cannot have more than 6 decimal places')
+
         return v
 
 

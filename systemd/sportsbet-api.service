@@ -1,0 +1,33 @@
+[Unit]
+Description=Sports Betting Platform API
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=sportsbet
+Group=sportsbet
+WorkingDirectory=/opt/sportsbet/backend
+Environment=PATH=/opt/sportsbet/backend/venv/bin
+EnvironmentFile=/etc/sportsbet/env
+ExecStart=/opt/sportsbet/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 5001 --workers 4
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sportsbet-api
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/sportsbet/backend /var/log/sportsbet /tmp
+ProtectHome=yes
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=1G
+
+[Install]
+WantedBy=multi-user.target

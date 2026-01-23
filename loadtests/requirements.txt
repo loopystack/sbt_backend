@@ -1,0 +1,2 @@
+locust==2.15.1
+fast-http==0.1.0

@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Sports Betting Reconciliation Timer
+Requires=sportsbet-reconciliation.service
+
+[Timer]
+# Run daily at 2:00 AM UTC
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

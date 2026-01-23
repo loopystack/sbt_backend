@@ -12,9 +12,8 @@ from app.core.database import get_db
 from app.core.deps import get_current_superuser
 from app.models.user import User
 from app.models.system_alert import (
-    SystemAlert, SystemAlertStatus, SystemHeartbeat
+    SystemAlert, SystemAlertStatus, SystemHeartbeat, ReconciliationReport
 )
-from app.models.reconciliation_report import ReconciliationReport
 from app.services.reconciliation_service import reconciliation_service
 from app.services.tron_send_service import tron_send_service
 from app.schemas.system import (
@@ -26,6 +25,27 @@ from app.schemas.system import (
 )
 
 router = APIRouter(prefix="/api/admin/system", tags=["admin-system"])
+
+# Public health check endpoints (no auth required)
+@router.get("/health/db")
+async def get_db_health(db: AsyncSession = Depends(get_db)):
+    """Public database health check endpoint"""
+    try:
+        # Simple query to test database connectivity
+        result = await db.execute(select(func.now()))
+        db_time = result.scalar()
+
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": db_time.isoformat() if db_time else None
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": str(e)
+        }
 
 
 @router.get("/health", response_model=SystemHealthResponse)

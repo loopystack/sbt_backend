@@ -22,7 +22,12 @@ class TronSendResult(TypedDict):
 
 class TronSendService:
     """Service for sending USDT TRC20 transfers on TRON network"""
-    
+
+    # Circuit breaker configuration
+    FAILURE_THRESHOLD = 5  # Number of consecutive failures before entering degraded mode
+    RECOVERY_TIMEOUT_SECONDS = 300  # Time to wait before trying to recover (5 minutes)
+    BACKOFF_MULTIPLIER = 2  # Exponential backoff multiplier
+
     def __init__(self):
         self.hot_wallet_address = settings.TRON_HOT_WALLET_ADDRESS
         self.hot_wallet_private_key = settings.TRON_HOT_WALLET_PRIVATE_KEY
@@ -30,6 +35,12 @@ class TronSendService:
         self._tron = None
         self._private_key = None
         self._initialized = False
+
+        # Circuit breaker state
+        self._consecutive_failures = 0
+        self._last_failure_time = None
+        self._degraded_until = None
+        self._backoff_level = 0
     
     def _ensure_initialized(self):
         """Lazy initialization - only initialize when actually needed"""
@@ -63,7 +74,64 @@ class TronSendService:
             raise ValueError(f"Invalid TRON hot wallet configuration: {e}")
         
         self._initialized = True
-    
+
+    def _is_degraded(self) -> bool:
+        """Check if service is in degraded mode due to circuit breaker"""
+        import time
+        current_time = time.time()
+
+        # Check if we're still in degraded state
+        if self._degraded_until and current_time < self._degraded_until:
+            return True
+
+        # Check if we should attempt recovery
+        if self._consecutive_failures >= self.FAILURE_THRESHOLD:
+            # Calculate backoff time
+            backoff_seconds = min(
+                self.RECOVERY_TIMEOUT_SECONDS * (self.BACKOFF_MULTIPLIER ** self._backoff_level),
+                3600  # Max 1 hour backoff
+            )
+
+            if self._last_failure_time and (current_time - self._last_failure_time) < backoff_seconds:
+                return True
+
+            # Attempt recovery - reset degraded state
+            self._degraded_until = None
+            logger.info("Circuit breaker: Attempting recovery from degraded mode")
+
+        return False
+
+    def _record_failure(self):
+        """Record a failure for circuit breaker logic"""
+        import time
+        current_time = time.time()
+
+        self._consecutive_failures += 1
+        self._last_failure_time = current_time
+
+        if self._consecutive_failures >= self.FAILURE_THRESHOLD:
+            # Enter degraded mode
+            backoff_seconds = min(
+                self.RECOVERY_TIMEOUT_SECONDS * (self.BACKOFF_MULTIPLIER ** self._backoff_level),
+                3600  # Max 1 hour
+            )
+            self._degraded_until = current_time + backoff_seconds
+            self._backoff_level += 1
+
+            logger.warning(
+                f"Circuit breaker: Entering degraded mode after {self._consecutive_failures} "
+                f"consecutive failures. Backoff: {backoff_seconds}s"
+            )
+
+    def _record_success(self):
+        """Record a success to reset circuit breaker state"""
+        if self._consecutive_failures > 0:
+            logger.info(f"Circuit breaker: Recovered after {self._consecutive_failures} failures")
+            self._consecutive_failures = 0
+            self._backoff_level = 0
+            self._degraded_until = None
+            self._last_failure_time = None
+
     async def send_usdt_trc20(
         self,
         to_address: str,
@@ -102,12 +170,17 @@ class TronSendService:
         
         # Ensure service is initialized
         self._ensure_initialized()
-        
+
+        # Check circuit breaker
+        if self._is_degraded():
+            logger.warning("Circuit breaker: Service is in degraded mode, rejecting transaction")
+            raise Exception("TRON API service is temporarily unavailable (circuit breaker)")
+
         logger.info(
             f"Sending {amount_usdt} USDT from {self.hot_wallet_address} to {to_address} "
             f"(smallest unit: {amount_smallest_unit})"
         )
-        
+
         try:
             # Get USDT contract
             contract = self._tron.get_contract(self.usdt_contract)
@@ -135,13 +208,19 @@ class TronSendService:
                 raise ValueError("Transaction broadcasted but no tx_hash returned")
             
             logger.info(f"Successfully broadcasted USDT transfer: tx_hash={tx_hash}")
-            
+
+            # Record success for circuit breaker
+            self._record_success()
+
             return TronSendResult(
                 tx_hash=tx_hash,
                 raw=result
             )
-            
+
         except Exception as e:
+            # Record failure for circuit breaker
+            self._record_failure()
+
             logger.error(
                 f"Failed to send USDT transfer to {to_address}: {e}",
                 exc_info=True
@@ -161,17 +240,28 @@ class TronSendService:
         """
         # Ensure service is initialized
         self._ensure_initialized()
-        
+
+        # Check circuit breaker - in degraded mode, return cached/zero balance
+        if self._is_degraded():
+            logger.warning("Circuit breaker: Service degraded, returning zero balance for safety")
+            return Decimal("0")
+
         try:
             contract = self._tron.get_contract(self.usdt_contract)
             balance = contract.functions.balanceOf(self.hot_wallet_address)
             
             # Convert from smallest unit to USDT (6 decimals)
             balance_usdt = Decimal(balance) / Decimal(1_000_000)
-            
+
+            # Record success for circuit breaker
+            self._record_success()
+
             return balance_usdt
-            
+
         except Exception as e:
+            # Record failure for circuit breaker
+            self._record_failure()
+
             logger.error(f"Failed to get hot wallet balance: {e}")
             raise Exception(f"Failed to get hot wallet balance: {str(e)}")
     

@@ -8,6 +8,9 @@ DEFAULT_LOCALHOST_IP = "152.42.167.41"
 DEFAULT_BACKEND_PORT = 5001
 
 class Settings(BaseSettings):
+    # Environment Configuration
+    ENV: str = "dev"  # 'dev', 'staging', 'production'
+
     # Database
     DATABASE_URL: str
     TEST_DATABASE_URL: Optional[str] = None
@@ -102,6 +105,15 @@ class Settings(BaseSettings):
     HOT_WALLET_TRX_THRESHOLD: Decimal = Decimal("1000.0")  # Alert when TRX balance below this
 
     RECON_TOLERANCE_USDT: Decimal = Decimal("1.0")  # Reconciliation tolerance (ok if delta <= this)
+
+    # Rate Limiting Configuration
+    RATE_LIMITING_ENABLED: bool = True
+
+    # Admin Security Configuration
+    ADMIN_IP_ALLOWLIST: Optional[str] = None  # Comma-separated IPs, e.g., "192.168.1.100,10.0.0.1"
+
+    # Environment-Specific Features
+    ALLOW_ADMIN_SIMULATION: bool = True  # Allow admin deposit/withdrawal simulation (staging only)
     
     @model_validator(mode='after')
     def sync_urls_with_localhost_ip(self):
@@ -109,6 +121,37 @@ class Settings(BaseSettings):
         # Reconstruct URLs based on actual LOCALHOST_IP value (in case it was overridden)
         self.GOOGLE_REDIRECT_URI = f"http://{self.LOCALHOST_IP}:{self.BACKEND_PORT}/api/auth/google/callback"
         self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}"
+        return self
+
+    @model_validator(mode='after')
+    def enforce_production_safety_rules(self):
+        """Enforce safety rules for production environment"""
+        if self.ENV == "production":
+            # Production safety checks
+            if self.DEBUG:
+                raise ValueError("DEBUG must be False in production environment")
+
+            if self.BLOCKCHAIN_TEST_MODE.lower() == "true":
+                raise ValueError("BLOCKCHAIN_TEST_MODE must be False in production environment")
+
+            if self.PAYMENT_MODE.lower() == "test":
+                raise ValueError("PAYMENT_MODE must be 'live' in production environment")
+
+            # Ensure required production secrets are set
+            if not self.TRON_HOT_WALLET_ADDRESS:
+                raise ValueError("TRON_HOT_WALLET_ADDRESS must be set in production")
+
+            if not self.TRON_HOT_WALLET_PRIVATE_KEY:
+                raise ValueError("TRON_HOT_WALLET_PRIVATE_KEY must be set in production")
+
+            # Ensure Rollbar is configured for production
+            if not self.ROLLBAR_ACCESS_TOKEN:
+                raise ValueError("ROLLBAR_ACCESS_TOKEN must be set in production")
+
+            # Disable admin simulation in production
+            if self.ALLOW_ADMIN_SIMULATION:
+                raise ValueError("ALLOW_ADMIN_SIMULATION must be False in production environment")
+
         return self
     
     @property

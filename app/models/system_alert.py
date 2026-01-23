@@ -2,7 +2,7 @@
 System Alert and Heartbeat Models
 For monitoring system health and alerting
 """
-from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, JSON, UniqueConstraint, Index, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -71,8 +71,8 @@ class SystemAlert(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     acknowledged_at = Column(DateTime, nullable=True)
     resolved_at = Column(DateTime, nullable=True)
-    acknowledged_by = Column(Integer, nullable=True)  # User ID who acknowledged
-    resolved_by = Column(Integer, nullable=True)  # User ID who resolved
+    acknowledged_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # User ID who acknowledged
+    resolved_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # User ID who resolved
 
     # Relationships
     acknowledger = relationship("User", foreign_keys=[acknowledged_by])
