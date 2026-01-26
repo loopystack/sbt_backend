@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple, Dict
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 
+from dotenv import load_dotenv
 
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
@@ -25,15 +26,6 @@ import platform
 import psycopg
 from psycopg.sql import SQL, Identifier
 # import psycopg.pool  # Not used in script - psycopg-pool is separate package if needed
-
-# -------------------- DB CONFIG --------------------
-DB_CONFIG = {
-    "host":     "ep-empty-term-adh8v9zs-pooler.c-2.us-east-1.aws.neon.tech",
-    "port":     5432,
-    "dbname":   "sportsbetting",
-    "user":     "neondb_owner",
-    "password": "npg_ZdRSbgLjv5s6",
-}
 
 TABLE  = "odds"
 
@@ -64,39 +56,41 @@ class LeagueConfig:
         return f"{self.base}{slug}/"
 
 # --- Leagues ---
-BRAZIL = LeagueConfig(
-    country="brazil",
-    league_name="Serie A Betano",
-    base="https://www.oddsportal.com/football/brazil/",
-    kind="single_year",
-    comp_slug="serie-a",
-    seasons=[2021, 2022, 2023, 2024, 2025],
-    next_slug="serie-a-betano",
-    special_slugs={2024: "serie-a-betano-2024/results/", 2025: "serie-a-betano/results/"},
-)
-ENGLAND = LeagueConfig("england", "Premier League", "https://www.oddsportal.com/football/england/", "two_year", "premier-league", [2021, 2022, 2023, 2024, 2025])
-SPAIN   = LeagueConfig("spain",   "LaLiga",          "https://www.oddsportal.com/football/spain/",   "two_year", "laliga",          [2021, 2022, 2023, 2024, 2025])
+# BRAZIL = LeagueConfig(
+#     country="brazil",
+#     league_name="Serie A Betano",
+#     base="https://www.oddsportal.com/football/brazil/",
+#     kind="single_year",
+#     comp_slug="serie-a",
+#     seasons=[2021, 2022, 2023, 2024, 2025],
+#     next_slug="serie-a-betano",
+#     special_slugs={2024: "serie-a-betano-2024/results/", 2025: "serie-a-betano/results/"},
+# )
+# ENGLAND = LeagueConfig("england", "Premier League", "https://www.oddsportal.com/football/england/", "two_year", "premier-league", [2021, 2022, 2023, 2024, 2025])
+# SPAIN   = LeagueConfig("spain",   "LaLiga",          "https://www.oddsportal.com/football/spain/",   "two_year", "laliga",          [2021, 2022, 2023, 2024, 2025])
 GERMANY = LeagueConfig("germany", "Bundesliga",      "https://www.oddsportal.com/football/germany/","two_year", "bundesliga",      [2021, 2022, 2023, 2024, 2025])
-ITALY   = LeagueConfig("italy",   "Serie A",         "https://www.oddsportal.com/football/italy/",  "two_year", "serie-a",         [2021, 2022, 2023, 2024, 2025])
-FRANCE  = LeagueConfig("france",  "Ligue 1",         "https://www.oddsportal.com/football/france/", "two_year", "ligue-1",         [2021, 2022, 2023, 2024, 2025])
+# ITALY   = LeagueConfig("italy",   "Serie A",         "https://www.oddsportal.com/football/italy/",  "two_year", "serie-a",         [2021, 2022, 2023, 2024, 2025])
+# FRANCE  = LeagueConfig("france",  "Ligue 1",         "https://www.oddsportal.com/football/france/", "two_year", "ligue-1",         [2021, 2022, 2023, 2024, 2025])
 # ARGENTINA = LeagueConfig("argentina","Torneo Betano","https://www.oddsportal.com/football/argentina/","single_year","torneo-betano",[2021, 2022, 2023, 2024, 2025])
-PORTUGAL  = LeagueConfig("portugal","Liga Portugal", "https://www.oddsportal.com/football/portugal/","two_year","liga-portugal",[2021, 2022, 2023, 2024, 2025])
-NETHERLANDS = LeagueConfig("netherlands","Eredivisie","https://www.oddsportal.com/football/netherlands/","two_year","eredivisie",[2021, 2022, 2023, 2024, 2025])
-BELGIUM  = LeagueConfig("belgium","Jupiler Pro League","https://www.oddsportal.com/football/belgium/","two_year","jupiler-pro-league",[2021, 2022, 2023, 2024, 2025])
-TURKEY   = LeagueConfig("turkey","Super Lig","https://www.oddsportal.com/football/turkey/","two_year","super-lig",[2021, 2022, 2023, 2024, 2025])
-RUSSIA   = LeagueConfig("russia","Premier League","https://www.oddsportal.com/football/russia/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
-UKRAINE  = LeagueConfig("ukraine","Premier League","https://www.oddsportal.com/football/ukraine/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
-POLAND   = LeagueConfig("poland","Ekstraklasa","https://www.oddsportal.com/football/poland/","two_year","ekstraklasa",[2021, 2022, 2023, 2024, 2025])
+# PORTUGAL  = LeagueConfig("portugal","Liga Portugal", "https://www.oddsportal.com/football/portugal/","two_year","liga-portugal",[2021, 2022, 2023, 2024, 2025])
+# NETHERLANDS = LeagueConfig("netherlands","Eredivisie","https://www.oddsportal.com/football/netherlands/","two_year","eredivisie",[2021, 2022, 2023, 2024, 2025])
+# BELGIUM  = LeagueConfig("belgium","Jupiler Pro League","https://www.oddsportal.com/football/belgium/","two_year","jupiler-pro-league",[2021, 2022, 2023, 2024, 2025])
+# TURKEY   = LeagueConfig("turkey","Super Lig","https://www.oddsportal.com/football/turkey/","two_year","super-lig",[2021, 2022, 2023, 2024, 2025])
+# RUSSIA   = LeagueConfig("russia","Premier League","https://www.oddsportal.com/football/russia/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
+# UKRAINE  = LeagueConfig("ukraine","Premier League","https://www.oddsportal.com/football/ukraine/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
+# POLAND   = LeagueConfig("poland","Ekstraklasa","https://www.oddsportal.com/football/poland/","two_year","ekstraklasa",[2021, 2022, 2023, 2024, 2025])
 # CZECH    = LeagueConfig("czech-republic","Fortuna Liga","https://www.oddsportal.com/football/czech-republic/","two_year","fortuna-liga",[2021, 2022, 2023, 2024, 2025])
-AUSTRIA  = LeagueConfig("austria","Bundesliga","https://www.oddsportal.com/football/austria/","two_year","bundesliga",[2021, 2022, 2023, 2024, 2025])
-SWITZERLAND = LeagueConfig("switzerland","Super League","https://www.oddsportal.com/football/switzerland/","two_year","super-league",[2021, 2022, 2023, 2024, 2025])
+# AUSTRIA  = LeagueConfig("austria","Bundesliga","https://www.oddsportal.com/football/austria/","two_year","bundesliga",[2021, 2022, 2023, 2024, 2025])
+# SWITZERLAND = LeagueConfig("switzerland","Super League","https://www.oddsportal.com/football/switzerland/","two_year","super-league",[2021, 2022, 2023, 2024, 2025])
 
-LEAGUES: List[LeagueConfig] = [
-    BRAZIL, ENGLAND, SPAIN,
-    GERMANY, ITALY, FRANCE,
-    PORTUGAL, NETHERLANDS, BELGIUM, TURKEY, 
-    RUSSIA, UKRAINE, POLAND, AUSTRIA, SWITZERLAND, 
-]
+# LEAGUES: List[LeagueConfig] = [
+#     BRAZIL, ENGLAND, SPAIN,
+#     GERMANY, ITALY, FRANCE,
+#     PORTUGAL, NETHERLANDS, BELGIUM, TURKEY, 
+#     RUSSIA, UKRAINE, POLAND, AUSTRIA, SWITZERLAND, 
+# ]
+
+LEAGUES: List[LeagueConfig] = [GERMANY]
 
 # -------------------- Chrome Version Detection --------------------
 def get_chrome_version() -> Optional[int]:
@@ -295,10 +289,15 @@ def make_driver(headless: bool = True) -> uc.Chrome:
 def wait_for_results_table(driver):
     """Wait for results table with fallback strategies"""
     try:
-        # Primary strategy: wait for game rows or headers
-        WebDriverWait(driver, 15).until(
+        # Primary strategy: wait for common oddsportal results elements
+        WebDriverWait(driver, 25).until(
             EC.presence_of_element_located(
-                (By.XPATH, "//div[@data-testid='secondary-header'] | //div[@data-testid='game-row']")
+                (By.XPATH,
+                 "//div[@data-testid='secondary-header']"
+                 " | //div[@data-testid='game-row']"
+                 " | //div[@data-testid='event-row']"
+                 " | //div[contains(@class,'eventRow') or contains(@class,'event__match')]"
+                 " | //div[contains(@class,'table') and contains(@class,'row')]")
             )
         )
         print("✅ Found results table elements")
@@ -502,6 +501,12 @@ def extract_date_from_row(row) -> Optional[str]:
         # print("HEADER RAW:", raw)
         return extract_date_from_text(raw)
     except Exception:
+        pass
+    try:
+        date_el = row.find_element(By.XPATH, ".//*[contains(@data-testid,'date') or contains(@class,'date')]")
+        raw = date_el.text.strip()
+        return extract_date_from_text(raw) or raw
+    except Exception:
         return None
 
 def _parse_date(d: Optional[str]):
@@ -521,9 +526,39 @@ def _parse_date(d: Optional[str]):
     return None
 
 # -------------------- Other extraction helpers --------------------
+def _extract_score_from_text(raw: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    if not raw:
+        return None, None
+    # Normalize HTML to text if needed
+    if "<" in raw and ">" in raw:
+        raw = re.sub(r"<[^>]+>", " ", raw)
+    raw = raw.replace("\u2013", "-")  # normalize en dash
+    m = re.search(r"\b(\d+)\s*-\s*(\d+)\b", raw)
+    if m:
+        return m.group(1), m.group(2)
+    nums = re.findall(r"\b\d+\b", raw)
+    if len(nums) >= 2:
+        return nums[0], nums[1]
+    return None, None
+
+def _get_text_from_selector(row, selector: str) -> str:
+    try:
+        return row._parent.execute_script(
+            "const el = arguments[0].querySelector(arguments[1]); return el ? (el.textContent || '') : '';",
+            row,
+            selector,
+        ) or ""
+    except Exception:
+        return ""
+
 def extract_time(row) -> Optional[str]:
     try:
         el = row.find_element(By.XPATH, ".//div[@data-testid='time-item']//p")
+        return el.text.strip()
+    except Exception:
+        pass
+    try:
+        el = row.find_element(By.XPATH, ".//*[contains(@data-testid,'time') or contains(@class,'time')]")
         return el.text.strip()
     except Exception:
         return None
@@ -531,7 +566,13 @@ def extract_time(row) -> Optional[str]:
 def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     home_name = away_name = None
     home_goals = away_goals = None
-    part = row.find_element(By.XPATH, ".//div[@data-testid='event-participants']")
+    try:
+        part = row.find_element(By.XPATH, ".//div[@data-testid='event-participants']")
+    except Exception:
+        try:
+            part = row.find_element(By.XPATH, ".//*[contains(@data-testid,'participants') or contains(@class,'participants')]")
+        except Exception:
+            part = row
 
     anchors = part.find_elements(By.XPATH, ".//a[.//p[contains(@class,'participant-name')]]")
     if len(anchors) >= 2:
@@ -549,27 +590,109 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
             ag = anchors[1].find_element(By.XPATH, ".//div[contains(@class,'ml-auto') and contains(@class,'font-bold')]").text.strip()
             if ag: away_goals = ag
         except Exception: pass
+    else:
+        # Fallback: participant names without anchors
+        try:
+            names = [
+                el.text.strip()
+                for el in part.find_elements(By.XPATH, ".//p[contains(@class,'participant-name')]")
+                if (el.text or "").strip()
+            ]
+            if len(names) >= 2:
+                home_name = home_name or names[0]
+                away_name = away_name or names[1]
+        except Exception:
+            pass
 
     # fallback center tiny “1–0”
     if home_goals is None or away_goals is None:
         try:
             center = part.find_element(By.XPATH, ".//div[contains(@class,'text-gray-dark') and contains(@class,'relative')]//div[contains(@class,'gap-1')]")
-            raw = center.get_attribute("textContent") or ""
-            m = re.search(r"(\d+)\s*[–-]\s*(\d+)", raw)
-            if m:
-                home_goals = home_goals or m.group(1)
-                away_goals = away_goals or m.group(2)
+            try:
+                raw = center.get_dom_attribute("textContent") or ""
+            except Exception:
+                # Fallback for older Selenium/WebElement implementations
+                raw = center.get_attribute("textContent") or ""
+            g1, g2 = _extract_score_from_text(raw)
+            if g1 is not None and g2 is not None:
+                home_goals = home_goals or g1
+                away_goals = away_goals or g2
+        except Exception:
+            pass
+    # fallback score anywhere inside participants block (results pages)
+    if home_goals is None or away_goals is None:
+        try:
+            try:
+                raw = part.get_dom_attribute("textContent") or ""
+            except Exception:
+                raw = part.get_attribute("textContent") or ""
+            g1, g2 = _extract_score_from_text(raw)
+            if g1 is not None and g2 is not None:
+                home_goals = home_goals or g1
+                away_goals = away_goals or g2
+        except Exception:
+            pass
+    # final fallback: parse hidden score from innerHTML
+    if home_goals is None or away_goals is None:
+        try:
+            score_el = row.find_element(By.XPATH, ".//div[contains(@class,'text-gray-dark') and contains(@class,'relative')]")
+            try:
+                raw = score_el.get_dom_attribute("innerHTML") or ""
+            except Exception:
+                raw = score_el.get_attribute("innerHTML") or ""
+            if not raw:
+                raw = score_el.get_attribute("innerText") or ""
+            g1, g2 = _extract_score_from_text(raw)
+            if g1 is not None and g2 is not None:
+                home_goals = home_goals or g1
+                away_goals = away_goals or g2
+        except Exception:
+            pass
+    # JS fallback: read textContent even if the score nodes are hidden
+    if home_goals is None or away_goals is None:
+        try:
+            selectors = [
+                "div.text-gray-dark.relative div.flex.gap-1",
+                "div.text-gray-dark.relative",
+                "div[data-testid='event-participants'] div.text-gray-dark",
+            ]
+            for sel in selectors:
+                raw = _get_text_from_selector(row, sel)
+                g1, g2 = _extract_score_from_text(raw)
+                if g1 is not None and g2 is not None:
+                    home_goals = home_goals or g1
+                    away_goals = away_goals or g2
+                    break
         except Exception:
             pass
 
     result = f"{home_goals}-{away_goals}" if (home_goals is not None and away_goals is not None) else None
+    if result is None and DEBUG_SCRAPE:
+        try:
+            try:
+                raw_text = part.get_dom_attribute("textContent") or ""
+            except Exception:
+                raw_text = part.get_attribute("textContent") or ""
+            try:
+                raw_html = part.get_dom_attribute("innerHTML") or ""
+            except Exception:
+                raw_html = part.get_attribute("innerHTML") or ""
+            print("🔍 DEBUG missing result; participants text:", raw_text[:400].replace("\n", " "))
+            print("🔍 DEBUG missing result; participants html:", raw_html[:400].replace("\n", " "))
+            try:
+                row_html = row.get_dom_attribute("innerHTML") or ""
+            except Exception:
+                row_html = row.get_attribute("innerHTML") or ""
+            print("🔍 DEBUG missing result; row html:", row_html[:400].replace("\n", " "))
+        except Exception:
+            pass
     return home_name, away_name, result
 
 def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
     odd_1 = odd_x = odd_2 = None
     bs_value = None
     try:
-        odd_cells = row.find_elements(By.XPATH, ".//following-sibling::div[contains(@data-testid,'odd-container')][position()<=3]")
+        odd_cells = row.find_elements(By.XPATH, ".//div[contains(@data-testid,'odd-container')]")
         def get_odd(cell):
             try:
                 p = cell.find_element(By.XPATH, ".//p[contains(@data-testid,'odd-container')]")
@@ -581,11 +704,49 @@ def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str
         if len(odd_cells) >= 3: odd_2 = get_odd(odd_cells[2])
     except Exception:
         pass
+    if not any([odd_1, odd_x, odd_2]):
+        try:
+            odd_cells = row.find_elements(
+                By.XPATH,
+                ".//*[contains(@data-testid,'odd') or contains(@class,'odd') or contains(@class,'odds')]"
+            )
+            raw_values: List[str] = []
+            for cell in odd_cells:
+                txt = (cell.text or "").strip()
+                if not txt:
+                    try:
+                        txt = cell.get_dom_attribute("textContent") or ""
+                    except Exception:
+                        txt = cell.get_attribute("textContent") or ""
+                    txt = txt.strip()
+                if txt:
+                    raw_values.append(txt)
+            # Extract odds from raw text candidates (decimal or American)
+            decs = []
+            for txt in raw_values:
+                for m in re.findall(r"[-+]?\d+(?:\.\d+)?", txt):
+                    try:
+                        val = float(m)
+                    except ValueError:
+                        continue
+                    if 1.01 <= abs(val) <= 10000:
+                        decs.append(f"{val:g}")
+                if len(decs) >= 3:
+                    break
+            if len(decs) >= 1: odd_1 = odd_1 or decs[0]
+            if len(decs) >= 2: odd_x = odd_x or decs[1]
+            if len(decs) >= 3: odd_2 = odd_2 or decs[2]
+        except Exception:
+            pass
     try:
-        bs_el = row.find_element(By.XPATH, ".//following-sibling::div[@data-testid='bookies-amount-item']//div[contains(@class,'height-content')]")
+        bs_el = row.find_element(By.XPATH, ".//div[@data-testid='bookies-amount-item']//div[contains(@class,'height-content')]")
         bs_value = bs_el.text.strip()
     except Exception:
-        pass
+        try:
+            bs_el = row.find_element(By.XPATH, ".//*[contains(@data-testid,'bookies') or contains(@data-testid,'bookmaker')]")
+            bs_value = bs_el.text.strip()
+        except Exception:
+            pass
     return odd_1, odd_x, odd_2, bs_value
 
 # -------------------- Data model --------------------
@@ -605,6 +766,22 @@ class MatchRow:
     odd_2: Optional[str]
     bets: Optional[str]
 
+# -------------------- Row de-dup helpers --------------------
+def _row_key(date_str: Optional[str], time_str: Optional[str], home: Optional[str], away: Optional[str]) -> Tuple[str, str, str, str]:
+    return (
+        (date_str or "").strip(),
+        (time_str or "").strip(),
+        (home or "").strip().lower(),
+        (away or "").strip().lower(),
+    )
+
+def _row_quality(r: MatchRow) -> int:
+    score = 0
+    for v in (r.date_str, r.time_str, r.home_team, r.away_team, r.result, r.odd_1, r.odd_X, r.odd_2, r.bets):
+        if v:
+            score += 1
+    return score
+
 # -------------------- Season helpers --------------------
 def infer_season_start(league: LeagueConfig, d: Optional[date]) -> int:
     if d is None:
@@ -617,11 +794,12 @@ def infer_season_start(league: LeagueConfig, d: Optional[date]) -> int:
 # -------------------- Scrape page (results; season fixed) --------------------
 def collect_rows_on_page(driver, country: str, league: str, season_start: int, page_num: int) -> List[MatchRow]:
     rows: List[MatchRow] = []
+    row_map: Dict[Tuple[str, str, str, str], MatchRow] = {}
     scroll_to_bottom_until_stable(driver, expected_rows_per_page=50, min_stable_checks=2)
 
     row_boxes = driver.find_elements(
         By.XPATH,
-        "//div[@data-testid='game-row']/ancestor::div[contains(@class,'group') and contains(@class,'flex')]"
+        "//div[@data-testid='game-row' or @data-testid='event-row' or contains(@class,'eventRow') or contains(@class,'event__match')]"
     )
     for box in row_boxes:
         try:
@@ -629,29 +807,34 @@ def collect_rows_on_page(driver, country: str, league: str, season_start: int, p
             tm = extract_time(box)
             home, away, result = extract_teams_and_result(box)
             o1, ox, o2, bs = extract_odds_and_bs(box)
-
-            print(f"[{country}][{league}][{season_start}] p{page_num} | {date_s or '?'} {tm or '?'} | "
-                  f"{home or '?'} vs {away or '?'} -> {result or '?'} | 1:{o1 or '?'} X:{ox or '?'} 2:{o2 or '?'} | bets:{bs or '?'}")
-
-            rows.append(MatchRow(
+            candidate = MatchRow(
                 country=country, league=league, season_start=season_start, page=page_num,
                 date_str=date_s, time_str=tm, home_team=home, away_team=away, result=result,
                 odd_1=o1, odd_X=ox, odd_2=o2, bets=bs
-            ))
+            )
+            key = _row_key(date_s, tm, home, away)
+            prev = row_map.get(key)
+            if prev is None or _row_quality(candidate) > _row_quality(prev):
+                row_map[key] = candidate
         except StaleElementReferenceException:
             continue
         except Exception:
             continue
+    for r in row_map.values():
+        print(f"[{country}][{league}][{season_start}] p{page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
+              f"{r.home_team or '?'} vs {r.away_team or '?'} -> {r.result or '?'} | 1:{r.odd_1 or '?'} X:{r.odd_X or '?'} 2:{r.odd_2 or '?'} | bets:{r.bets or '?'}")
+        rows.append(r)
     return rows
 
 # -------------------- Scrape page (next matches; season inferred per row) --------------------
 def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_num: int) -> List[MatchRow]:
     rows: List[MatchRow] = []
+    row_map: Dict[Tuple[str, str, str, str], MatchRow] = {}
     scroll_to_bottom_until_stable(driver, expected_rows_per_page=50, min_stable_checks=2)
 
     row_boxes = driver.find_elements(
         By.XPATH,
-        "//div[@data-testid='game-row']/ancestor::div[contains(@class,'group') and contains(@class,'flex')]"
+        "//div[@data-testid='game-row' or @data-testid='event-row' or contains(@class,'eventRow') or contains(@class,'event__match')]"
     )
     for box in row_boxes:
         try:
@@ -662,20 +845,24 @@ def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_n
             tm = extract_time(box)
             home, away, result = extract_teams_and_result(box)  # likely None
             o1, ox, o2, bs = extract_odds_and_bs(box)
-
-            print(f"[{league_cfg.country}][{league_cfg.league_name}][{season_start}] p{page_num} | {date_s or '?'} {tm or '?'} | "
-                  f"{home or '?'} vs {away or '?'} -> {result or '-'} | 1:{o1 or '-'} X:{ox or '-'} 2:{o2 or '-'} | bets:{bs or '-'}")
-
-            rows.append(MatchRow(
+            candidate = MatchRow(
                 country=league_cfg.country, league=league_cfg.league_name,
                 season_start=season_start, page=page_num,
                 date_str=date_s, time_str=tm, home_team=home, away_team=away, result=result,
                 odd_1=o1, odd_X=ox, odd_2=o2, bets=bs
-            ))
+            )
+            key = _row_key(date_s, tm, home, away)
+            prev = row_map.get(key)
+            if prev is None or _row_quality(candidate) > _row_quality(prev):
+                row_map[key] = candidate
         except StaleElementReferenceException:
             continue
         except Exception:
             continue
+    for r in row_map.values():
+        print(f"[{league_cfg.country}][{league_cfg.league_name}][{season_start}] p{page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
+              f"{r.home_team or '?'} vs {r.away_team or '?'} -> {r.result or '-'} | 1:{r.odd_1 or '-'} X:{r.odd_X or '-'} 2:{r.odd_2 or '-'} | bets:{r.bets or '-'}")
+        rows.append(r)
     return rows
 
 # -------------------- Database checking helpers --------------------
@@ -826,9 +1013,10 @@ def build_insert_values(rows: List[MatchRow]) -> List[Tuple]:
         ))
     return vals
 
-def insert_rows(conn, values: List[Tuple]):
+def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
     """
     Insert rows into odds table, skipping duplicates based on match identity.
+    If allow_update=True, existing rows will be updated with any new non-null fields.
     Note: Since there's no unique constraint on the match columns, we check for
     existing rows before inserting to avoid duplicates.
     """
@@ -837,6 +1025,7 @@ def insert_rows(conn, values: List[Tuple]):
     
     # Filter out rows that already exist using a single query for better performance
     filtered_values = []
+    updated_count = 0
     with conn.cursor() as check_cur:
         # Build a query to check all rows at once using VALUES
         # This is more efficient than checking one by one
@@ -867,9 +1056,46 @@ def insert_rows(conn, values: List[Tuple]):
             
             if not exists:
                 filtered_values.append(val)
+            elif allow_update:
+                update_sql = SQL("""
+                    UPDATE {table}
+                    SET result = COALESCE(%s, result),
+                        odd_1 = COALESCE(%s, odd_1),
+                        "odd_X" = COALESCE(%s, "odd_X"),
+                        odd_2 = COALESCE(%s, odd_2),
+                        bets = COALESCE(%s, bets)
+                    WHERE country = %s
+                      AND league = %s
+                      AND season = %s
+                      AND date = %s
+                      AND (time = %s OR (time IS NULL AND %s IS NULL))
+                      AND home_team = %s
+                      AND away_team = %s
+                """).format(table=Identifier(TABLE))
+                check_cur.execute(update_sql, (
+                    val[7],  # result
+                    val[8],  # odd_1
+                    val[9],  # odd_X
+                    val[10], # odd_2
+                    val[11], # bets
+                    val[0],  # country
+                    val[1],  # league
+                    val[2],  # season
+                    val[3],  # date
+                    val[4],  # time
+                    val[4],  # time (for NULL check)
+                    val[5],  # home_team
+                    val[6],  # away_team
+                ))
+                if check_cur.rowcount > 0:
+                    updated_count += 1
     
     if not filtered_values:
-        print(f"   ⏭️  All {len(values)} rows already exist, skipping insert")
+        if updated_count > 0:
+            conn.commit()
+            print(f"   🔄 Updated {updated_count} existing rows")
+        else:
+            print(f"   ⏭️  All {len(values)} rows already exist, skipping insert")
         return
     
     if len(filtered_values) < len(values):
@@ -883,6 +1109,8 @@ def insert_rows(conn, values: List[Tuple]):
     with conn.cursor() as cur:
         cur.executemany(sql, filtered_values)
     conn.commit()
+    if updated_count > 0:
+        print(f"   🔄 Updated {updated_count} existing rows")
     print(f"   ✅ Inserted {len(filtered_values)} rows")
 
 # -------------------- Orchestration --------------------
@@ -895,6 +1123,8 @@ FORCE_RESCRAPE_ALL = False        # Force rescrape everything (ignores all skip 
 MIN_MATCHES_COMPLETE = 300        # Minimum matches to consider a season "complete"
 SKIP_CURRENT_SEASON = False       # Whether to skip current/future seasons (usually False)
 ALWAYS_SCRAPE_NEXT_MATCHES = True # Always scrape next matches regardless of skip settings
+ALWAYS_REFRESH_LATEST_SEASON = True  # Always refresh latest season to update results/odds
+DEBUG_SCRAPE = True              # Enable verbose debug logging for missing fields
 
 def scrape_results_for_league(conn, driver, league: LeagueConfig):
     # Check what seasons already exist
@@ -903,12 +1133,22 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
     print(f"Seasons to scrape: {league.seasons}")
     print(f"Existing seasons in DB: {existing_seasons}")
     
+    latest_configured_season = max(league.seasons)
     for start_year in league.seasons:
+        # Pre-calc latest date for "new matches after last seen" logic
+        date_range = get_date_range_for_season(conn, league.country, league.league_name, start_year)
+        latest_date = date_range[1]
+        should_refresh_for_new = False
+        if latest_date:
+            today = datetime.now().date()
+            is_latest_configured_season = start_year == max(league.seasons)
+            if latest_date < today and is_latest_configured_season:
+                should_refresh_for_new = True
+
         # Check if we should skip this season
         if SKIP_EXISTING_SEASONS and not FORCE_RESCRAPE_ALL:
             if should_skip_season(conn, league.country, league.league_name, start_year, FORCE_RESCRAPE_ALL):
                 match_count = count_matches_in_season(conn, league.country, league.league_name, start_year)
-                date_range = get_date_range_for_season(conn, league.country, league.league_name, start_year)
                 
                 # Check for significant gaps that might warrant re-scraping
                 if has_significant_gaps(conn, league.country, league.league_name, start_year):
@@ -919,6 +1159,10 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
                         if gap_days > 30:
                             print(f"   📅 Gap: {gap_start} to {gap_end} ({gap_days} days)")
                     print(f"   ✅ Proceeding to re-scrape to fill gaps...")
+                elif should_refresh_for_new:
+                    print(f"🔁 Last DB date {latest_date} is before today; checking for new matches on OddsPortal...")
+                elif ALWAYS_REFRESH_LATEST_SEASON and start_year == latest_configured_season:
+                    print("🔄 Latest season refresh enabled; checking for updated results/odds...")
                 else:
                     print(f"⏭️  SKIPPING {start_year} - already has {match_count} matches (dates: {date_range[0]} to {date_range[1]})")
                     continue
@@ -962,7 +1206,7 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
             while True:
                 print(f"-- Page {page_idx}")
                 rows = collect_rows_on_page(driver, league.country, league.league_name, start_year, page_idx)
-                insert_rows(conn, build_insert_values(rows))
+                insert_rows(conn, build_insert_values(rows), allow_update=(start_year == latest_configured_season))
                 if not click_next_page(driver):
                     break
                 page_idx += 1
@@ -970,7 +1214,7 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
             for p in range(1, total_pages + 1):
                 print(f"-- Page {p}/{total_pages}")
                 rows = collect_rows_on_page(driver, league.country, league.league_name, start_year, p)
-                insert_rows(conn, build_insert_values(rows))
+                insert_rows(conn, build_insert_values(rows), allow_update=(start_year == latest_configured_season))
                 if p < total_pages and not click_next_page(driver):
                     print("Next not found/disabled early; stopping this season.")
                     break
@@ -1036,7 +1280,16 @@ def print_scraping_summary(conn):
     print("="*80)
 
 def main(headless=True):
-    conn = psycopg.connect(**DB_CONFIG)
+    load_dotenv()
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL is not set in .env or environment")
+    # Normalize SQLAlchemy-style URLs for psycopg
+    if "postgresql+psycopg://" in database_url:
+        database_url = database_url.replace("postgresql+psycopg://", "postgresql://", 1)
+    elif "postgresql+psycopg2://" in database_url:
+        database_url = database_url.replace("postgresql+psycopg2://", "postgresql://", 1)
+    conn = psycopg.connect(database_url)
     driver = None
     try:
         # Show summary before starting
