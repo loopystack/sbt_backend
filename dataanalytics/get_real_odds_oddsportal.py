@@ -56,41 +56,41 @@ class LeagueConfig:
         return f"{self.base}{slug}/"
 
 # --- Leagues ---
-# BRAZIL = LeagueConfig(
-#     country="brazil",
-#     league_name="Serie A Betano",
-#     base="https://www.oddsportal.com/football/brazil/",
-#     kind="single_year",
-#     comp_slug="serie-a",
-#     seasons=[2021, 2022, 2023, 2024, 2025],
-#     next_slug="serie-a-betano",
-#     special_slugs={2024: "serie-a-betano-2024/results/", 2025: "serie-a-betano/results/"},
-# )
-# ENGLAND = LeagueConfig("england", "Premier League", "https://www.oddsportal.com/football/england/", "two_year", "premier-league", [2021, 2022, 2023, 2024, 2025])
-# SPAIN   = LeagueConfig("spain",   "LaLiga",          "https://www.oddsportal.com/football/spain/",   "two_year", "laliga",          [2021, 2022, 2023, 2024, 2025])
+BRAZIL = LeagueConfig(
+    country="brazil",
+    league_name="Serie A Betano",
+    base="https://www.oddsportal.com/football/brazil/",
+    kind="single_year",
+    comp_slug="serie-a",
+    seasons=[2021, 2022, 2023, 2024, 2025],
+    next_slug="serie-a-betano",
+    special_slugs={2024: "serie-a-betano-2024/results/", 2025: "serie-a-betano/results/"},
+)
+ENGLAND = LeagueConfig("england", "Premier League", "https://www.oddsportal.com/football/england/", "two_year", "premier-league", [2021, 2022, 2023, 2024, 2025])
+SPAIN   = LeagueConfig("spain",   "LaLiga",          "https://www.oddsportal.com/football/spain/",   "two_year", "laliga",          [2021, 2022, 2023, 2024, 2025])
 GERMANY = LeagueConfig("germany", "Bundesliga",      "https://www.oddsportal.com/football/germany/","two_year", "bundesliga",      [2021, 2022, 2023, 2024, 2025])
-# ITALY   = LeagueConfig("italy",   "Serie A",         "https://www.oddsportal.com/football/italy/",  "two_year", "serie-a",         [2021, 2022, 2023, 2024, 2025])
-# FRANCE  = LeagueConfig("france",  "Ligue 1",         "https://www.oddsportal.com/football/france/", "two_year", "ligue-1",         [2021, 2022, 2023, 2024, 2025])
-# ARGENTINA = LeagueConfig("argentina","Torneo Betano","https://www.oddsportal.com/football/argentina/","single_year","torneo-betano",[2021, 2022, 2023, 2024, 2025])
-# PORTUGAL  = LeagueConfig("portugal","Liga Portugal", "https://www.oddsportal.com/football/portugal/","two_year","liga-portugal",[2021, 2022, 2023, 2024, 2025])
-# NETHERLANDS = LeagueConfig("netherlands","Eredivisie","https://www.oddsportal.com/football/netherlands/","two_year","eredivisie",[2021, 2022, 2023, 2024, 2025])
-# BELGIUM  = LeagueConfig("belgium","Jupiler Pro League","https://www.oddsportal.com/football/belgium/","two_year","jupiler-pro-league",[2021, 2022, 2023, 2024, 2025])
-# TURKEY   = LeagueConfig("turkey","Super Lig","https://www.oddsportal.com/football/turkey/","two_year","super-lig",[2021, 2022, 2023, 2024, 2025])
-# RUSSIA   = LeagueConfig("russia","Premier League","https://www.oddsportal.com/football/russia/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
-# UKRAINE  = LeagueConfig("ukraine","Premier League","https://www.oddsportal.com/football/ukraine/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
-# POLAND   = LeagueConfig("poland","Ekstraklasa","https://www.oddsportal.com/football/poland/","two_year","ekstraklasa",[2021, 2022, 2023, 2024, 2025])
-# CZECH    = LeagueConfig("czech-republic","Fortuna Liga","https://www.oddsportal.com/football/czech-republic/","two_year","fortuna-liga",[2021, 2022, 2023, 2024, 2025])
-# AUSTRIA  = LeagueConfig("austria","Bundesliga","https://www.oddsportal.com/football/austria/","two_year","bundesliga",[2021, 2022, 2023, 2024, 2025])
-# SWITZERLAND = LeagueConfig("switzerland","Super League","https://www.oddsportal.com/football/switzerland/","two_year","super-league",[2021, 2022, 2023, 2024, 2025])
+ITALY   = LeagueConfig("italy",   "Serie A",         "https://www.oddsportal.com/football/italy/",  "two_year", "serie-a",         [2021, 2022, 2023, 2024, 2025])
+FRANCE  = LeagueConfig("france",  "Ligue 1",         "https://www.oddsportal.com/football/france/", "two_year", "ligue-1",         [2021, 2022, 2023, 2024, 2025])
+ARGENTINA = LeagueConfig("argentina","Torneo Betano","https://www.oddsportal.com/football/argentina/","single_year","torneo-betano",[2021, 2022, 2023, 2024, 2025])
+PORTUGAL  = LeagueConfig("portugal","Liga Portugal", "https://www.oddsportal.com/football/portugal/","two_year","liga-portugal",[2021, 2022, 2023, 2024, 2025])
+NETHERLANDS = LeagueConfig("netherlands","Eredivisie","https://www.oddsportal.com/football/netherlands/","two_year","eredivisie",[2021, 2022, 2023, 2024, 2025])
+BELGIUM  = LeagueConfig("belgium","Jupiler Pro League","https://www.oddsportal.com/football/belgium/","two_year","jupiler-pro-league",[2021, 2022, 2023, 2024, 2025])
+TURKEY   = LeagueConfig("turkey","Super Lig","https://www.oddsportal.com/football/turkey/","two_year","super-lig",[2021, 2022, 2023, 2024, 2025])
+RUSSIA   = LeagueConfig("russia","Premier League","https://www.oddsportal.com/football/russia/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
+UKRAINE  = LeagueConfig("ukraine","Premier League","https://www.oddsportal.com/football/ukraine/","two_year","premier-league",[2021, 2022, 2023, 2024, 2025])
+POLAND   = LeagueConfig("poland","Ekstraklasa","https://www.oddsportal.com/football/poland/","two_year","ekstraklasa",[2021, 2022, 2023, 2024, 2025])
+CZECH    = LeagueConfig("czech-republic","Fortuna Liga","https://www.oddsportal.com/football/czech-republic/","two_year","fortuna-liga",[2021, 2022, 2023, 2024, 2025])
+AUSTRIA  = LeagueConfig("austria","Bundesliga","https://www.oddsportal.com/football/austria/","two_year","bundesliga",[2021, 2022, 2023, 2024, 2025])
+SWITZERLAND = LeagueConfig("switzerland","Super League","https://www.oddsportal.com/football/switzerland/","two_year","super-league",[2021, 2022, 2023, 2024, 2025])
 
-# LEAGUES: List[LeagueConfig] = [
-#     BRAZIL, ENGLAND, SPAIN,
-#     GERMANY, ITALY, FRANCE,
-#     PORTUGAL, NETHERLANDS, BELGIUM, TURKEY, 
-#     RUSSIA, UKRAINE, POLAND, AUSTRIA, SWITZERLAND, 
-# ]
+LEAGUES: List[LeagueConfig] = [
+    BRAZIL, ENGLAND, SPAIN,
+    GERMANY, ITALY, FRANCE,
+    PORTUGAL, NETHERLANDS, BELGIUM, TURKEY, 
+    RUSSIA, UKRAINE, POLAND, AUSTRIA, SWITZERLAND, 
+]
 
-LEAGUES: List[LeagueConfig] = [GERMANY]
+# LEAGUES: List[LeagueConfig] = [GERMANY]
 
 # -------------------- Chrome Version Detection --------------------
 def get_chrome_version() -> Optional[int]:
@@ -476,10 +476,25 @@ def get_total_pages(driver) -> Optional[int]:
     return max(nums) if nums else None
 
 # -------------------- Date handling --------------------
-# Accepts “24 Apr 2022”, “24 April 2022”, even when surrounded by text like “24 Apr 2022 – Relegation”
+# Accepts “24 Apr 2022”, “24 April 2022”, and headers like “Today, 26 Jan”
 DATE_PAT = re.compile(r"(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})")
+DATE_NOYEAR_PAT = re.compile(r"(\d{1,2})\s+([A-Za-z]{3,})")
+MONTH_MAP = {
+    "jan": 1, "january": 1,
+    "feb": 2, "february": 2,
+    "mar": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "may": 5,
+    "jun": 6, "june": 6,
+    "jul": 7, "july": 7,
+    "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10,
+    "nov": 11, "november": 11,
+    "dec": 12, "december": 12,
+}
 
-def extract_date_from_text(raw: str) -> Optional[str]:
+def extract_date_from_text(raw: str, season_start: Optional[int] = None) -> Optional[str]:
     """
     Return the matched 'DD Mon YYYY' or 'DD Month YYYY' substring from any header line,
     ignoring trailing qualifiers (e.g., '– Relegation', '– Play-offs').
@@ -488,9 +503,34 @@ def extract_date_from_text(raw: str) -> Optional[str]:
         return None
     raw = raw.strip()
     m = DATE_PAT.search(raw)
-    return m.group(0) if m else None
+    if m:
+        return m.group(0)
+    # Handle headers like "Today, 26 Jan" / "Yesterday, 25 Jan"
+    m2 = DATE_NOYEAR_PAT.search(raw)
+    if not m2:
+        return None
+    day = int(m2.group(1))
+    month_name = m2.group(2).lower()
+    month = MONTH_MAP.get(month_name)
+    if not month:
+        return None
+    if "today" in raw.lower():
+        d = datetime.now().date()
+        return d.strftime("%d %b %Y")
+    if "yesterday" in raw.lower():
+        d = (datetime.now() - timedelta(days=1)).date()
+        return d.strftime("%d %b %Y")
+    if season_start is None:
+        year = datetime.now().year
+        # If month is far in future, assume previous year (season crossover)
+        if month > datetime.now().month + 1:
+            year -= 1
+    else:
+        # For two-year seasons: Jul–Dec -> start_year; Jan–Jun -> start_year+1
+        year = season_start if month >= 7 else season_start + 1
+    return f"{day:02d} {month_name.title()} {year}"
 
-def extract_date_from_row(row) -> Optional[str]:
+def extract_date_from_row(row, season_start: Optional[int] = None) -> Optional[str]:
     try:
         date_el = row.find_element(
             By.XPATH,
@@ -499,13 +539,46 @@ def extract_date_from_row(row) -> Optional[str]:
         raw = date_el.text.strip()
         # print for debug if you want:
         # print("HEADER RAW:", raw)
-        return extract_date_from_text(raw)
+        return extract_date_from_text(raw, season_start=season_start)
     except Exception:
         pass
     try:
         date_el = row.find_element(By.XPATH, ".//*[contains(@data-testid,'date') or contains(@class,'date')]")
         raw = date_el.text.strip()
-        return extract_date_from_text(raw) or raw
+        return extract_date_from_text(raw, season_start=season_start) or raw
+    except Exception:
+        pass
+    # JS fallback: find nearest eventRow/date header node and read its date text
+    try:
+        raw = row._parent.execute_script(
+            """
+            const row = arguments[0];
+            const eventRow = row.closest(".eventRow") || row.closest("[data-testid='event-row']");
+            if (eventRow) {
+                const header = eventRow.querySelector("[data-testid='date-header'] div");
+                if (header) return header.textContent || "";
+            }
+            let prev = row.previousElementSibling;
+            while (prev) {
+                const header = prev.querySelector?.("[data-testid='date-header'] div");
+                if (header) return header.textContent || "";
+                prev = prev.previousElementSibling;
+            }
+            const all = Array.from(document.querySelectorAll("[data-testid='date-header'] div"));
+            if (!all.length) return "";
+            const rowTop = row.getBoundingClientRect().top;
+            let nearest = null;
+            let minDiff = Infinity;
+            for (const el of all) {
+                const diff = rowTop - el.getBoundingClientRect().top;
+                if (diff >= 0 && diff < minDiff) { minDiff = diff; nearest = el; }
+            }
+            return nearest ? (nearest.textContent || "") : "";
+            """,
+            row,
+        ) or ""
+        raw = raw.strip()
+        return extract_date_from_text(raw, season_start=season_start) or raw or None
     except Exception:
         return None
 
@@ -625,7 +698,10 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
             try:
                 raw = part.get_dom_attribute("textContent") or ""
             except Exception:
-                raw = part.get_attribute("textContent") or ""
+                try:
+                    raw = part.get_dom_attribute("textContent") or ""
+                except Exception:
+                    raw = part.get_attribute("textContent") or ""
             g1, g2 = _extract_score_from_text(raw)
             if g1 is not None and g2 is not None:
                 home_goals = home_goals or g1
@@ -639,9 +715,15 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
             try:
                 raw = score_el.get_dom_attribute("innerHTML") or ""
             except Exception:
-                raw = score_el.get_attribute("innerHTML") or ""
+                try:
+                    raw = score_el.get_dom_attribute("innerHTML") or ""
+                except Exception:
+                    raw = score_el.get_attribute("innerHTML") or ""
             if not raw:
-                raw = score_el.get_attribute("innerText") or ""
+                try:
+                    raw = score_el.get_dom_attribute("innerText") or ""
+                except Exception:
+                    raw = score_el.get_attribute("innerText") or ""
             g1, g2 = _extract_score_from_text(raw)
             if g1 is not None and g2 is not None:
                 home_goals = home_goals or g1
@@ -792,21 +874,50 @@ def infer_season_start(league: LeagueConfig, d: Optional[date]) -> int:
     return d.year if d.month >= 7 else d.year - 1
 
 # -------------------- Scrape page (results; season fixed) --------------------
+def _iter_game_rows_with_headers(driver) -> List[Tuple[Optional[str], object]]:
+    """
+    Return a list of (header_date_text, game_row_element) in DOM order.
+    Uses a JS querySelectorAll to preserve document order across headers and rows.
+    """
+    try:
+        nodes = driver.execute_script(
+            "return Array.from(document.querySelectorAll(\"[data-testid='secondary-header'], [data-testid='game-row']\"));"
+        ) or []
+    except Exception:
+        nodes = driver.find_elements(By.XPATH, "//div[@data-testid='secondary-header'] | //div[@data-testid='game-row']")
+    out: List[Tuple[Optional[str], object]] = []
+    current_header: Optional[str] = None
+    for el in nodes:
+        try:
+            dt = el.get_dom_attribute("data-testid") or el.get_attribute("data-testid")
+        except Exception:
+            dt = None
+        if dt == "secondary-header":
+            try:
+                header_el = el.find_element(By.XPATH, ".//div[@data-testid='date-header']//div")
+                current_header = header_el.text.strip()
+            except Exception:
+                current_header = None
+            continue
+        if dt == "game-row":
+            out.append((current_header, el))
+    return out
+
+
 def collect_rows_on_page(driver, country: str, league: str, season_start: int, page_num: int) -> List[MatchRow]:
     rows: List[MatchRow] = []
     row_map: Dict[Tuple[str, str, str, str], MatchRow] = {}
     scroll_to_bottom_until_stable(driver, expected_rows_per_page=50, min_stable_checks=2)
 
-    row_boxes = driver.find_elements(
-        By.XPATH,
-        "//div[@data-testid='game-row' or @data-testid='event-row' or contains(@class,'eventRow') or contains(@class,'event__match')]"
-    )
-    for box in row_boxes:
+    for header_date_text, box in _iter_game_rows_with_headers(driver):
         try:
-            date_s = extract_date_from_row(box)           # <-- sanitized now
+            header_date = extract_date_from_text(header_date_text or "", season_start=season_start) if header_date_text else None
+            date_s = extract_date_from_row(box, season_start=season_start) or header_date
             tm = extract_time(box)
             home, away, result = extract_teams_and_result(box)
             o1, ox, o2, bs = extract_odds_and_bs(box)
+            if not home and not away:
+                continue
             candidate = MatchRow(
                 country=country, league=league, season_start=season_start, page=page_num,
                 date_str=date_s, time_str=tm, home_team=home, away_team=away, result=result,
@@ -820,8 +931,9 @@ def collect_rows_on_page(driver, country: str, league: str, season_start: int, p
             continue
         except Exception:
             continue
+
     for r in row_map.values():
-        print(f"[{country}][{league}][{season_start}] p{page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
+        print(f"[{country}][{league}][{season_start}] Page {page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
               f"{r.home_team or '?'} vs {r.away_team or '?'} -> {r.result or '?'} | 1:{r.odd_1 or '?'} X:{r.odd_X or '?'} 2:{r.odd_2 or '?'} | bets:{r.bets or '?'}")
         rows.append(r)
     return rows
@@ -832,19 +944,17 @@ def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_n
     row_map: Dict[Tuple[str, str, str, str], MatchRow] = {}
     scroll_to_bottom_until_stable(driver, expected_rows_per_page=50, min_stable_checks=2)
 
-    row_boxes = driver.find_elements(
-        By.XPATH,
-        "//div[@data-testid='game-row' or @data-testid='event-row' or contains(@class,'eventRow') or contains(@class,'event__match')]"
-    )
-    for box in row_boxes:
+    for header_date_text, box in _iter_game_rows_with_headers(driver):
         try:
-            date_s = extract_date_from_row(box)          # sanitized
+            date_s = extract_date_from_row(box) or header_date_text
             parsed_date = _parse_date(date_s)
             season_start = infer_season_start(league_cfg, parsed_date)
 
             tm = extract_time(box)
             home, away, result = extract_teams_and_result(box)  # likely None
             o1, ox, o2, bs = extract_odds_and_bs(box)
+            if not home and not away:
+                continue
             candidate = MatchRow(
                 country=league_cfg.country, league=league_cfg.league_name,
                 season_start=season_start, page=page_num,
@@ -859,8 +969,9 @@ def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_n
             continue
         except Exception:
             continue
+
     for r in row_map.values():
-        print(f"[{league_cfg.country}][{league_cfg.league_name}][{season_start}] p{page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
+        print(f"[{league_cfg.country}][{league_cfg.league_name}][{season_start}] Page {page_num} | {r.date_str or '?'} {r.time_str or '?'} | "
               f"{r.home_team or '?'} vs {r.away_team or '?'} -> {r.result or '-'} | 1:{r.odd_1 or '-'} X:{r.odd_X or '-'} 2:{r.odd_2 or '-'} | bets:{r.bets or '-'}")
         rows.append(r)
     return rows
@@ -1026,6 +1137,7 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
     # Filter out rows that already exist using a single query for better performance
     filtered_values = []
     updated_count = 0
+    exists_count = 0
     with conn.cursor() as check_cur:
         # Build a query to check all rows at once using VALUES
         # This is more efficient than checking one by one
@@ -1057,6 +1169,7 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
             if not exists:
                 filtered_values.append(val)
             elif allow_update:
+                exists_count += 1
                 update_sql = SQL("""
                     UPDATE {table}
                     SET result = COALESCE(%s, result),
@@ -1091,9 +1204,9 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
                     updated_count += 1
     
     if not filtered_values:
-        if updated_count > 0:
+        if allow_update:
             conn.commit()
-            print(f"   🔄 Updated {updated_count} existing rows")
+            print(f"   🔄 Checked {exists_count} existing rows; updated {updated_count}")
         else:
             print(f"   ⏭️  All {len(values)} rows already exist, skipping insert")
         return
@@ -1109,8 +1222,8 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
     with conn.cursor() as cur:
         cur.executemany(sql, filtered_values)
     conn.commit()
-    if updated_count > 0:
-        print(f"   🔄 Updated {updated_count} existing rows")
+    if allow_update:
+        print(f"   🔄 Checked {exists_count} existing rows; updated {updated_count}")
     print(f"   ✅ Inserted {len(filtered_values)} rows")
 
 # -------------------- Orchestration --------------------
@@ -1124,6 +1237,7 @@ MIN_MATCHES_COMPLETE = 300        # Minimum matches to consider a season "comple
 SKIP_CURRENT_SEASON = False       # Whether to skip current/future seasons (usually False)
 ALWAYS_SCRAPE_NEXT_MATCHES = True # Always scrape next matches regardless of skip settings
 ALWAYS_REFRESH_LATEST_SEASON = True  # Always refresh latest season to update results/odds
+SCRAPE_HISTORICAL_ONCE = True     # Only scrape past seasons if DB has no data yet
 DEBUG_SCRAPE = True              # Enable verbose debug logging for missing fields
 
 def scrape_results_for_league(conn, driver, league: LeagueConfig):
@@ -1134,7 +1248,7 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
     print(f"Existing seasons in DB: {existing_seasons}")
     
     latest_configured_season = max(league.seasons)
-    for start_year in league.seasons:
+    for start_year in sorted(league.seasons, reverse=True):
         # Pre-calc latest date for "new matches after last seen" logic
         date_range = get_date_range_for_season(conn, league.country, league.league_name, start_year)
         latest_date = date_range[1]
@@ -1144,6 +1258,12 @@ def scrape_results_for_league(conn, driver, league: LeagueConfig):
             is_latest_configured_season = start_year == max(league.seasons)
             if latest_date < today and is_latest_configured_season:
                 should_refresh_for_new = True
+        # If historical data already exists, skip older seasons after initial load
+        if SCRAPE_HISTORICAL_ONCE and start_year != latest_configured_season:
+            existing_count = count_matches_in_season(conn, league.country, league.league_name, start_year)
+            if existing_count > 0:
+                print(f"⏭️  SKIPPING historical season {start_year} (already has {existing_count} matches)")
+                continue
 
         # Check if we should skip this season
         if SKIP_EXISTING_SEASONS and not FORCE_RESCRAPE_ALL:
@@ -1306,6 +1426,11 @@ def main(headless=True):
             try:
                 # Properly close the driver
                 driver.quit()
+                try:
+                    # Prevent __del__ from attempting a second quit
+                    driver.quit = lambda *args, **kwargs: None
+                except Exception:
+                    pass
                 # Small delay to ensure cleanup completes before garbage collection
                 time.sleep(0.2)
             except (OSError, Exception) as e:

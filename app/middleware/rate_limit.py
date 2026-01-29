@@ -7,10 +7,18 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Optional
 
 from app.security.rate_limiter import rate_limiter, get_rate_limit_config
+from app.core.config import settings
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware to apply rate limiting based on endpoint patterns"""
+
+    def _is_localhost(self, request: Request) -> bool:
+        """Check if request is from localhost"""
+        client_host = request.client.host if request.client else None
+        if not client_host:
+            return False
+        return client_host in ["127.0.0.1", "localhost", "::1"] or client_host.startswith("192.168.") or client_host.startswith("10.")
 
     async def dispatch(self, request: Request, call_next):
         # Skip rate limiting for health checks and static files
@@ -19,6 +27,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Skip OPTIONS requests (CORS preflight)
         if request.method == "OPTIONS":
+            return await call_next(request)
+
+        # Skip rate limiting for localhost in development
+        if settings.ENV.lower() in ["dev", "development", "local"] and self._is_localhost(request):
             return await call_next(request)
 
         # Determine endpoint type and apply rate limiting
@@ -35,12 +47,34 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         max_requests=config["max_requests"]
                     )
                 except HTTPException as e:
-                    # Convert to proper JSON response
+                    # Convert to proper JSON response with CORS headers
+                    # Since we're returning early, CORS middleware won't process this response
                     from starlette.responses import JSONResponse
+                    origin = request.headers.get("origin")
+                    cors_headers = {}
+                    if origin:
+                        # Allow common localhost origins for development
+                        allowed_origins = [
+                            "http://localhost:5173",
+                            "http://127.0.0.1:5173",
+                            "http://localhost:3000",
+                            "http://127.0.0.1:3000",
+                            "http://localhost:5000",
+                            "http://127.0.0.1:5000",
+                        ]
+                        # Also check if it matches localhost pattern
+                        if origin in allowed_origins or any(origin.startswith(prefix) for prefix in ["http://localhost", "http://127.0.0.1"]):
+                            cors_headers["Access-Control-Allow-Origin"] = origin
+                            cors_headers["Access-Control-Allow-Credentials"] = "true"
+                            cors_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+                            cors_headers["Access-Control-Allow-Headers"] = "*"
                     return JSONResponse(
                         status_code=e.status_code,
                         content=e.detail,
-                        headers={"Retry-After": str(e.detail.get("retry_after", 60))}
+                        headers={
+                            **cors_headers,
+                            "Retry-After": str(e.detail.get("retry_after", 60))
+                        }
                     )
 
         # Continue with request

@@ -108,10 +108,13 @@ rate_limiter = RateLimiter()
 
 
 # Rate limit configurations
+# In development, use more lenient limits; in production, use stricter limits
+_is_dev = settings.ENV.lower() in ["dev", "development", "local"]
+
 RATE_LIMITS = {
-    # Auth endpoints
-    "auth_login": {"window_seconds": 60, "max_requests": 10, "key_type": "ip"},
-    "auth_register": {"window_seconds": 60, "max_requests": 5, "key_type": "ip"},
+    # Auth endpoints - more lenient in development
+    "auth_login": {"window_seconds": 60, "max_requests": 30 if _is_dev else 10, "key_type": "ip"},
+    "auth_register": {"window_seconds": 60, "max_requests": 15 if _is_dev else 5, "key_type": "ip"},
 
     # Withdrawal endpoints
     "withdraw_initiate": {"window_seconds": 60, "max_requests": 5, "key_type": "user"},

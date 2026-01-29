@@ -93,18 +93,25 @@ allowed_origins_list = [
     f"https://{settings.LOCALHOST_IP}:443",
     f"http://{settings.LOCALHOST_IP}:3000",
     f"http://{settings.LOCALHOST_IP}:5000",
+    f"http://{settings.LOCALHOST_IP}:5001",
     f"http://{settings.LOCALHOST_IP}:5173",
     f"http://{settings.LOCALHOST_IP}:8080",
     "http://localhost",
     "http://localhost:3000",
-    "http://localhost",
+    "http://localhost:5000",
+    "http://localhost:5001",
+    "http://localhost:5173",
     "http://localhost:8080",
     "http://127.0.0.1",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:5001",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:8080",
     "https://localhost",
+    "https://localhost:5173",
     "https://127.0.0.1",
+    "https://127.0.0.1:5173",
     # Production domain
     "https://probetflow.com",
     "http://probetflow.com",
@@ -116,7 +123,7 @@ allowed_origins_list = [
 if hasattr(settings, 'FRONTEND_PRODUCTION_URL') and settings.FRONTEND_PRODUCTION_URL:
     allowed_origins_list.append(settings.FRONTEND_PRODUCTION_URL)
 
-# Build regex pattern for dynamic port matching - allows any port
+# Build regex pattern for dynamic port matching - allows any port on localhost/127.0.0.1
 escaped_ip = settings.LOCALHOST_IP.replace('.', r'\.')
 origin_regex = f"^(http|https)://({escaped_ip}|localhost|127\\.0\\.0\\.1)(:\\d+)?$"
 
