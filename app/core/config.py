@@ -127,9 +127,9 @@ class Settings(BaseSettings):
     def enforce_production_safety_rules(self):
         """Enforce safety rules for production environment"""
         if self.ENV == "production":
-            # Production safety checks
+            # Force DEBUG=False in production (override env/.env so the app always starts)
             if self.DEBUG:
-                raise ValueError("DEBUG must be False in production environment")
+                self.DEBUG = False
 
             if self.BLOCKCHAIN_TEST_MODE.lower() == "true":
                 raise ValueError("BLOCKCHAIN_TEST_MODE must be False in production environment")
