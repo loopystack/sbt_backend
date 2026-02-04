@@ -141,22 +141,33 @@ def get_chrome_version() -> Optional[int]:
                             continue
         
         elif system == "Linux":
-            # Try chrome --version command
-            try:
-                result = subprocess.run(
-                    ["google-chrome", "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-                if result.returncode == 0:
-                    # Output format: "Google Chrome 143.0.7499.41"
-                    version_str = result.stdout.strip()
-                    match = re.search(r'(\d+)\.', version_str)
-                    if match:
-                        return int(match.group(1))
-            except Exception:
-                pass
+            # Try common Linux Chrome/Chromium binaries (Ubuntu: google-chrome-stable, chromium-browser, etc.)
+            linux_binaries = [
+                "google-chrome",
+                "google-chrome-stable",
+                "chromium",
+                "chromium-browser",
+                "/usr/bin/google-chrome",
+                "/usr/bin/google-chrome-stable",
+                "/usr/bin/chromium",
+                "/usr/bin/chromium-browser",
+                "/snap/bin/chromium",
+            ]
+            for binary in linux_binaries:
+                try:
+                    result = subprocess.run(
+                        [binary, "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        version_str = result.stdout.strip()
+                        match = re.search(r'(\d+)\.', version_str)
+                        if match:
+                            return int(match.group(1))
+                except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+                    continue
         
         elif system == "Darwin":  # macOS
             # Try /Applications/Google Chrome.app
@@ -183,6 +194,42 @@ def get_chrome_version() -> Optional[int]:
     except Exception as e:
         print(f"⚠️ Error detecting Chrome version: {e}")
         return None
+
+
+def get_chrome_binary_path_linux() -> Optional[str]:
+    """
+    On Linux/Ubuntu, return the path to Chrome or Chromium binary.
+    Used to set options.binary_location so undetected-chromedriver never sets it to None (avoids TypeError).
+    """
+    if platform.system() != "Linux":
+        return None
+    binaries = [
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/snap/bin/chromium",
+    ]
+    for path in binaries:
+        if os.path.isfile(path):
+            return path
+    # Fallback: which google-chrome or chromium
+    for cmd in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+        try:
+            result = subprocess.run(
+                ["which", cmd],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                p = result.stdout.strip()
+                if os.path.isfile(p):
+                    return p
+        except Exception:
+            continue
+    return None
+
 
 # -------------------- Selenium setup --------------------
 def make_driver(headless: bool = True) -> uc.Chrome:
@@ -231,6 +278,15 @@ def make_driver(headless: bool = True) -> uc.Chrome:
         print(f"🔍 Detected Chrome version: {chrome_version}")
     else:
         print("🔍 Chrome version auto-detection failed, using automatic driver selection")
+
+    # On Linux/Ubuntu: set binary_location explicitly so uc never sets it to None (avoids "Binary Location Must be a String")
+    if platform.system() == "Linux":
+        chrome_binary = get_chrome_binary_path_linux()
+        if chrome_binary:
+            chrome_opts.binary_location = chrome_binary
+            print(f"🔍 Using Chrome/Chromium at: {chrome_binary}")
+        else:
+            print("⚠️ No Chrome/Chromium binary found. Install with: sudo apt install google-chrome-stable  # or chromium-browser")
     
     for attempt in range(max_retries):
         try:
