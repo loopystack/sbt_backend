@@ -293,7 +293,7 @@ async def create_betting_record(
 @router.get("/records", response_model=BettingRecordResponse)
 async def get_betting_records(
     page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(10, ge=1, le=50, description="Records per page"),
+    per_page: int = Query(10, ge=1, le=100, description="Records per page"),
     status: Optional[str] = Query(None, description="Filter by bet status"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
