@@ -606,7 +606,8 @@ def _extract_score_from_text(raw: Optional[str]) -> Tuple[Optional[str], Optiona
     if "<" in raw and ">" in raw:
         raw = re.sub(r"<[^>]+>", " ", raw)
     raw = raw.replace("\u2013", "-")  # normalize en dash
-    m = re.search(r"\b(\d+)\s*-\s*(\d+)\b", raw)
+    # Match "N-M" or "N:M" (football score patterns)
+    m = re.search(r"\b(\d+)\s*[-:]\s*(\d+)\b", raw)
     if m:
         return m.group(1), m.group(2)
     nums = re.findall(r"\b\d+\b", raw)
@@ -745,6 +746,37 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
                     home_goals = home_goals or g1
                     away_goals = away_goals or g2
                     break
+        except Exception:
+            pass
+
+    # Whole-row fallback: score often appears somewhere in the row (e.g. different layout)
+    if home_goals is None or away_goals is None:
+        try:
+            try:
+                raw = row.get_dom_attribute("textContent") or row.get_attribute("textContent") or ""
+            except Exception:
+                raw = row.text or ""
+            if raw:
+                g1, g2 = _extract_score_from_text(raw)
+                if g1 is not None and g2 is not None:
+                    home_goals = home_goals or g1
+                    away_goals = away_goals or g2
+        except Exception:
+            pass
+
+    # Score/result element fallback: look for any element that might contain "N-M"
+    if home_goals is None or away_goals is None:
+        try:
+            for el in row.find_elements(By.XPATH, ".//*[contains(@data-testid,'score') or contains(@data-testid,'result') or contains(@class,'score') or contains(@class,'result')]"):
+                try:
+                    raw = el.get_dom_attribute("textContent") or el.get_attribute("textContent") or el.text or ""
+                    g1, g2 = _extract_score_from_text(raw)
+                    if g1 is not None and g2 is not None:
+                        home_goals = home_goals or g1
+                        away_goals = away_goals or g2
+                        break
+                except Exception:
+                    continue
         except Exception:
             pass
 

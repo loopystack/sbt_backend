@@ -21,6 +21,51 @@ from app.models.user import User
 router = APIRouter(prefix="/api/wallet", tags=["wallet"])
 logger = logging.getLogger(__name__)
 
+@router.get("/total-balance")
+async def get_total_balance(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get unified total balance (crypto as USD equivalent).
+    Frontend expects UnifiedBalanceResponse; fiat is zero (no Stripe in backend).
+    """
+    balance_info = await wallet_service.get_balance(
+        user_id=current_user.id,
+        asset="USDT",
+        db=db
+    )
+    total = balance_info["total"]
+    available = balance_info["available"]
+    reserved = balance_info["reserved"]
+    return {
+        "total_balance_usd": str(total),
+        "total_available_usd": str(available),
+        "total_reserved_usd": str(reserved),
+        "breakdown": {
+            "fiat": {
+                "amount": "0",
+                "currency": "USD",
+                "source": "stripe",
+                "available": "0",
+                "reserved": "0",
+            },
+            "crypto": {
+                "asset": "USDT",
+                "amount": str(total),
+                "available": str(available),
+                "reserved": str(reserved),
+                "usd_equivalent": str(total),
+                "usd_available": str(available),
+                "usd_reserved": str(reserved),
+                "source": "crypto",
+                "usd_price": "1",
+            },
+        },
+        "currency": "USD",
+    }
+
+
 @router.get("/balance")
 async def get_wallet_balance(
     asset: Optional[str] = Query(None, description="Filter by asset (e.g., USDT)"),
