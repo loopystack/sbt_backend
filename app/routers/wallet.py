@@ -27,37 +27,49 @@ async def get_total_balance(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get unified total balance (crypto as USD equivalent).
-    Frontend expects UnifiedBalanceResponse; fiat is zero (no Stripe in backend).
+    Get unified total balance = card/Stripe (user.funds_usd) + crypto ledger.
+    Total available = user.funds_usd (canonical balance from confirmed card + crypto deposits).
+    Breakdown: fiat = funds_usd minus crypto ledger USD, crypto = ledger USDT.
     """
+    # Ensure we have latest funds_usd from DB (canonical total from confirmed Stripe + crypto)
+    await db.refresh(current_user)
+    funds_usd = Decimal(str(current_user.funds_usd)) if current_user.funds_usd is not None else Decimal("0")
+
+    # Crypto ledger balance (USDT)
     balance_info = await wallet_service.get_balance(
         user_id=current_user.id,
         asset="USDT",
         db=db
     )
-    total = balance_info["total"]
-    available = balance_info["available"]
-    reserved = balance_info["reserved"]
+    crypto_total = balance_info["total"]
+    crypto_available = balance_info["available"]
+    crypto_reserved = balance_info["reserved"]
+    # Treat USDT as 1:1 USD
+    crypto_usd = crypto_total
+
+    # Fiat = remainder so that fiat + crypto = funds_usd (canonical total)
+    fiat_usd = max(Decimal("0"), funds_usd - crypto_usd)
+
     return {
-        "total_balance_usd": str(total),
-        "total_available_usd": str(available),
-        "total_reserved_usd": str(reserved),
+        "total_balance_usd": str(funds_usd),
+        "total_available_usd": str(funds_usd),
+        "total_reserved_usd": "0",
         "breakdown": {
             "fiat": {
-                "amount": "0",
+                "amount": str(fiat_usd),
                 "currency": "USD",
                 "source": "stripe",
-                "available": "0",
+                "available": str(fiat_usd),
                 "reserved": "0",
             },
             "crypto": {
                 "asset": "USDT",
-                "amount": str(total),
-                "available": str(available),
-                "reserved": str(reserved),
-                "usd_equivalent": str(total),
-                "usd_available": str(available),
-                "usd_reserved": str(reserved),
+                "amount": str(crypto_total),
+                "available": str(crypto_available),
+                "reserved": str(crypto_reserved),
+                "usd_equivalent": str(crypto_usd),
+                "usd_available": str(crypto_available),
+                "usd_reserved": str(crypto_reserved),
                 "source": "crypto",
                 "usd_price": "1",
             },
