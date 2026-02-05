@@ -3,7 +3,7 @@ Tests for Deposit Monitor Worker
 Tests status transitions and deposit detection
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
@@ -57,7 +57,7 @@ async def test_user(test_db: AsyncSession):
 @pytest.fixture
 async def pending_deposit_intent(test_db: AsyncSession, test_user: User):
     """Create a pending deposit intent"""
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent = DepositIntent(
         user_id=test_user.id,
         asset="USDT",
@@ -117,7 +117,7 @@ async def test_tx_appears_status_becomes_detected(test_db: AsyncSession, pending
             "to": pending_deposit_intent.generated_address,
             "amount": Decimal("100.00"),
             "block_number": 1000,
-            "timestamp": int(datetime.utcnow().timestamp() * 1000)
+            "timestamp": int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp() * 1000)
         }]
     
     tron_client.get_usdt_transfers_to_address = mock_get_transfers
@@ -145,7 +145,7 @@ async def test_confirmations_reach_threshold_confirmed(test_db: AsyncSession):
     Test that when confirmations reach threshold, status becomes confirmed
     """
     # Create a detected intent
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent = DepositIntent(
         user_id=1,  # Assuming test_user.id is 1
         asset="USDT",
@@ -158,7 +158,7 @@ async def test_confirmations_reach_threshold_confirmed(test_db: AsyncSession):
         tx_hash="test_tx_hash_123",
         confirmations=0,
         required_confirmations=2,
-        detected_at=datetime.utcnow()
+        detected_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     test_db.add(intent)
     await test_db.commit()
@@ -171,7 +171,7 @@ async def test_confirmations_reach_threshold_confirmed(test_db: AsyncSession):
     async def mock_get_tx_info(tx_hash):
         return {
             "block_number": 1000,
-            "timestamp": int(datetime.utcnow().timestamp() * 1000),
+            "timestamp": int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp() * 1000),
             "success": True,
             "confirmations": 3  # Above threshold
         }
@@ -211,7 +211,7 @@ async def test_expired_intents_skipped(test_db: AsyncSession):
     Test that expired intents are skipped
     """
     # Create an expired intent
-    expires_at = datetime.utcnow() - timedelta(hours=1)  # Expired 1 hour ago
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=1)  # Expired 1 hour ago
     intent = DepositIntent(
         user_id=1,
         asset="USDT",

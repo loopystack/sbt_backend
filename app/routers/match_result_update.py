@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 from app.core.database import get_db
@@ -255,7 +255,7 @@ async def settle_match_bets_automatically(match: Odds, db: AsyncSession):
             bet.bet_status = "won" if bet_won else "lost"
             bet.actual_profit = profit
             bet.is_settled = True
-            bet.settlement_date = datetime.utcnow()
+            bet.settlement_date = datetime.now(timezone.utc).replace(tzinfo=None)
             bet.match_status = "finished"
             
             total_settled += 1

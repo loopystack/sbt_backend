@@ -7,7 +7,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -91,7 +91,7 @@ class WalletSweeper:
                     
                     if sweep_tx_hash:
                         # Mark deposit as swept
-                        deposit.settled_at = datetime.utcnow()
+                        deposit.settled_at = datetime.now(timezone.utc).replace(tzinfo=None)
                         deposit.status = "settled"
                         
                         # Create sweep transaction record
@@ -174,7 +174,7 @@ class WalletSweeper:
             # This would use a service like BlockCypher, BitGo, or your own Bitcoin node
             # For now, return a mock transaction hash
             logger.info(f"Sweeping {amount} BTC from {from_address} to {to_address}")
-            return f"btc_sweep_{datetime.utcnow().timestamp()}"
+            return f"btc_sweep_{datetime.now(timezone.utc).timestamp()}"
         except Exception as e:
             logger.error(f"Bitcoin sweep failed: {str(e)}")
             return None
@@ -184,7 +184,7 @@ class WalletSweeper:
         try:
             # This would use Web3.py or a service like Infura/Alchemy
             logger.info(f"Sweeping {amount} {asset} from {from_address} to {to_address}")
-            return f"eth_sweep_{datetime.utcnow().timestamp()}"
+            return f"eth_sweep_{datetime.now(timezone.utc).timestamp()}"
         except Exception as e:
             logger.error(f"Ethereum sweep failed: {str(e)}")
             return None
@@ -193,7 +193,7 @@ class WalletSweeper:
         """Sweep XRP"""
         try:
             logger.info(f"Sweeping {amount} XRP from {from_address} to {to_address}")
-            return f"xrp_sweep_{datetime.utcnow().timestamp()}"
+            return f"xrp_sweep_{datetime.now(timezone.utc).timestamp()}"
         except Exception as e:
             logger.error(f"XRP sweep failed: {str(e)}")
             return None
@@ -202,7 +202,7 @@ class WalletSweeper:
         """Sweep Stellar Lumens"""
         try:
             logger.info(f"Sweeping {amount} XLM from {from_address} to {to_address}")
-            return f"xlm_sweep_{datetime.utcnow().timestamp()}" 
+            return f"xlm_sweep_{datetime.now(timezone.utc).timestamp()}" 
         except Exception as e:
             logger.error(f"Stellar sweep failed: {str(e)}")
             return None
@@ -211,7 +211,7 @@ class WalletSweeper:
         """Sweep BNB"""
         try:
             logger.info(f"Sweeping {amount} BNB from {from_address} to {to_address}")
-            return f"bnb_sweep_{datetime.utcnow().timestamp()}"
+            return f"bnb_sweep_{datetime.now(timezone.utc).timestamp()}"
         except Exception as e:
             logger.error(f"BNB sweep failed: {str(e)}")
             return None

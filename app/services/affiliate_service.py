@@ -4,7 +4,7 @@ Handles affiliate registration, referral tracking, and commission calculations
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from decimal import Decimal
 import secrets
@@ -114,7 +114,7 @@ class AffiliateService:
             referral_code_used=referral_code,
             source=source,
             campaign_id=campaign_id,
-            signup_date=datetime.utcnow()
+            signup_date=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         
         db.add(referral)
@@ -138,7 +138,7 @@ class AffiliateService:
         if not referral:
             return None
         
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         
         if conversion_type == "first_deposit" and not referral.first_deposit_date:
             referral.first_deposit_date = now

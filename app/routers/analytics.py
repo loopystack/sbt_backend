@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, or_
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 from app.core.database import get_db
@@ -997,9 +997,9 @@ async def self_exclude(
     
     # Set exclusion
     compliance.is_self_excluded = True
-    compliance.self_exclusion_until = datetime.utcnow() + timedelta(days=duration_days)
+    compliance.self_exclusion_until = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=duration_days)
     compliance.self_exclusion_reason = reason
-    compliance.updated_at = datetime.utcnow()
+    compliance.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     # Create alert
     await compliance_service.create_alert(
@@ -1047,7 +1047,7 @@ async def cancel_self_exclusion(
     compliance.is_self_excluded = False
     compliance.self_exclusion_until = None
     compliance.self_exclusion_reason = None
-    compliance.updated_at = datetime.utcnow()
+    compliance.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await compliance_service.create_alert(
         user_id=current_user.id,

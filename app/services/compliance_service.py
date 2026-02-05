@@ -4,7 +4,7 @@ Handles all responsible gaming and regional restrictions enforcement
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Union
 from decimal import Decimal
 from fastapi import HTTPException, status
@@ -62,7 +62,7 @@ class ComplianceService:
         
         # Check self-exclusion
         if compliance.is_self_excluded:
-            if compliance.self_exclusion_until and compliance.self_exclusion_until > datetime.utcnow():
+            if compliance.self_exclusion_until and compliance.self_exclusion_until > datetime.now(timezone.utc).replace(tzinfo=None):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=f"Account is self-excluded until {compliance.self_exclusion_until}"
@@ -74,7 +74,7 @@ class ComplianceService:
                 )
         
         # Calculate daily deposits
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         daily_deposits_query = select(func.sum(func.abs(Transaction.amount))).where(
             and_(
                 Transaction.user_id == user_id,
@@ -145,7 +145,7 @@ class ComplianceService:
             }
         
         # Check daily betting limit
-        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         from app.models.betting_record import BettingRecord
         daily_bets_query = select(func.sum(BettingRecord.bet_amount)).where(
             and_(
@@ -231,7 +231,7 @@ class ComplianceService:
         if not compliance or not compliance.session_start_time:
             return {"timeout": False, "warnings": []}
         
-        session_duration = datetime.utcnow() - compliance.session_start_time
+        session_duration = datetime.now(timezone.utc).replace(tzinfo=None) - compliance.session_start_time
         session_minutes = session_duration.total_seconds() / 60
         max_minutes = compliance.max_session_duration_minutes
         

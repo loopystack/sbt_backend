@@ -3,7 +3,7 @@ Tests for Deposit Settlement Service
 Tests idempotency and double-credit prevention
 """
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy import select
@@ -57,7 +57,7 @@ async def test_user(test_db: AsyncSession):
 @pytest.fixture
 async def confirmed_deposit_intent(test_db: AsyncSession, test_user: User):
     """Create a confirmed deposit intent ready for settlement"""
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent = DepositIntent(
         user_id=test_user.id,
         asset="USDT",
@@ -70,8 +70,8 @@ async def confirmed_deposit_intent(test_db: AsyncSession, test_user: User):
         tx_hash="test_tx_hash_settlement_123",
         confirmations=3,
         required_confirmations=2,
-        detected_at=datetime.utcnow(),
-        confirmed_at=datetime.utcnow()
+        detected_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        confirmed_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     test_db.add(intent)
     await test_db.commit()
@@ -191,7 +191,7 @@ async def test_settlement_requires_confirmed_status(test_db: AsyncSession, test_
     Test that settlement only works for confirmed intents
     """
     # Create a pending intent
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent = DepositIntent(
         user_id=test_user.id,
         asset="USDT",
@@ -220,7 +220,7 @@ async def test_settlement_requires_tx_hash(test_db: AsyncSession, test_user: Use
     Test that settlement requires tx_hash
     """
     # Create a confirmed intent without tx_hash
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent = DepositIntent(
         user_id=test_user.id,
         asset="USDT",
@@ -233,7 +233,7 @@ async def test_settlement_requires_tx_hash(test_db: AsyncSession, test_user: Use
         tx_hash=None,  # No tx_hash
         confirmations=3,
         required_confirmations=2,
-        confirmed_at=datetime.utcnow()
+        confirmed_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     test_db.add(intent)
     await test_db.commit()
@@ -253,7 +253,7 @@ async def test_unique_constraint_prevents_duplicate_tx_hash(test_db: AsyncSessio
     Test that unique constraint on (network, tx_hash) prevents duplicate processing
     """
     # Create first confirmed intent with tx_hash
-    expires_at = datetime.utcnow() + timedelta(hours=24)
+    expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
     intent1 = DepositIntent(
         user_id=test_user.id,
         asset="USDT",
@@ -266,7 +266,7 @@ async def test_unique_constraint_prevents_duplicate_tx_hash(test_db: AsyncSessio
         tx_hash="duplicate_tx_hash_123",
         confirmations=3,
         required_confirmations=2,
-        confirmed_at=datetime.utcnow()
+        confirmed_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     test_db.add(intent1)
     await test_db.commit()
@@ -285,7 +285,7 @@ async def test_unique_constraint_prevents_duplicate_tx_hash(test_db: AsyncSessio
         tx_hash="duplicate_tx_hash_123",  # Same tx_hash
         confirmations=3,
         required_confirmations=2,
-        confirmed_at=datetime.utcnow()
+        confirmed_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     test_db.add(intent2)
     

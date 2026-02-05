@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, update
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 from app.core.database import get_db
@@ -92,7 +92,7 @@ async def settle_finished_matches(
             betting_record.bet_status = bet_status
             betting_record.actual_profit = profit
             betting_record.is_settled = True
-            betting_record.settlement_date = datetime.utcnow()
+            betting_record.settlement_date = datetime.now(timezone.utc).replace(tzinfo=None)
             betting_record.match_status = "finished"
             
             # Always create transaction records for both wins and losses
@@ -236,7 +236,7 @@ async def settle_specific_match(
             betting_record.bet_status = bet_status
             betting_record.actual_profit = profit
             betting_record.is_settled = True
-            betting_record.settlement_date = datetime.utcnow()
+            betting_record.settlement_date = datetime.now(timezone.utc).replace(tzinfo=None)
             betting_record.match_status = "finished"
             
             # Update user balance and create transaction

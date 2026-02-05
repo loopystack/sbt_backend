@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.core.database import get_db
 from app.core.admin_deps import get_admin_user
@@ -280,7 +280,7 @@ async def update_affiliate(
     for field, value in affiliate_data.model_dump(exclude_unset=True).items():
         setattr(affiliate, field, value)
     
-    affiliate.updated_at = datetime.utcnow()
+    affiliate.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await db.commit()
     await db.refresh(affiliate)
     
@@ -364,7 +364,7 @@ async def approve_commission(
         )
     
     commission.status = CommissionStatus.APPROVED.value
-    commission.approved_at = datetime.utcnow()
+    commission.approved_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await db.commit()
     await db.refresh(commission)
@@ -394,7 +394,7 @@ async def pay_commission(
         )
     
     commission.status = CommissionStatus.PAID.value
-    commission.paid_at = datetime.utcnow()
+    commission.paid_at = datetime.now(timezone.utc).replace(tzinfo=None)
     commission.payment_reference = payment_reference
     
     # Update affiliate paid total

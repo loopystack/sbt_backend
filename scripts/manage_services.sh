@@ -5,7 +5,7 @@
 
 set -e
 
-SERVICES=("sbt-backend" "sbt-deposit-monitor" "sbt-withdrawal-monitor")
+SERVICES=("sbt-backend" "sportsbet-deposit-monitor" "sportsbet-withdrawal-monitor")
 ACTION="${1:-status}"
 SERVICE="${2:-all}"
 
@@ -42,9 +42,9 @@ show_help() {
     echo "  disable   Disable services from starting on boot"
     echo ""
     echo "Services:"
-    echo "  api/backend            API service only"
-    echo "  deposit-monitor        Deposit monitor only"
-    echo "  withdrawal-monitor     Withdrawal monitor only"
+    echo "  api|backend            API service only (sbt-backend)"
+    echo "  deposit-monitor        Deposit monitor only (sportsbet-deposit-monitor)"
+    echo "  withdrawal-monitor     Withdrawal monitor only (sportsbet-withdrawal-monitor)"
     echo "  all                    All services (default)"
     echo ""
     echo "Examples:"
@@ -60,10 +60,10 @@ get_services_to_manage() {
             echo "sbt-backend"
             ;;
         "deposit-monitor")
-            echo "sbt-deposit-monitor"
+            echo "sportsbet-deposit-monitor"
             ;;
         "withdrawal-monitor")
-            echo "sbt-withdrawal-monitor"
+            echo "sportsbet-withdrawal-monitor"
             ;;
         "all")
             printf '%s\n' "${SERVICES[@]}"

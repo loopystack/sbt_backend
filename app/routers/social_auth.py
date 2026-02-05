@@ -7,7 +7,7 @@ from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 import secrets
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.core.database import get_db
@@ -108,8 +108,8 @@ async def mock_google_callback(
                 avatar_url=picture,
                 is_verified=False,
                 is_active=True,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             db.add(user)
             await db.commit()
@@ -117,7 +117,7 @@ async def mock_google_callback(
         
         # Generate activation token
         activation_token = secrets.token_urlsafe(32)
-        activation_expires = datetime.utcnow() + timedelta(hours=24)
+        activation_expires = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
         
         # Delete any existing verification records for this user
         await db.execute(
@@ -135,7 +135,7 @@ async def mock_google_callback(
             email=user.email,
             token=activation_token,
             expires_at=activation_expires,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         db.add(verification)
         
@@ -298,8 +298,8 @@ async def google_callback(
                 avatar_url=picture,
                 is_verified=False,  # Will be verified via email activation
                 is_active=True,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             db.add(user)
             await db.commit()
@@ -422,7 +422,7 @@ async def activate_account(
             )
         
         # Check if token is expired
-        if verification.expires_at < datetime.utcnow():
+        if verification.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Activation token has expired"
@@ -442,7 +442,7 @@ async def activate_account(
         
         # Activate user
         user.is_verified = True
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         
         # Delete verification record
         await db.delete(verification)

@@ -607,15 +607,15 @@ async def cryptomus_callback(request: Request, db: AsyncSession = Depends(get_db
             
             if wallet:
                 wallet.balance += amount
-                wallet.updated_at = datetime.utcnow()
+                wallet.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             else:
                 # Create wallet if it doesn't exist
                 wallet = UserWallet(
                     user_id=user_id,
                     balance=amount,
                     currency="USD",
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                    updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
                 )
                 db.add(wallet)
             
@@ -631,8 +631,8 @@ async def cryptomus_callback(request: Request, db: AsyncSession = Depends(get_db
                 status="completed",
                 confirmations=1,  # Cryptomus handles confirmations
                 required_confirmations=1,
-                settled_at=datetime.utcnow(),
-                created_at=datetime.utcnow()
+                settled_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             db.add(deposit_intent)
             

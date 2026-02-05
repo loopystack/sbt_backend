@@ -5,7 +5,7 @@ Handles automatic sweeping and monitoring
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List
 
 from app.services.wallet_sweeper import wallet_sweeper
@@ -113,7 +113,7 @@ class ScheduledTasks:
             "is_running": self.is_running,
             "sweep_interval": self.sweep_interval,
             "monitor_interval": self.monitor_interval,
-            "uptime": datetime.utcnow().isoformat() if self.is_running else None
+            "uptime": datetime.now(timezone.utc).isoformat() if self.is_running else None
         }
 
 # Global scheduler instance

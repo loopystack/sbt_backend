@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import get_db
 from app.models.deposit import DepositIntent, CryptoTransaction, UserCryptoBalance
 from app.services.crypto_service import CryptoService
@@ -287,7 +287,7 @@ class BlockchainWatcher:
         try:
             # Update deposit status
             deposit.status = "settled"
-            deposit.settled_at = datetime.utcnow()
+            deposit.settled_at = datetime.now(timezone.utc).replace(tzinfo=None)
             
             # Update user's crypto balance
             user_balance = db.query(UserCryptoBalance).filter(
