@@ -14,11 +14,11 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sbt-backend
 
-# Security hardening
+# Security hardening (ProtectHome=false: app and venv live under /home/deploy)
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ProtectHome=true
+ProtectHome=false
 ReadWritePaths=/var/log/sportsbet
 CapabilityBoundingSet=~CAP_SYS_ADMIN CAP_NET_BIND_SERVICE
 LimitNOFILE=1024

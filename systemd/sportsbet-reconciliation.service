@@ -12,10 +12,11 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=sbt-reconciliation
 
-# Security hardening
+# Security hardening (ProtectHome=false: app and venv live under /home/deploy)
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
+ProtectHome=false
 CapabilityBoundingSet=~CAP_SYS_ADMIN
 LimitNOFILE=512
 LimitNPROC=256
