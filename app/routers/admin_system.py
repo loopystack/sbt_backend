@@ -9,6 +9,7 @@ from typing import Optional, List
 from datetime import date, datetime, timezone, timedelta
 
 from app.core.database import get_db
+from app.services.revenue_report_service import revenue_report_service
 from app.core.deps import get_current_superuser
 from app.models.user import User
 from app.models.system_alert import (
@@ -304,4 +305,97 @@ async def trigger_reconciliation(
         "report_id": report.id,
         "status": report.status,
         "delta": float(report.delta)
+    }
+
+
+# ---------- Revenue report (GGR/NGR + cashflow) ----------
+
+def _revenue_report_to_dict(r):
+    """Serialize DailyRevenueReport to dict for API."""
+    return {
+        "id": r.id,
+        "report_date": r.report_date.isoformat() if r.report_date else None,
+        "asset": r.asset,
+        "total_staked": float(r.total_staked),
+        "losing_stakes": float(r.losing_stakes),
+        "winning_profit_paid": float(r.winning_profit_paid),
+        "ggr": float(r.ggr),
+        "bonuses": float(r.bonuses),
+        "fees": float(r.fees),
+        "ngr": float(r.ngr),
+        "total_deposited_onchain": float(r.total_deposited_onchain),
+        "total_withdrawn_onchain": float(r.total_withdrawn_onchain),
+        "net_inflow": float(r.net_inflow),
+        "created_at": r.created_at.isoformat() if r.created_at else None,
+    }
+
+
+@router.get("/revenue-report")
+async def get_revenue_report(
+    report_date: date = Query(..., description="Date (YYYY-MM-DD)"),
+    asset: str = Query("USDT", description="Asset"),
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_current_superuser),
+):
+    """Get stored revenue report for a single date."""
+    report = await revenue_report_service.get_report(report_date, asset, db)
+    if not report:
+        return None
+    return _revenue_report_to_dict(report)
+
+
+@router.get("/revenue-report/list")
+async def list_revenue_reports(
+    from_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    asset: str = Query("USDT", description="Asset"),
+    limit: int = Query(90, ge=1, le=365),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_current_superuser),
+):
+    """List daily revenue reports in date range (newest first)."""
+    reports = await revenue_report_service.get_reports(
+        from_date, to_date, asset, limit, offset, db
+    )
+    return {
+        "reports": [_revenue_report_to_dict(r) for r in reports],
+        "from_date": from_date.isoformat(),
+        "to_date": to_date.isoformat(),
+        "asset": asset,
+    }
+
+
+@router.get("/revenue-report/summary")
+async def get_revenue_report_summary(
+    from_date: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    to_date: date = Query(..., description="End date (YYYY-MM-DD)"),
+    asset: str = Query("USDT", description="Asset"),
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_current_superuser),
+):
+    """Get aggregated GGR/NGR and cashflow summary over date range."""
+    summary = await revenue_report_service.get_summary(from_date, to_date, asset, db)
+    # Convert Decimal to float for JSON
+    return {
+        k: (float(v) if hasattr(v, "__float__") and not isinstance(v, (str, dict)) else v)
+        for k, v in summary.items()
+    }
+
+
+@router.post("/revenue-report/run")
+async def run_revenue_report(
+    report_date: Optional[date] = Query(None, description="Date to compute (default: yesterday)"),
+    asset: str = Query("USDT", description="Asset"),
+    db: AsyncSession = Depends(get_db),
+    admin_user: User = Depends(get_current_superuser),
+):
+    """Compute and store daily revenue report for the given date (or yesterday)."""
+    if report_date is None:
+        report_date = date.today() - timedelta(days=1)
+    report = await revenue_report_service.compute_and_store(report_date, asset, db)
+    await db.commit()
+    return {
+        "message": "Revenue report computed and stored",
+        "report": _revenue_report_to_dict(report),
     }

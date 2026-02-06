@@ -22,6 +22,7 @@ from .system_alert import (
     SystemHeartbeat, ReconciliationReport
 )
 from .idempotency_key import IdempotencyKey
+from .revenue_report import DailyRevenueReport
 
 __all__ = [
     "Base",
@@ -58,5 +59,6 @@ __all__ = [
     "SystemAlertStatus",
     "SystemHeartbeat",
     "ReconciliationReport",
-    "IdempotencyKey"
+    "IdempotencyKey",
+    "DailyRevenueReport",
 ]
