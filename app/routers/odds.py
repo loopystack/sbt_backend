@@ -96,6 +96,12 @@ async def get_odds(
     if date_to:
         conditions.append(Odds.date <= date_to)
     
+    # Results page: only show matches with a valid score (N-M, 0-25 each). Exclude scraper garbage like 19-523.
+    if date_to and not date_from:
+        conditions.append(Odds.result.isnot(None))
+        conditions.append(func.coalesce(func.trim(Odds.result), "") != "")
+        conditions.append(text("trim(result) ~ '^[0-9]{1,2}-[0-9]{1,2}$'"))
+    
     # Build base query
     query = select(Odds)
     count_query = select(func.count(Odds.id))
@@ -113,8 +119,11 @@ async def get_odds(
     offset = (page - 1) * size
     pages = math.ceil(total / size) if total > 0 else 0
     
-    # Apply pagination and ordering (sooner to later - upcoming matches first)
-    query = query.order_by(Odds.date.asc(), Odds.time.asc()).offset(offset).limit(size)
+    # Ordering: Results (date_to set, past matches) = newest first; Next matches = soonest first
+    if date_to and not date_from:
+        query = query.order_by(Odds.date.desc(), Odds.time.desc()).offset(offset).limit(size)
+    else:
+        query = query.order_by(Odds.date.asc(), Odds.time.asc()).offset(offset).limit(size)
     
     # Execute query
     result = await db.execute(query)

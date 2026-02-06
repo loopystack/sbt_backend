@@ -576,6 +576,10 @@ def extract_date_from_text(raw: str, season_start: Optional[int] = None) -> Opti
     if "yesterday" in raw.lower():
         d = (datetime.now() - timedelta(days=1)).date()
         return d.strftime("%d %b %Y")
+    # "Tomorrow, 07 Feb" -> use machine date for tomorrow (avoids wrong date from wrong header)
+    if "tomorrow" in raw.lower():
+        d = (datetime.now() + timedelta(days=1)).date()
+        return d.strftime("%d %b %Y")
     if season_start is None:
         year = datetime.now().year
         # If month is far in future, assume previous year (season crossover)
@@ -1000,7 +1004,8 @@ def collect_rows_on_page(driver, country: str, league: str, season_start: int, p
     for header_date_text, box in _iter_game_rows_with_headers(driver):
         try:
             header_date = extract_date_from_text(header_date_text or "", season_start=season_start) if header_date_text else None
-            date_s = extract_date_from_row(box, season_start=season_start) or header_date
+            # Prefer section header from DOM walk; row's preceding:: can pick wrong section
+            date_s = header_date or extract_date_from_row(box, season_start=season_start)
             tm = extract_time(box)
             home, away, result = extract_teams_and_result(box)
             o1, ox, o2, bs = extract_odds_and_bs(box)
@@ -1034,7 +1039,8 @@ def collect_rows_on_page_dynamic_season(driver, league_cfg: LeagueConfig, page_n
 
     for header_date_text, box in _iter_game_rows_with_headers(driver):
         try:
-            date_s = extract_date_from_row(box) or header_date_text
+            # Prefer section header from DOM walk (correct for this row); row's preceding:: can pick wrong section
+            date_s = header_date_text or extract_date_from_row(box)
             parsed_date = _parse_date(date_s)
             season_start = infer_season_start(league_cfg, parsed_date)
 
