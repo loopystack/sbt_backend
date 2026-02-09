@@ -44,3 +44,28 @@ class OddsQueryParams(BaseModel):
     away_team: Optional[str] = Field(default=None, description="Filter by away team")
     date_from: Optional[date] = Field(default=None, description="Filter matches from this date")
     date_to: Optional[date] = Field(default=None, description="Filter matches to this date")
+
+
+class DroppingOddsItem(BaseModel):
+    id: str
+    match_id: int
+    sport: str = "Football"
+    country: str
+    league: str
+    bet_type: str  # "1", "X", "2"
+    date: str
+    time: str
+    teams: str
+    current_odds: float
+    previous_odds: float
+    drop_percent: float
+    best_current_odds: float
+    bookmaker: str = "Platform"
+
+
+class DroppingOddsResponse(BaseModel):
+    items: List[DroppingOddsItem]
+    total: int
+    page: int
+    size: int
+    pages: int

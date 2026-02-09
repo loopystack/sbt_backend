@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, text
+from sqlalchemy.orm import load_only
 from typing import Optional, List
 from datetime import date, datetime
 import math
@@ -10,7 +11,7 @@ from app.models.odds import Odds
 from app.models.betting_record import BettingRecord
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.schemas.odds import OddsResponse, OddsListResponse, OddsQueryParams
+from app.schemas.odds import OddsResponse, OddsListResponse, OddsQueryParams, DroppingOddsItem, DroppingOddsResponse
 
 router = APIRouter()
 
@@ -410,6 +411,90 @@ def estimate_true_probabilities(home_team: str, away_team: str, league: str, cou
     true_prob_2 /= total
     
     return true_prob_1, true_prob_X, true_prob_2
+
+
+@router.get("/dropping-odds", response_model=DroppingOddsResponse)
+async def get_dropping_odds(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(50, ge=1, le=100, description="Page size"),
+    min_drop_percent: float = Query(20.0, ge=0, le=100, description="Minimum drop percentage (e.g. 20 = 20%)"),
+    bet_type: Optional[str] = Query(None, description="Filter: 1, X, or 2"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get matches where odds have dropped (current < previous). Returns one row per outcome (1/X/2) that dropped.
+    """
+    today = date.today()
+    max_rows = 400
+    cols = [
+        Odds.id, Odds.date, Odds.time, Odds.home_team, Odds.away_team,
+        Odds.country, Odds.league,
+        Odds.odd_1, Odds.odd_X, Odds.odd_2,
+        Odds.pre_odd_1, Odds.pre_odd_X, Odds.pre_odd_2,
+    ]
+    query = (
+        select(Odds)
+        .options(load_only(*cols))
+        .where(Odds.date >= today)
+        .where(
+            ((Odds.odd_1.isnot(None)) & (Odds.pre_odd_1.isnot(None)) & (Odds.odd_1 < Odds.pre_odd_1))
+            | ((Odds.odd_X.isnot(None)) & (Odds.pre_odd_X.isnot(None)) & (Odds.odd_X < Odds.pre_odd_X))
+            | ((Odds.odd_2.isnot(None)) & (Odds.pre_odd_2.isnot(None)) & (Odds.odd_2 < Odds.pre_odd_2))
+        )
+        .order_by(Odds.date.asc(), Odds.time.asc())
+        .limit(max_rows)
+    )
+    result = await db.execute(query)
+    rows = result.scalars().all()
+    items: List[DroppingOddsItem] = []
+    for o in rows:
+        time_str = str(o.time) if o.time else "00:00"
+        if len(time_str) >= 5 and time_str[2] == ":":
+            time_str = time_str[:5]
+        date_str = o.date.strftime("%Y-%m-%d")
+        teams = f"{o.home_team} - {o.away_team}"
+        country = o.country or ""
+        for label, curr, pre in [
+            ("1", o.odd_1, o.pre_odd_1),
+            ("X", o.odd_X, o.pre_odd_X),
+            ("2", o.odd_2, o.pre_odd_2),
+        ]:
+            if bet_type and label != bet_type:
+                continue
+            if curr is None or pre is None or float(curr) >= float(pre):
+                continue
+            try:
+                drop = (float(curr) - float(pre)) / float(pre) * 100
+            except (ZeroDivisionError, TypeError):
+                continue
+            if drop > 0:
+                continue
+            if abs(drop) < min_drop_percent:
+                continue
+            items.append(
+                DroppingOddsItem(
+                    id=f"{o.id}-{label}",
+                    match_id=o.id,
+                    sport="Football",
+                    country=country,
+                    league=o.league or "",
+                    bet_type=label,
+                    date=date_str,
+                    time=time_str,
+                    teams=teams,
+                    current_odds=float(curr),
+                    previous_odds=float(pre),
+                    drop_percent=round(drop, 1),
+                    best_current_odds=float(curr),
+                    bookmaker="Platform",
+                )
+            )
+    items.sort(key=lambda x: x.drop_percent)
+    total = len(items)
+    pages = math.ceil(total / size) if total > 0 else 0
+    offset = (page - 1) * size
+    page_items = items[offset : offset + size]
+    return DroppingOddsResponse(items=page_items, total=total, page=page, size=size, pages=pages)
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)
