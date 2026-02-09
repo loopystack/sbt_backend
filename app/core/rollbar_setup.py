@@ -55,14 +55,17 @@ def report_error(error: Exception, request=None, extra_data: dict = None):
         
         exc_info = sys.exc_info()
         
+        # report_exc_info expects (exc_info=None, request=None, ...); pass exc_info as one tuple
+        exc_tuple = (exc_info[0], exc_info[1], exc_info[2]) if exc_info[0] else None
         if exc_info[0] and exc_info[1] == error:
-            rollbar.report_exc_info(exc_info[0], exc_info[1], exc_info[2], request=None, level='error', extra_data=payload)
+            rollbar.report_exc_info(exc_info=exc_tuple, request=request, level='error', extra_data=payload)
         else:
             try:
                 raise error
             except Exception:
                 exc_info = sys.exc_info()
-                rollbar.report_exc_info(exc_info[0], exc_info[1], exc_info[2], request=None, level='error', extra_data=payload)
+                exc_tuple = (exc_info[0], exc_info[1], exc_info[2]) if exc_info[0] else None
+                rollbar.report_exc_info(exc_info=exc_tuple, request=request, level='error', extra_data=payload)
     except Exception as e:
         print(f"⚠️  Failed to report error to Rollbar: {e}")
 
@@ -79,7 +82,7 @@ def report_message(message: str, level: str = 'info', request=None, extra_data: 
             payload['request_url'] = str(request.url)
             payload['request_method'] = request.method
         
-        rollbar.report_message(message, level=level, request=None, extra_data=payload)
+        rollbar.report_message(message, level=level, request=request, extra_data=payload)
     except Exception as e:
         print(f"⚠️  Failed to report message to Rollbar: {e}")
 

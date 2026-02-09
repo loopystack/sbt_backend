@@ -118,13 +118,16 @@ class Settings(BaseSettings):
     @model_validator(mode='after')
     def sync_urls_with_localhost_ip(self):
         """Update URLs to match LOCALHOST_IP if it was changed via environment variable"""
-        # Reconstruct URLs based on actual LOCALHOST_IP value (in case it was overridden)
-        self.GOOGLE_REDIRECT_URI = f"http://{self.LOCALHOST_IP}:{self.BACKEND_PORT}/api/auth/google/callback"
-        # Local dev: include port 5173 so redirects reach the Vite dev server
+        # For local development, auto-construct URLs from LOCALHOST_IP/BACKEND_PORT
+        # so you don't need to keep .env and code in sync.
         if self.LOCALHOST_IP in ("127.0.0.1", "localhost"):
+            self.GOOGLE_REDIRECT_URI = f"http://{self.LOCALHOST_IP}:{self.BACKEND_PORT}/api/auth/google/callback"
+            # Local dev frontend runs on Vite (5173)
             self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}:5173"
-        else:
-            self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}"
+        # For non-local environments (staging/production), trust explicit env vars:
+        # - GOOGLE_REDIRECT_URI
+        # - FRONTEND_URL
+        # This lets you use HTTPS and custom domains.
         return self
 
     @model_validator(mode='after')
