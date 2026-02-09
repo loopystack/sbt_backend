@@ -18,16 +18,18 @@ from app.core.security import create_access_token, create_refresh_token
 
 router = APIRouter()
 
-# Google OAuth configuration
-GOOGLE_CLIENT_CONFIG = {
-    "web": {
-        "client_id": settings.GOOGLE_CLIENT_ID,
-        "client_secret": settings.GOOGLE_CLIENT_SECRET,
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [settings.GOOGLE_REDIRECT_URI]
+
+def _google_client_config():
+    """Build Google OAuth client config from current settings (avoids stale module-level config)."""
+    return {
+        "web": {
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "client_secret": settings.GOOGLE_CLIENT_SECRET,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [settings.GOOGLE_REDIRECT_URI],
+        }
     }
-}
 
 @router.get("/google")
 async def google_login():
@@ -46,7 +48,7 @@ async def google_login():
         
         # Real Google OAuth flow - standard web app approach
         flow = Flow.from_client_config(
-            GOOGLE_CLIENT_CONFIG,
+            _google_client_config(),
             scopes=[
                 "openid",
                 "https://www.googleapis.com/auth/userinfo.email",
@@ -242,20 +244,28 @@ async def google_callback(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Authorization code not provided"
             )
-        
-        # Create OAuth flow
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
+        # Log so you can confirm it matches Google Console (client_id masked)
+        print(f"Google callback: redirect_uri={redirect_uri}, client_id={settings.GOOGLE_CLIENT_ID[:20]}...{settings.GOOGLE_CLIENT_ID[-8:]}")
+        # Create OAuth flow with current settings
         flow = Flow.from_client_config(
-            GOOGLE_CLIENT_CONFIG,
+            _google_client_config(),
             scopes=[
                 "openid",
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile"
             ],
-            redirect_uri=settings.GOOGLE_REDIRECT_URI
+            redirect_uri=redirect_uri
         )
-        
-        # Exchange code for token
-        flow.fetch_token(code=code)
+        # Exchange code for token (Flow uses same redirect_uri as in authorization request)
+        try:
+            flow.fetch_token(code=code)
+        except Exception as token_err:
+            err_msg = str(token_err)
+            print(f"Google token exchange failed: {err_msg}")
+            if hasattr(token_err, "error") and isinstance(getattr(token_err, "error"), dict):
+                print(f"   Google error details: {token_err.error}")
+            raise
         # Get user info from Google
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
@@ -343,7 +353,7 @@ async def google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost"
+            frontend_base_url = (getattr(settings, "FRONTEND_URL", None) or "http://127.0.0.1:5173").rstrip("/")
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         
@@ -393,7 +403,7 @@ async def google_callback(
             is_localhost = True
         
         if is_localhost:
-            frontend_base_url = "http://localhost"
+            frontend_base_url = (getattr(settings, "FRONTEND_URL", None) or "http://127.0.0.1:5173").rstrip("/")
         else:
             frontend_base_url = "https://sportsbetting-seiw.onrender.com"
         

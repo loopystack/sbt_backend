@@ -120,7 +120,11 @@ class Settings(BaseSettings):
         """Update URLs to match LOCALHOST_IP if it was changed via environment variable"""
         # Reconstruct URLs based on actual LOCALHOST_IP value (in case it was overridden)
         self.GOOGLE_REDIRECT_URI = f"http://{self.LOCALHOST_IP}:{self.BACKEND_PORT}/api/auth/google/callback"
-        self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}"
+        # Local dev: include port 5173 so redirects reach the Vite dev server
+        if self.LOCALHOST_IP in ("127.0.0.1", "localhost"):
+            self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}:5173"
+        else:
+            self.FRONTEND_URL = f"http://{self.LOCALHOST_IP}"
         return self
 
     @model_validator(mode='after')

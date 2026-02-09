@@ -38,6 +38,7 @@ def log_startup_summary():
     logger.info(f"Rollbar Monitoring: {'ENABLED' if settings.ROLLBAR_ENABLED else 'DISABLED'}")
     logger.info(f"Rate Limiting: {'ENABLED' if settings.RATE_LIMITING_ENABLED else 'DISABLED'}")
     logger.info(f"Alerts: {'ENABLED' if settings.ALERTS_ENABLED else 'DISABLED'}")
+    logger.info(f"Google OAuth redirect URI: {settings.GOOGLE_REDIRECT_URI}")
     logger.info("=" * 60)
 
     # Production safety warnings
