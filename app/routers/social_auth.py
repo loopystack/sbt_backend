@@ -150,40 +150,8 @@ async def mock_google_callback(
             verification_token=activation_token
         )
         
-        # Redirect to frontend with success message
-        # Determine frontend URL dynamically
-        referer = request.headers.get("referer", "")
-        host = request.headers.get("host", "")
-        origin = request.headers.get("origin", "")
-        
-        # More precise localhost detection - prioritize production
-        is_localhost = False
-        
-        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
-        if any([
-            "sportsbetting-seiw.onrender.com" in referer.lower(),
-            "sportsbetting-seiw.onrender.com" in host.lower(),
-            "sportsbetting-seiw.onrender.com" in origin.lower(),
-            "sportsbetting-seiw.onrender.com" in str(request.url)
-        ]):
-            is_localhost = False
-        # Then check for localhost indicators
-        elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:5001" in str(request.url)
-        ]):
-            is_localhost = True
-        
-        if is_localhost:
-            frontend_base_url = "http://localhost"
-        else:
-            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
-        
+        # Redirect to frontend with success message (use FRONTEND_URL from .env)
+        frontend_base_url = (settings.FRONTEND_URL or "http://127.0.0.1:5173").rstrip("/")
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?message=activation_sent&mock=true",
             status_code=status.HTTP_302_FOUND
@@ -191,39 +159,8 @@ async def mock_google_callback(
         
     except Exception as e:
         print(f"Mock Google callback error: {str(e)}")
-        # Use dynamic frontend URL for error redirect too
-        referer = request.headers.get("referer", "")
-        host = request.headers.get("host", "")
-        origin = request.headers.get("origin", "")
-        
-        # More precise localhost detection - prioritize production
-        is_localhost = False
-        
-        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
-        if any([
-            "sportsbetting-seiw.onrender.com" in referer.lower(),
-            "sportsbetting-seiw.onrender.com" in host.lower(),
-            "sportsbetting-seiw.onrender.com" in origin.lower(),
-            "sportsbetting-seiw.onrender.com" in str(request.url)
-        ]):
-            is_localhost = False
-        # Then check for localhost indicators
-        elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:5001" in str(request.url)
-        ]):
-            is_localhost = True
-        
-        if is_localhost:
-            frontend_base_url = "http://localhost"
-        else:
-            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
-        
+        # Use configured frontend URL for error redirect too
+        frontend_base_url = (settings.FRONTEND_URL or "http://127.0.0.1:5173").rstrip("/")
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?error=mock_auth_failed",
             status_code=status.HTTP_302_FOUND
@@ -323,47 +260,9 @@ async def google_callback(
         access_token = create_access_token(data={"sub": str(user.id)})
         refresh_token = create_refresh_token(data={"sub": str(user.id)})
         
-        # Determine frontend URL dynamically based on the request
-        # Check multiple sources to detect localhost vs production
-        referer = request.headers.get("referer", "")
-        host = request.headers.get("host", "")
-        origin = request.headers.get("origin", "")
-        
-        # More precise localhost detection - prioritize production
-        is_localhost = False
-        
-        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
-        if any([
-            "sportsbetting-seiw.onrender.com" in referer.lower(),
-            "sportsbetting-seiw.onrender.com" in host.lower(),
-            "sportsbetting-seiw.onrender.com" in origin.lower(),
-            "sportsbetting-seiw.onrender.com" in str(request.url)
-        ]):
-            is_localhost = False
-        # Then check for localhost indicators
-        elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:5001" in str(request.url)
-        ]):
-            is_localhost = True
-        
-        if is_localhost:
-            frontend_base_url = (getattr(settings, "FRONTEND_URL", None) or "http://127.0.0.1:5173").rstrip("/")
-        else:
-            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
-        
-        print(f"🔍 OAuth Callback Debug:")
-        print(f"   Referer: {referer}")
-        print(f"   Host: {host}")
-        print(f"   Origin: {origin}")
-        print(f"   Request URL: {request.url}")
-        print(f"   Is Localhost: {is_localhost}")
-        print(f"   Frontend URL: {frontend_base_url}")
+        # Use configured frontend URL (FRONTEND_URL in .env) so production redirects to correct domain
+        frontend_base_url = (settings.FRONTEND_URL or "http://127.0.0.1:5173").rstrip("/")
+        print(f"🔍 OAuth Callback: redirecting to frontend {frontend_base_url}")
         
         # Redirect directly to dashboard with tokens (no intermediate signin page)
         frontend_url = f"{frontend_base_url}/dashboard?google_auth=success&access_token={access_token}&refresh_token={refresh_token}"
@@ -374,39 +273,7 @@ async def google_callback(
         
     except Exception as e:
         print(f"Google callback error: {str(e)}")
-        # Use dynamic frontend URL for error redirect too
-        referer = request.headers.get("referer", "")
-        host = request.headers.get("host", "")
-        origin = request.headers.get("origin", "")
-        
-        # More precise localhost detection - prioritize production
-        is_localhost = False
-        
-        # First check if we're definitely on production (sportsbetting-seiw.onrender.com)
-        if any([
-            "sportsbetting-seiw.onrender.com" in referer.lower(),
-            "sportsbetting-seiw.onrender.com" in host.lower(),
-            "sportsbetting-seiw.onrender.com" in origin.lower(),
-            "sportsbetting-seiw.onrender.com" in str(request.url)
-        ]):
-            is_localhost = False
-        # Then check for localhost indicators
-        elif any([
-            "localhost" in referer.lower(),
-            "127.0.0.1" in referer.lower(),
-            "localhost" in host.lower(),
-            "127.0.0.1" in host.lower(),
-            "localhost" in origin.lower(),
-            "127.0.0.1" in origin.lower(),
-            "localhost:5001" in str(request.url)
-        ]):
-            is_localhost = True
-        
-        if is_localhost:
-            frontend_base_url = (getattr(settings, "FRONTEND_URL", None) or "http://127.0.0.1:5173").rstrip("/")
-        else:
-            frontend_base_url = "https://sportsbetting-seiw.onrender.com"
-        
+        frontend_base_url = (settings.FRONTEND_URL or "http://127.0.0.1:5173").rstrip("/")
         return RedirectResponse(
             url=f"{frontend_base_url}/signin?error=google_auth_failed",
             status_code=status.HTTP_302_FOUND
