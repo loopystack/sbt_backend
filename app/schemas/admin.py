@@ -88,3 +88,13 @@ class UserUpdateRequest(BaseModel):
     is_verified: Optional[bool] = None
     is_superuser: Optional[bool] = None
     funds_usd: Optional[float] = None
+
+
+class AdminActivityItem(BaseModel):
+    """Single item for the admin Live Activity Feed."""
+    type: str  # "user" | "bet" | "transaction"
+    title: str
+    subtitle: str
+    created_at: datetime
+
+    model_config = {"from_attributes": False}

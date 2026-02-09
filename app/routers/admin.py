@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, or_
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.core.database import get_db
 from app.core.admin_deps import get_admin_user
@@ -17,7 +17,8 @@ from app.schemas.admin import (
     AdminBettingRecordResponse, 
     AdminTransactionResponse,
     AdminStatsResponse,
-    UserUpdateRequest
+    UserUpdateRequest,
+    AdminActivityItem,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -80,6 +81,101 @@ async def get_admin_stats(
             total_transactions=0,
             total_transaction_volume=0.0
         )
+
+
+@router.get("/activity", response_model=List[AdminActivityItem])
+async def get_admin_activity(
+    limit: int = Query(20, ge=1, le=50),
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get recent activity for the admin Live Activity Feed (registrations, bets, transactions)."""
+    activities: List[AdminActivityItem] = []
+    now = datetime.now(timezone.utc)
+
+    try:
+        # Recent user registrations
+        users_stmt = (
+            select(User)
+            .order_by(desc(User.created_at))
+            .limit(10)
+        )
+        users_result = await db.execute(users_stmt)
+        for user in users_result.scalars().all():
+            created = getattr(user, "created_at", None) or now
+            if hasattr(created, "tzinfo") and created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            activities.append(
+                AdminActivityItem(
+                    type="user",
+                    title="New user registered",
+                    subtitle=user.email or user.username or f"User #{user.id}",
+                    created_at=created,
+                )
+            )
+
+        # Recent bets
+        bets_stmt = (
+            select(BettingRecord, User.email, User.username)
+            .join(User, BettingRecord.user_id == User.id)
+            .order_by(desc(BettingRecord.created_at))
+            .limit(10)
+        )
+        bets_result = await db.execute(bets_stmt)
+        for row in bets_result.all():
+            bet, user_email, user_username = row[0], row[1], row[2]
+            created = bet.created_at
+            if created and created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            league = bet.match_league or "Match"
+            activities.append(
+                AdminActivityItem(
+                    type="bet",
+                    title="Bet placed",
+                    subtitle=f"${bet.bet_amount:.2f} on {league} • {user_email or user_username}",
+                    created_at=created or now,
+                )
+            )
+
+        # Recent transactions
+        tx_stmt = (
+            select(Transaction, User.email, User.username)
+            .join(User, Transaction.user_id == User.id)
+            .order_by(desc(Transaction.created_at))
+            .limit(10)
+        )
+        tx_result = await db.execute(tx_stmt)
+        for row in tx_result.all():
+            tx, user_email, user_username = row[0], row[1], row[2]
+            created = tx.created_at
+            if created and created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            amount_str = f"${abs(tx.amount):.2f}" if tx.amount else ""
+            tx_desc = (tx.description or "").strip()[:60]
+            if len((tx.description or "").strip()) > 60:
+                tx_desc += "…"
+            parts = [p for p in [amount_str, tx_desc] if p]
+            subtitle = " • ".join(parts) if parts else "Transaction"
+            activities.append(
+                AdminActivityItem(
+                    type="transaction",
+                    title=f"{tx.transaction_type.replace('_', ' ').title()}",
+                    subtitle=subtitle,
+                    created_at=created or now,
+                )
+            )
+
+        # Sort all by created_at descending and return top `limit`
+        activities.sort(key=lambda a: a.created_at, reverse=True)
+        result = activities[:limit]
+        print(f"Admin activity feed: returning {len(result)} items (users/bets/transactions)")
+        return result
+    except Exception as e:
+        import traceback
+        print(f"Error in get_admin_activity: {e}")
+        traceback.print_exc()
+        return []
+
 
 @router.get("/users", response_model=List[AdminUserResponse])
 async def get_all_users(
