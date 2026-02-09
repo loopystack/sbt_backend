@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time as dt_time
 import asyncio
 
 from app.core.database import get_db
@@ -12,6 +12,33 @@ from app.models.user import User
 from app.services.email_service import email_service
 
 router = APIRouter()
+
+
+def _is_valid_football_result(result: str) -> bool:
+    """Only treat as a real match score. Rejects scraper garbage like 18-17 or 19-523."""
+    if not result or not result.strip():
+        return False
+    parts = result.strip().split("-")
+    if len(parts) != 2:
+        return False
+    try:
+        a, b = int(parts[0]), int(parts[1])
+        return 0 <= a <= 15 and 0 <= b <= 15
+    except ValueError:
+        return False
+
+
+def _match_has_been_played(match) -> bool:
+    """True only if match date+time is in the past. Never settle future matches."""
+    match_date = getattr(match, "date", None)
+    if not match_date:
+        return False
+    match_time = getattr(match, "time", None) or dt_time.min
+    try:
+        match_dt = datetime.combine(match_date, match_time).replace(tzinfo=timezone.utc)
+        return match_dt < datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return False
 
 
 @router.put("/update-result/{match_id}")
@@ -47,11 +74,29 @@ async def update_match_result_and_settle(
         if not match:
             raise HTTPException(status_code=404, detail=f"Match {match_id} not found")
         
+        if not _is_valid_football_result(result):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid result format or impossible score (use e.g. 2-1; each side must be 0-15)"
+            )
+        
         print(f"🏟️  Match: {match.home_team} vs {match.away_team}")
         
         # Update the match result
         match.result = result
         print(f"✅ Updated result: {result}")
+        
+        # Only settle bets if the match has actually been played (date+time in the past)
+        if not _match_has_been_played(match):
+            await db.commit()
+            return {
+                "message": "Result saved. Match has not been played yet; no bets were settled.",
+                "match": f"{match.home_team} vs {match.away_team}",
+                "result": result,
+                "bets_settled": 0,
+                "total_winnings": 0.0,
+                "settlement_details": []
+            }
         
         # AUTOMATIC SETTLEMENT: Process all bets for this match
         settlement_result = await settle_match_bets_automatically(match, db)

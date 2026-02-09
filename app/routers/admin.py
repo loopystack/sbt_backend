@@ -415,6 +415,137 @@ async def get_all_betting_records(
         print(f"Error in get_all_betting_records: {e}")
         return []
 
+
+def _match_date_still_future(match_date) -> bool:
+    """True if match_date is in the future (match not yet played)."""
+    if not match_date:
+        return False
+    now = datetime.now(timezone.utc)
+    md = match_date
+    if getattr(md, "tzinfo", None) is None:
+        md = md.replace(tzinfo=timezone.utc)
+    return md > now
+
+
+@router.post("/revert-future-settled-bets")
+async def revert_future_settled_bets(
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    One-off: revert bets that were wrongly settled for future matches.
+    Resets those bets to pending and reverses any winnings paid. Use after fixing
+    auto-settlement so future matches are no longer settled.
+    """
+    try:
+        result = await db.execute(select(BettingRecord).where(BettingRecord.is_settled == True))
+        settled = result.scalars().all()
+        to_revert = [b for b in settled if _match_date_still_future(b.match_date)]
+        if not to_revert:
+            return {"message": "No wrongly settled (future) bets found.", "reverted": 0}
+
+        for bet in to_revert:
+            user = await db.get(User, bet.user_id)
+            if not user:
+                continue
+            tx_result = await db.execute(
+                select(Transaction).where(
+                    and_(
+                        Transaction.reference_type == "betting_record",
+                        Transaction.reference_id == str(bet.id),
+                        Transaction.transaction_type.in_(["bet_won", "bet_lost"]),
+                    )
+                )
+            )
+            for tx in tx_result.scalars().all():
+                await db.delete(tx)
+            if bet.bet_status == "won":
+                winnings = float(bet.bet_amount * bet.odds_decimal)
+                old = float(user.funds_usd)
+                new_balance = max(0.0, old - winnings)
+                user.funds_usd = new_balance
+                # Record a balance-correction transaction so "current balance" matches latest transaction (fixes "out of sync" warning)
+                db.add(
+                    Transaction(
+                        user_id=bet.user_id,
+                        transaction_type="balance_correction",
+                        amount=-winnings,
+                        balance_before=old,
+                        balance_after=new_balance,
+                        description=f"Balance correction: reverted mistaken payout for future match ({bet.match_teams})",
+                        reference_id=str(bet.id),
+                        reference_type="betting_record",
+                        status="completed",
+                        payment_method="revert_future_settlement",
+                    )
+                )
+            bet.bet_status = "pending"
+            bet.is_settled = False
+            bet.actual_profit = None
+            bet.settlement_date = None
+            bet.match_status = "upcoming"
+
+        await db.commit()
+        return {
+            "message": f"Reverted {len(to_revert)} bet(s) that were settled for future matches.",
+            "reverted": len(to_revert),
+        }
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Revert failed: {str(e)}",
+        )
+
+
+@router.post("/fix-user-balance-sync")
+async def fix_user_balance_sync(
+    user_id: int = Query(..., description="User ID to fix"),
+    current_user: User = Depends(get_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Fix 'Balance may be out of sync' for a user. Inserts a balance_correction transaction
+    so the latest transaction's balance_after equals the user's current funds_usd.
+    Use after a revert that was run before we added correction transactions.
+    """
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    latest_tx_result = await db.execute(
+        select(Transaction)
+        .where(Transaction.user_id == user_id)
+        .order_by(desc(Transaction.created_at))
+        .limit(1)
+    )
+    latest_tx = latest_tx_result.scalar_one_or_none()
+    current = float(user.funds_usd)
+    if not latest_tx:
+        # No transactions: no sync issue
+        return {"message": "User has no transactions; nothing to fix.", "fixed": False}
+    if abs(float(latest_tx.balance_after) - current) < 0.01:
+        return {"message": "Balance already in sync.", "fixed": False}
+    before = float(latest_tx.balance_after)
+    db.add(
+        Transaction(
+            user_id=user_id,
+            transaction_type="balance_correction",
+            amount=current - before,
+            balance_before=before,
+            balance_after=current,
+            description="Balance correction: align ledger with current balance",
+            reference_type="balance_sync",
+            status="completed",
+            payment_method="admin_fix",
+        )
+    )
+    await db.commit()
+    return {
+        "message": f"Inserted balance correction for user {user_id}: balance_after now {current}.",
+        "fixed": True,
+    }
+
+
 @router.get("/transactions", response_model=List[AdminTransactionResponse])
 async def get_all_transactions(
     page: int = Query(1, ge=1),

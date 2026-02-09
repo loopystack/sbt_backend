@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc, and_, select, func
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time as dt_time
 
 from ..core.deps import get_db, get_current_user
 from ..models.user import User
@@ -17,6 +17,34 @@ from ..schemas.transaction import (
 )
 
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
+
+
+def _is_valid_football_result(result: str) -> bool:
+    """Only treat as a real match score. Rejects scraper garbage like 18-17 or 19-523."""
+    if not result or not result.strip():
+        return False
+    parts = result.strip().split("-")
+    if len(parts) != 2:
+        return False
+    try:
+        a, b = int(parts[0]), int(parts[1])
+        return 0 <= a <= 15 and 0 <= b <= 15
+    except ValueError:
+        return False
+
+
+def _match_has_been_played(match) -> bool:
+    """True only if match date+time is in the past. Never settle future matches."""
+    match_date = getattr(match, "date", None)
+    if not match_date:
+        return False
+    match_time = getattr(match, "time", None) or dt_time.min
+    try:
+        match_dt = datetime.combine(match_date, match_time).replace(tzinfo=timezone.utc)
+        return match_dt < datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return False
+
 
 async def auto_settle_user_bets(db: AsyncSession, user_id: int):
     """
@@ -69,6 +97,10 @@ async def auto_settle_user_bets(db: AsyncSession, user_id: int):
             
             if not match or not match.result:
                 continue  # Skip if no match found or no result
+            if not _is_valid_football_result(match.result):
+                continue  # Reject scraper garbage (e.g. 18-17) and impossible scores
+            if not _match_has_been_played(match):
+                continue  # Never settle future matches; only after match has started
             
             print(f"   🏟️  Settling: {bet.match_teams} ({match.result})")
             

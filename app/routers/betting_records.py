@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc, and_, select, func
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time as dt_time
 
 from ..core.deps import get_db, get_current_user
 from ..models.user import User
@@ -21,6 +21,34 @@ from ..schemas.betting_record import (
 )
 
 router = APIRouter(prefix="/api/betting", tags=["betting_records"])
+
+
+def _is_valid_football_result(result: str) -> bool:
+    """Only treat as a real match score (e.g. 1-0, 2-1). Rejects scraper garbage like 18-17 or 19-523."""
+    if not result or not result.strip():
+        return False
+    parts = result.strip().split("-")
+    if len(parts) != 2:
+        return False
+    try:
+        a, b = int(parts[0]), int(parts[1])
+        return 0 <= a <= 15 and 0 <= b <= 15
+    except ValueError:
+        return False
+
+
+def _match_has_been_played(match) -> bool:
+    """True only if match date+time is in the past (match has started). Never settle future matches."""
+    match_date = getattr(match, "date", None)
+    if not match_date:
+        return False
+    match_time = getattr(match, "time", None) or dt_time.min
+    try:
+        match_dt = datetime.combine(match_date, match_time).replace(tzinfo=timezone.utc)
+        return match_dt < datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return False
+
 
 async def auto_settle_user_bets(db: AsyncSession, user_id: int):
     """
@@ -73,6 +101,10 @@ async def auto_settle_user_bets(db: AsyncSession, user_id: int):
             
             if not match or not match.result:
                 continue  # Skip if no match found or no result
+            if not _is_valid_football_result(match.result):
+                continue  # Reject scraper garbage (e.g. 18-17) and impossible scores
+            if not _match_has_been_played(match):
+                continue  # Never settle future matches; only after match has started
             
             print(f"   🏟️  Settling: {bet.match_teams} ({match.result})")
             
@@ -361,25 +393,26 @@ async def get_betting_stats(
         print(f"📊 Found {len(records)} betting records for user {current_user.id}")
         
         total_bets = len(records)
-        total_amount_bet = sum(record.bet_amount for record in records)
-        total_potential_win = sum(record.potential_win for record in records)
+        total_amount_bet = sum(float(record.bet_amount) for record in records)
+        total_potential_win = sum(float(record.potential_win) for record in records)
         
         settled_records = [r for r in records if r.is_settled]
-        won_bets = len([r for r in settled_records if r.bet_status == "won"])
-        lost_bets = len([r for r in settled_records if r.bet_status == "lost"])
+        won_bets = sum(1 for r in settled_records if r.bet_status == "won")
+        lost_bets = sum(1 for r in settled_records if r.bet_status == "lost")
+        pending_bets = total_bets - len(settled_records)
         
-        total_profit = sum(r.actual_profit or 0 for r in settled_records)
-        win_rate = (won_bets / len(settled_records)) * 100 if settled_records else 0
+        total_profit = sum(float(r.actual_profit or 0) for r in settled_records)
+        win_rate = (won_bets / len(settled_records)) * 100.0 if settled_records else 0.0
         
         return {
-            "total_bets": total_bets,
-            "total_amount_bet": float(total_amount_bet),
-            "total_potential_win": float(total_potential_win),
-            "won_bets": won_bets,
-            "lost_bets": lost_bets,
-            "pending_bets": total_bets - len(settled_records),
-            "total_profit": float(total_profit),
-            "win_rate": round(win_rate, 2)
+            "total_bets": int(total_bets),
+            "total_amount_bet": round(float(total_amount_bet), 2),
+            "total_potential_win": round(float(total_potential_win), 2),
+            "won_bets": int(won_bets),
+            "lost_bets": int(lost_bets),
+            "pending_bets": int(pending_bets),
+            "total_profit": round(float(total_profit), 2),
+            "win_rate": round(win_rate, 2),
         }
     except Exception as e:
         print(f"❌ Error fetching betting stats: {str(e)}")
