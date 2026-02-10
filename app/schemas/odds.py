@@ -69,3 +69,30 @@ class DroppingOddsResponse(BaseModel):
     page: int
     size: int
     pages: int
+
+
+class SureBetItem(BaseModel):
+    id: str
+    sport: str = "Football"
+    country: str
+    league: str
+    teams: str
+    date: str
+    time: str
+    best_odd_1: float
+    best_odd_x: float
+    best_odd_2: float
+    profit_percent: float
+    stake_1: float
+    stake_x: float
+    stake_2: float
+    total_stake: float
+    guaranteed_return: float
+
+
+class SureBetsResponse(BaseModel):
+    items: List[SureBetItem]
+    total: int
+    page: int
+    size: int
+    pages: int

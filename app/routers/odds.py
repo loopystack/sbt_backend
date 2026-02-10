@@ -11,7 +11,15 @@ from app.models.odds import Odds
 from app.models.betting_record import BettingRecord
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.schemas.odds import OddsResponse, OddsListResponse, OddsQueryParams, DroppingOddsItem, DroppingOddsResponse
+from app.schemas.odds import (
+    OddsResponse,
+    OddsListResponse,
+    OddsQueryParams,
+    DroppingOddsItem,
+    DroppingOddsResponse,
+    SureBetItem,
+    SureBetsResponse,
+)
 
 router = APIRouter()
 
@@ -495,6 +503,108 @@ async def get_dropping_odds(
     offset = (page - 1) * size
     page_items = items[offset : offset + size]
     return DroppingOddsResponse(items=page_items, total=total, page=page, size=size, pages=pages)
+
+
+@router.get("/sure-bets", response_model=SureBetsResponse)
+async def get_sure_bets(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Page size"),
+    date_from: Optional[date] = Query(None, description="Filter from date (YYYY-MM-DD)"),
+    date_to: Optional[date] = Query(None, description="Filter to date (YYYY-MM-DD)"),
+    min_profit_percent: float = Query(0.0, ge=0, le=50, description="Minimum profit %"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get sure bets (arbitrage): matches where best odds across rows give 1/odd_1 + 1/odd_X + 1/odd_2 < 1.
+    Groups odds by (date, home_team, away_team, league, country), takes max per outcome, then filters by implied sum < 1.
+    """
+    today = date.today()
+    from_date = date_from if date_from is not None else today
+    to_date = date_to if date_to is not None else today
+    max_rows = 2000
+    cols = [
+        Odds.id, Odds.date, Odds.time, Odds.home_team, Odds.away_team,
+        Odds.country, Odds.league,
+        Odds.odd_1, Odds.odd_X, Odds.odd_2,
+    ]
+    query = (
+        select(Odds)
+        .options(load_only(*cols))
+        .where(Odds.date >= from_date)
+        .where(Odds.date <= to_date)
+        .where(Odds.result.is_(None))
+        .where(
+            Odds.odd_1.isnot(None),
+            Odds.odd_X.isnot(None),
+            Odds.odd_2.isnot(None),
+            Odds.odd_1 > 0,
+            Odds.odd_X > 0,
+            Odds.odd_2 > 0,
+        )
+        .order_by(Odds.date.asc(), Odds.time.asc())
+        .limit(max_rows)
+    )
+    result = await db.execute(query)
+    rows = result.scalars().all()
+
+    # Group by match (date, home_team, away_team, league, country)
+    groups: dict = {}
+    for o in rows:
+        key = (o.date, o.home_team, o.away_team, (o.league or ""), (o.country or ""))
+        if key not in groups:
+            groups[key] = []
+        groups[key].append(
+            (float(o.odd_1), float(o.odd_X), float(o.odd_2), o.time)
+        )
+
+    items: List[SureBetItem] = []
+    for (match_date, home_team, away_team, league, country), odds_list in groups.items():
+        best_1 = max(x[0] for x in odds_list)
+        best_x = max(x[1] for x in odds_list)
+        best_2 = max(x[2] for x in odds_list)
+        implied = (1.0 / best_1) + (1.0 / best_x) + (1.0 / best_2)
+        if implied >= 1.0:
+            continue
+        profit_pct = (1.0 / implied - 1.0) * 100.0
+        if profit_pct < min_profit_percent:
+            continue
+        time_val = odds_list[0][3]
+        time_str = str(time_val)[:5] if time_val else "00:00"
+        date_str = match_date.strftime("%Y-%m-%d")
+        teams = f"{home_team} - {away_team}"
+        total_stake = 100.0
+        stake_1 = total_stake * (1.0 / best_1) / implied
+        stake_x = total_stake * (1.0 / best_x) / implied
+        stake_2 = total_stake * (1.0 / best_2) / implied
+        guaranteed_return = total_stake * (1.0 / implied)
+        bet_id = f"{date_str}-{home_team[:20]}-{away_team[:20]}".replace(" ", "_")
+        items.append(
+            SureBetItem(
+                id=bet_id,
+                sport="Football",
+                country=country,
+                league=league,
+                teams=teams,
+                date=date_str,
+                time=time_str,
+                best_odd_1=round(best_1, 2),
+                best_odd_x=round(best_x, 2),
+                best_odd_2=round(best_2, 2),
+                profit_percent=round(profit_pct, 2),
+                stake_1=round(stake_1, 2),
+                stake_x=round(stake_x, 2),
+                stake_2=round(stake_2, 2),
+                total_stake=round(total_stake, 2),
+                guaranteed_return=round(guaranteed_return, 2),
+            )
+        )
+
+    items.sort(key=lambda x: -x.profit_percent)
+    total = len(items)
+    pages = math.ceil(total / size) if total > 0 else 0
+    offset = (page - 1) * size
+    page_items = items[offset : offset + size]
+    return SureBetsResponse(items=page_items, total=total, page=page, size=size, pages=pages)
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)
