@@ -6,11 +6,11 @@
 set -e  # Exit on any error
 
 # Configuration - Modify these for your environment
-BACKUP_DIR="/var/backups/sportsbet"
+BACKUP_DIR="/home/deploy/db_backup"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
-DB_NAME="${DB_NAME:-sportsbetting_db}"
-DB_USER="${DB_USER:-sportsbet}"
+DB_NAME="${DB_NAME:-sportsbetting}"
+DB_USER="${DB_USER:-betting_master}"
 
 # Environment-specific settings
 ENVIRONMENT="${1:-production}"
