@@ -21,13 +21,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours (much more reasonable)
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30     # 30 days (extended refresh)
     
-    # Email SMTP Configuration
+    # Email: SMTP (Gmail etc.) or SendGrid API (recommended on VPS where SMTP ports are blocked)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 465
-    SMTP_USERNAME: str
-    SMTP_PASSWORD: str
-    SMTP_FROM_EMAIL: str
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
     SMTP_FROM_NAME: str = "Soccer Betting App"
+    SENDGRID_API_KEY: Optional[str] = None  # If set, emails are sent via SendGrid Web API (no SMTP ports needed)
     
     # IP Address Configuration
     LOCALHOST_IP: str = DEFAULT_LOCALHOST_IP

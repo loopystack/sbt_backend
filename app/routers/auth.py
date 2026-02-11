@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, timezone
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from typing import Any
 import httpx
+
+logger = logging.getLogger(__name__)
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from decimal import Decimal
@@ -130,12 +133,17 @@ async def register(
     db.add(email_verification)
     await db.commit()
     
-    # Send verification email
-    await email_service.send_verification_email(
-        email=db_user.email,
-        username=db_user.username,
-        verification_token=verification_token
-    )
+    # Send verification email (don't fail signup if email fails - e.g. SendGrid config issue)
+    try:
+        sent = await email_service.send_verification_email(
+            email=db_user.email,
+            username=db_user.username,
+            verification_token=verification_token
+        )
+        if not sent:
+            logger.warning("Verification email was not sent for user %s (check email/SendGrid config)", db_user.email)
+    except Exception as e:
+        logger.exception("Failed to send verification email for %s: %s", db_user.email, e)
     
     return db_user
 
