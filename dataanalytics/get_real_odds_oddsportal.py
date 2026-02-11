@@ -659,6 +659,15 @@ def _parse_date(d: Optional[str]):
     return None
 
 # -------------------- Other extraction helpers --------------------
+# Valid football score: each side 0-15 (reject scraper garbage like 16-384, 19-823)
+def _is_valid_football_score(g1: str, g2: str) -> bool:
+    try:
+        a, b = int(g1), int(g2)
+        return 0 <= a <= 15 and 0 <= b <= 15
+    except (ValueError, TypeError):
+        return False
+
+
 def _extract_score_from_text(raw: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
     if not raw:
         return None, None
@@ -666,13 +675,16 @@ def _extract_score_from_text(raw: Optional[str]) -> Tuple[Optional[str], Optiona
     if "<" in raw and ">" in raw:
         raw = re.sub(r"<[^>]+>", " ", raw)
     raw = raw.replace("\u2013", "-")  # normalize en dash
-    # Match "N-M" or "N:M" (football score patterns)
-    m = re.search(r"\b(\d+)\s*[-:]\s*(\d+)\b", raw)
-    if m:
-        return m.group(1), m.group(2)
+    # Match "N-M" or "N:M" (football score patterns); only accept valid score range 0-15
+    for m in re.finditer(r"\b(\d+)\s*[-:]\s*(\d+)\b", raw):
+        g1, g2 = m.group(1), m.group(2)
+        if _is_valid_football_score(g1, g2):
+            return g1, g2
+    # Fallback: first two numbers that form a valid score (e.g. "1" and "0" in "1 0")
     nums = re.findall(r"\b\d+\b", raw)
-    if len(nums) >= 2:
-        return nums[0], nums[1]
+    for i in range(len(nums) - 1):
+        if _is_valid_football_score(nums[i], nums[i + 1]):
+            return nums[i], nums[i + 1]
     return None, None
 
 def _get_text_from_selector(row, selector: str) -> str:
@@ -1194,6 +1206,23 @@ def _to_int(s: Optional[str]):
     try: return int(str(s).strip())
     except Exception: return None
 
+def _normalize_result(result: Optional[str]) -> Optional[str]:
+    """Only allow football score format N-M with each side 0-15. Reject xx-xxx garbage."""
+    if not result or not str(result).strip():
+        return None
+    s = str(result).strip()
+    parts = re.split(r"[-:]", s, 1)
+    if len(parts) != 2:
+        return None
+    try:
+        a, b = int(parts[0].strip()), int(parts[1].strip())
+        if 0 <= a <= 15 and 0 <= b <= 15:
+            return f"{a}-{b}"
+    except ValueError:
+        pass
+    return None
+
+
 def build_insert_values(rows: List[MatchRow]) -> List[Tuple]:
     vals = []
     for r in rows:
@@ -1202,6 +1231,9 @@ def build_insert_values(rows: List[MatchRow]) -> List[Tuple]:
             # Safety: skip rows whose date we can't parse (avoid NOT NULL violation)
             print(f"!! SKIP (no date): [{r.country}][{r.league}] {r.date_str} {r.time_str} {r.home_team} vs {r.away_team}")
             continue
+        result = _normalize_result(r.result)
+        if r.result and not result:
+            print(f"!! SKIP invalid result '{r.result}': [{r.country}][{r.league}] {r.home_team} vs {r.away_team}")
         vals.append((
             r.country,
             r.league,
@@ -1210,7 +1242,7 @@ def build_insert_values(rows: List[MatchRow]) -> List[Tuple]:
             _parse_time(r.time_str),
             (r.home_team or None),
             (r.away_team or None),
-            (r.result or None),
+            result,
             _to_decimal(r.odd_1),
             _to_decimal(r.odd_X),
             _to_decimal(r.odd_2),
