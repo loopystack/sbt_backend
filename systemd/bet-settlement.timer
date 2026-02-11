@@ -1,0 +1,10 @@
+[Unit]
+Description=Run bet settlement daily (after odds scraper)
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+Persistent=true
+Unit=bet-settlement.service
+
+[Install]
+WantedBy=timers.target

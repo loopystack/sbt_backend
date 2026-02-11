@@ -15,13 +15,24 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/settle-all-finished")
-async def settle_all_finished_matches(
-    db: AsyncSession = Depends(get_db)
-):
+def _is_valid_football_result(result: str) -> bool:
+    """Only treat as a real match score. Rejects scraper garbage like 18-17 or 19-523."""
+    if not result or not str(result).strip():
+        return False
+    parts = str(result).strip().split("-")
+    if len(parts) != 2:
+        return False
+    try:
+        a, b = int(parts[0]), int(parts[1])
+        return 0 <= a <= 15 and 0 <= b <= 15
+    except ValueError:
+        return False
+
+
+async def run_settle_all_finished(db: AsyncSession):
     """
-    BULLETPROOF settlement system that handles all finished matches.
-    Uses match_id when available, falls back to smart team matching.
+    Core settlement logic: find all Odds with a valid result and settle matching unsettled bets.
+    Used by the API endpoint and by the daily settlement script.
     """
     try:
         print("🎯 Starting bulletproof settlement system...")
@@ -30,7 +41,7 @@ async def settle_all_finished_matches(
         try:
             await db.execute(text("SELECT match_id FROM betting_records LIMIT 1"))
             print("✅ match_id column exists")
-        except:
+        except Exception:
             print("🔧 Adding match_id column...")
             await db.execute(text("ALTER TABLE betting_records ADD COLUMN match_id INTEGER"))
             await db.commit()
@@ -54,6 +65,9 @@ async def settle_all_finished_matches(
         total_winnings = 0.0
         
         for match in finished_matches:
+            if not _is_valid_football_result(match.result):
+                print(f"   ⏭️  Skipping invalid result: {match.home_team} vs {match.away_team} ({match.result})")
+                continue
             print(f"\n🏟️  Processing match: {match.home_team} vs {match.away_team} ({match.result})")
             
             # Find unsettled bets for this match using BULLETPROOF matching
@@ -188,6 +202,20 @@ async def settle_all_finished_matches(
     except Exception as e:
         await db.rollback()
         logger.error(f"Settlement error: {str(e)}")
+        raise
+
+
+@router.post("/settle-all-finished")
+async def settle_all_finished_matches(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    BULLETPROOF settlement system that handles all finished matches.
+    Uses match_id when available, falls back to smart team matching.
+    """
+    try:
+        return await run_settle_all_finished(db)
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Settlement failed: {str(e)}")
 
 
