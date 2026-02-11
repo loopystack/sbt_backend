@@ -755,10 +755,9 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
         try:
             center = part.find_element(By.XPATH, ".//div[contains(@class,'text-gray-dark') and contains(@class,'relative')]//div[contains(@class,'gap-1')]")
             try:
-                raw = center.get_dom_attribute("textContent") or ""
+                raw = center.get_dom_attribute("textContent") or center.text or ""
             except Exception:
-                # Fallback for older Selenium/WebElement implementations
-                raw = center.get_attribute("textContent") or ""
+                raw = ""
             g1, g2 = _extract_score_from_text(raw)
             if g1 is not None and g2 is not None:
                 home_goals = home_goals or g1
@@ -769,12 +768,9 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
     if home_goals is None or away_goals is None:
         try:
             try:
-                raw = part.get_dom_attribute("textContent") or ""
+                raw = part.get_dom_attribute("textContent") or part.text or ""
             except Exception:
-                try:
-                    raw = part.get_dom_attribute("textContent") or ""
-                except Exception:
-                    raw = part.get_attribute("textContent") or ""
+                raw = ""
             g1, g2 = _extract_score_from_text(raw)
             if g1 is not None and g2 is not None:
                 home_goals = home_goals or g1
@@ -788,15 +784,12 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
             try:
                 raw = score_el.get_dom_attribute("innerHTML") or ""
             except Exception:
-                try:
-                    raw = score_el.get_dom_attribute("innerHTML") or ""
-                except Exception:
-                    raw = score_el.get_attribute("innerHTML") or ""
+                raw = ""
             if not raw:
                 try:
-                    raw = score_el.get_dom_attribute("innerText") or ""
+                    raw = score_el.get_dom_attribute("innerText") or score_el.text or ""
                 except Exception:
-                    raw = score_el.get_attribute("innerText") or ""
+                    raw = ""
             g1, g2 = _extract_score_from_text(raw)
             if g1 is not None and g2 is not None:
                 home_goals = home_goals or g1
@@ -825,9 +818,9 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
     if home_goals is None or away_goals is None:
         try:
             try:
-                raw = row.get_dom_attribute("textContent") or row.get_attribute("textContent") or ""
+                raw = row.get_dom_attribute("textContent") or row.text or ""
             except Exception:
-                raw = row.text or ""
+                raw = ""
             if raw:
                 g1, g2 = _extract_score_from_text(raw)
                 if g1 is not None and g2 is not None:
@@ -841,7 +834,7 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
         try:
             for el in row.find_elements(By.XPATH, ".//*[contains(@data-testid,'score') or contains(@data-testid,'result') or contains(@class,'score') or contains(@class,'result')]"):
                 try:
-                    raw = el.get_dom_attribute("textContent") or el.get_attribute("textContent") or el.text or ""
+                    raw = el.get_dom_attribute("textContent") or el.text or ""
                     g1, g2 = _extract_score_from_text(raw)
                     if g1 is not None and g2 is not None:
                         home_goals = home_goals or g1
@@ -856,19 +849,19 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
     if result is None and DEBUG_SCRAPE:
         try:
             try:
-                raw_text = part.get_dom_attribute("textContent") or ""
+                raw_text = part.get_dom_attribute("textContent") or part.text or ""
             except Exception:
-                raw_text = part.get_attribute("textContent") or ""
+                raw_text = ""
             try:
                 raw_html = part.get_dom_attribute("innerHTML") or ""
             except Exception:
-                raw_html = part.get_attribute("innerHTML") or ""
+                raw_html = ""
             print("🔍 DEBUG missing result; participants text:", raw_text[:400].replace("\n", " "))
             print("🔍 DEBUG missing result; participants html:", raw_html[:400].replace("\n", " "))
             try:
                 row_html = row.get_dom_attribute("innerHTML") or ""
             except Exception:
-                row_html = row.get_attribute("innerHTML") or ""
+                row_html = ""
             print("🔍 DEBUG missing result; row html:", row_html[:400].replace("\n", " "))
         except Exception:
             pass
@@ -901,9 +894,9 @@ def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str
                 txt = (cell.text or "").strip()
                 if not txt:
                     try:
-                        txt = cell.get_dom_attribute("textContent") or ""
+                        txt = cell.get_dom_attribute("textContent") or cell.text or ""
                     except Exception:
-                        txt = cell.get_attribute("textContent") or ""
+                        txt = ""
                     txt = txt.strip()
                 if txt:
                     raw_values.append(txt)
@@ -993,7 +986,7 @@ def _iter_game_rows_with_headers(driver) -> List[Tuple[Optional[str], object]]:
     current_header: Optional[str] = None
     for el in nodes:
         try:
-            dt = el.get_dom_attribute("data-testid") or el.get_attribute("data-testid")
+            dt = el.get_dom_attribute("data-testid")
         except Exception:
             dt = None
         if dt == "secondary-header":
