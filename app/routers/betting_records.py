@@ -267,9 +267,16 @@ async def create_betting_record(
                 detail=compliance_check.get("reason", "Bet limit exceeded")
             )
         
+        data = betting_record.model_dump()
+        # Use canonical match date from Odds when match_id is set so dashboard and league results page show the same date/time
+        if betting_record.match_id:
+            match = await db.get(Odds, betting_record.match_id)
+            if match and getattr(match, "date", None):
+                match_time = getattr(match, "time", None) or dt_time.min
+                data["match_date"] = datetime.combine(match.date, match_time)
         db_record = BettingRecord(
             user_id=current_user.id,
-            **betting_record.model_dump()
+            **data
         )
         db.add(db_record)
         await db.flush()  # Flush to get the ID
