@@ -131,19 +131,12 @@ async def settle_match_bets_automatically(match: Odds, db: AsyncSession):
     try:
         print(f"\n🏟️  AUTOMATIC SETTLEMENT: Processing {match.home_team} vs {match.away_team} ({match.result})")
         
-        # Find unsettled bets for this match using BULLETPROOF matching
+        # Find unsettled bets: by match_id OR by same teams (catches duplicate odds rows)
+        teams_str = f"{match.home_team} vs {match.away_team}"
         unsettled_bets_query = select(BettingRecord).where(
             and_(
                 BettingRecord.is_settled == False,
-                # BULLETPROOF: Use match_id if available, otherwise team matching
-                (BettingRecord.match_id == match.id) |
-                (
-                    and_(
-                        # Only use team matching if match_id is null AND teams match exactly
-                        BettingRecord.match_id.is_(None),
-                        BettingRecord.match_teams == f"{match.home_team} vs {match.away_team}"
-                    )
-                )
+                (BettingRecord.match_id == match.id) | (BettingRecord.match_teams == teams_str)
             )
         )
         

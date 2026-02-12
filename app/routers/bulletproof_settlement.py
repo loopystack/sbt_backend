@@ -70,19 +70,13 @@ async def run_settle_all_finished(db: AsyncSession):
                 continue
             print(f"\n🏟️  Processing match: {match.home_team} vs {match.away_team} ({match.result})")
             
-            # Find unsettled bets for this match using BULLETPROOF matching
+            # Find unsettled bets for this match: by match_id OR by same teams (match_teams).
+            # This catches bets linked to a duplicate odds row (same teams, different date) that has no result yet.
+            teams_str = f"{match.home_team} vs {match.away_team}"
             unsettled_bets_query = select(BettingRecord).where(
                 and_(
                     BettingRecord.is_settled == False,
-                    # BULLETPROOF: Use match_id if available, otherwise team matching
-                    (BettingRecord.match_id == match.id) |
-                    (
-                        and_(
-                            # Only use team matching if match_id is null AND teams match exactly
-                            BettingRecord.match_id.is_(None),
-                            BettingRecord.match_teams == f"{match.home_team} vs {match.away_team}"
-                        )
-                    )
+                    (BettingRecord.match_id == match.id) | (BettingRecord.match_teams == teams_str)
                 )
             )
             
