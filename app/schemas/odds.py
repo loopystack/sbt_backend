@@ -96,3 +96,19 @@ class SureBetsResponse(BaseModel):
     page: int
     size: int
     pages: int
+
+
+class StatisticsResponse(BaseModel):
+    bookmakers: int = Field(description="Maximum number of bookmakers offering odds for any match", ge=0)
+    sports: int = Field(description="Number of distinct sports/leagues", ge=0)
+    daily_matches: int = Field(description="Number of matches scheduled for today", ge=0)
+    
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "bookmakers": 50,
+                "sports": 25,
+                "daily_matches": 150
+            }
+        }
+    }

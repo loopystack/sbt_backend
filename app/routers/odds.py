@@ -19,6 +19,7 @@ from app.schemas.odds import (
     DroppingOddsResponse,
     SureBetItem,
     SureBetsResponse,
+    StatisticsResponse,
 )
 
 router = APIRouter()
@@ -605,6 +606,130 @@ async def get_sure_bets(
     offset = (page - 1) * size
     page_items = items[offset : offset + size]
     return SureBetsResponse(items=page_items, total=total, page=page, size=size, pages=pages)
+
+
+@router.get("/statistics")
+async def get_statistics(db: AsyncSession = Depends(get_db)):
+    """
+    Get platform statistics: bookmakers count, sports count, and daily matches count.
+    Returns real-time data from the database.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        today = datetime.now().date()
+        
+        # Get average number of bookmakers per match (more accurate than MAX)
+        # The bets column represents bookmakers offering odds per match from OddsPortal
+        # Using average gives a better representation of platform coverage
+        avg_bookmakers_query = select(func.avg(Odds.bets)).where(
+            and_(Odds.bets.isnot(None), Odds.bets > 0)
+        )
+        avg_bookmakers_result = await db.execute(avg_bookmakers_query)
+        avg_bookmakers_raw = avg_bookmakers_result.scalar()
+        
+        # Convert to float first, then int (handles Decimal/Numeric types)
+        try:
+            avg_bookmakers = float(avg_bookmakers_raw) if avg_bookmakers_raw is not None else 0.0
+        except (TypeError, ValueError):
+            avg_bookmakers = 0.0
+        
+        # Round up to nearest 10 for display (e.g., 45 -> 50, 67 -> 70)
+        if avg_bookmakers > 0:
+            bookmakers_display = int(((int(avg_bookmakers) + 9) // 10) * 10)
+        else:
+            bookmakers_display = 0
+        
+        # Count distinct leagues (sports)
+        distinct_leagues_query = select(func.count(func.distinct(Odds.league)))
+        distinct_leagues_result = await db.execute(distinct_leagues_query)
+        sports_count_raw = distinct_leagues_result.scalar()
+        
+        # Convert to int (handles Decimal/Numeric types)
+        try:
+            sports_count = int(float(sports_count_raw)) if sports_count_raw is not None else 0
+        except (TypeError, ValueError):
+            sports_count = 0
+        
+        # Count matches for today
+        today_matches_query = select(func.count(Odds.id)).where(Odds.date == today)
+        today_matches_result = await db.execute(today_matches_query)
+        daily_matches_raw = today_matches_result.scalar()
+        
+        # Convert to int (handles Decimal/Numeric types)
+        try:
+            daily_matches = int(float(daily_matches_raw)) if daily_matches_raw is not None else 0
+        except (TypeError, ValueError):
+            daily_matches = 0
+        
+        # Cap at reasonable maximum to avoid showing unrealistic numbers
+        # If > 1000, it might indicate duplicates or data issues
+        if daily_matches > 1000:
+            logger.warning(f"Daily matches count seems high: {daily_matches}. This might indicate duplicates.")
+            # Still return the actual count, but log a warning
+        
+        # Ensure all values are proper Python int types (not Decimal, not string)
+        # Convert to native Python int to avoid Pydantic validation issues
+        def ensure_int(value):
+            """Ensure value is a native Python int"""
+            if value is None:
+                return 0
+            if isinstance(value, (int, float)):
+                return int(value)
+            if isinstance(value, str):
+                try:
+                    return int(float(value))
+                except (ValueError, TypeError):
+                    return 0
+            # Handle Decimal and other numeric types
+            try:
+                return int(float(value))
+            except (ValueError, TypeError):
+                return 0
+        
+        bookmakers_final = ensure_int(bookmakers_display)
+        sports_final = ensure_int(sports_count)
+        daily_matches_final = ensure_int(daily_matches)
+        
+        # Verify types are actually int (remove assertions to avoid crashes, just log)
+        if not isinstance(bookmakers_final, int):
+            logger.warning(f"bookmakers_final is {type(bookmakers_final)}, not int. Value: {bookmakers_final}")
+            bookmakers_final = int(bookmakers_final) if bookmakers_final is not None else 0
+        if not isinstance(sports_final, int):
+            logger.warning(f"sports_final is {type(sports_final)}, not int. Value: {sports_final}")
+            sports_final = int(sports_final) if sports_final is not None else 0
+        if not isinstance(daily_matches_final, int):
+            logger.warning(f"daily_matches_final is {type(daily_matches_final)}, not int. Value: {daily_matches_final}")
+            daily_matches_final = int(daily_matches_final) if daily_matches_final is not None else 0
+        
+        logger.info(f"Statistics API called: bookmakers={bookmakers_final} (type: {type(bookmakers_final).__name__}), sports={sports_final} (type: {type(sports_final).__name__}), daily_matches={daily_matches_final} (type: {type(daily_matches_final).__name__})")
+        
+        # Final conversion to ensure native Python int types
+        final_bookmakers = int(bookmakers_final) if bookmakers_final is not None else 0
+        final_sports = int(sports_final) if sports_final is not None else 0
+        final_daily_matches = int(daily_matches_final) if daily_matches_final is not None else 0
+        
+        # Return dict directly - FastAPI will serialize it as JSON
+        # This avoids Pydantic validation issues
+        result_dict = {
+            "bookmakers": final_bookmakers,
+            "sports": final_sports,
+            "daily_matches": final_daily_matches
+        }
+        
+        logger.info(f"Returning statistics dict: {result_dict}")
+        logger.info(f"Types: bookmakers={type(final_bookmakers).__name__}, sports={type(final_sports).__name__}, daily_matches={type(final_daily_matches).__name__}")
+        
+        return result_dict
+        
+    except Exception as e:
+        logger.error(f"Error fetching statistics: {e}", exc_info=True)
+        # Return zeros on error (frontend will handle the error state)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch statistics: {str(e)}"
+        )
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)
