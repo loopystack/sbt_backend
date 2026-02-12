@@ -1249,6 +1249,8 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
     If allow_update=True, existing rows will be updated with any new non-null fields.
     Note: Since there's no unique constraint on the match columns, we check for
     existing rows before inserting to avoid duplicates.
+    
+    Also detects suspicious duplicates: same teams within 2 days (likely timezone/parsing issues).
     """
     if not values:
         return
@@ -1257,6 +1259,8 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
     filtered_values = []
     updated_count = 0
     exists_count = 0
+    suspicious_duplicates = []
+    
     with conn.cursor() as check_cur:
         # Build a query to check all rows at once using VALUES
         # This is more efficient than checking one by one
@@ -1286,6 +1290,45 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
             exists = check_cur.fetchone()[0] > 0
             
             if not exists:
+                # Check for suspicious duplicates: same teams within 2 days but different dates (likely timezone/parsing issue)
+                # Teams don't play twice in 2 days in normal leagues
+                suspicious_check_sql = SQL("""
+                    SELECT id, date, time, result FROM {table}
+                    WHERE country = %s 
+                      AND league = %s 
+                      AND season = %s 
+                      AND home_team = %s 
+                      AND away_team = %s
+                      AND date != %s
+                      AND ABS(date - %s::date) <= 2
+                """).format(table=Identifier(TABLE))
+                
+                check_cur.execute(suspicious_check_sql, (
+                    val[0], val[1], val[2], val[5], val[6], val[3], val[3]  # country, league, season, home, away, date (twice for != and ABS)
+                ))
+                suspicious = check_cur.fetchall()
+                
+                if suspicious:
+                    # Found suspicious duplicate - prefer the one with a result if available
+                    existing_with_result = [s for s in suspicious if s[3]]  # result column
+                    if existing_with_result:
+                        print(f"   ⚠️  SUSPICIOUS DUPLICATE: {val[5]} vs {val[6]} on {val[3]} {val[4]}")
+                        print(f"      Found existing match(es) within 2 days: {[(s[1], s[2], s[3]) for s in suspicious]}")
+                        print(f"      Skipping new entry (keeping existing with result)")
+                        suspicious_duplicates.append(val)
+                        continue
+                    elif val[7]:  # New entry has result, existing doesn't
+                        print(f"   ⚠️  SUSPICIOUS DUPLICATE: {val[5]} vs {val[6]} on {val[3]} {val[4]}")
+                        print(f"      Found existing match(es) without result: {[(s[1], s[2]) for s in suspicious]}")
+                        print(f"      Keeping new entry with result")
+                        # Continue to insert this one
+                    else:
+                        print(f"   ⚠️  SUSPICIOUS DUPLICATE: {val[5]} vs {val[6]} on {val[3]} {val[4]}")
+                        print(f"      Found existing match(es): {[(s[1], s[2], s[3]) for s in suspicious]}")
+                        print(f"      Both have no result - keeping first occurrence, skipping duplicate")
+                        suspicious_duplicates.append(val)
+                        continue
+                
                 filtered_values.append(val)
             elif allow_update:
                 exists_count += 1
@@ -1327,11 +1370,19 @@ def insert_rows(conn, values: List[Tuple], allow_update: bool = False):
             conn.commit()
             print(f"   🔄 Checked {exists_count} existing rows; updated {updated_count}")
         else:
-            print(f"   ⏭️  All {len(values)} rows already exist, skipping insert")
+            skipped_msg = f"All {len(values)} rows already exist"
+            if suspicious_duplicates:
+                skipped_msg += f" ({len(suspicious_duplicates)} suspicious duplicates within 2 days)"
+            print(f"   ⏭️  {skipped_msg}, skipping insert")
         return
     
-    if len(filtered_values) < len(values):
-        print(f"   📝 Inserting {len(filtered_values)} new rows (skipped {len(values) - len(filtered_values)} duplicates)")
+    skipped_total = len(values) - len(filtered_values)
+    if skipped_total > 0:
+        skipped_msg = f"Inserting {len(filtered_values)} new rows (skipped {skipped_total} duplicates"
+        if suspicious_duplicates:
+            skipped_msg += f", {len(suspicious_duplicates)} suspicious within 2 days"
+        skipped_msg += ")"
+        print(f"   📝 {skipped_msg}")
     
     sql = f"""
     INSERT INTO {TABLE}
