@@ -661,9 +661,10 @@ def _parse_date(d: Optional[str]):
 # -------------------- Other extraction helpers --------------------
 # Valid football score: each side 0-15 (reject scraper garbage like 16-384, 19-823)
 def _is_valid_football_score(g1: str, g2: str) -> bool:
+    """Reject unrealistic scores (e.g. 3-15 from time '3:15' misparsed)."""
     try:
         a, b = int(g1), int(g2)
-        return 0 <= a <= 15 and 0 <= b <= 15
+        return 0 <= a <= 10 and 0 <= b <= 10
     except (ValueError, TypeError):
         return False
 

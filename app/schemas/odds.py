@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import date, time
+from datetime import date, time as time_type
 
 
 class OddsBase(BaseModel):
     season: int
     date: date
-    time: time
+    time: Optional[time_type] = None  # nullable in DB
     home_team: str
     away_team: str
     result: Optional[str] = None

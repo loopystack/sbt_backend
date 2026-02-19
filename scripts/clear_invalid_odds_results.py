@@ -26,6 +26,7 @@ for prefix in ("postgresql+psycopg://", "postgresql+psycopg2://"):
         break
 
 def is_valid_result(result: str) -> bool:
+    """Valid = N-M with both 0-10 (realistic football). Rejects e.g. 3-15 (likely time '3:15' misparsed)."""
     if not result or not str(result).strip():
         return False
     parts = str(result).strip().split("-")
@@ -33,7 +34,8 @@ def is_valid_result(result: str) -> bool:
         return False
     try:
         a, b = int(parts[0].strip()), int(parts[1].strip())
-        return 0 <= a <= 15 and 0 <= b <= 15
+        # Cap at 10: scores > 10 are almost certainly scraper errors (e.g. time 3:15 -> 3-15)
+        return 0 <= a <= 10 and 0 <= b <= 10
     except ValueError:
         return False
 

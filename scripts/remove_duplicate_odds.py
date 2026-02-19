@@ -11,15 +11,19 @@ Examples:
   # Actually delete it
   python scripts/remove_duplicate_odds.py --country "France" --league "Ligue 1" --date 2026-02-06 --home "Metz" --away "Lille"
 
-  # Remove all duplicates (keeps one row per match: latest date/time)
+  # Remove all duplicates (keeps one row per match: latest date/time, most bookmakers)
   python scripts/remove_duplicate_odds.py --remove-all-dupes
   python scripts/remove_duplicate_odds.py --remove-all-dupes --dry-run
+
+  # Inspect why a match still shows duplicates (shows exact DB values)
+  python scripts/remove_duplicate_odds.py --inspect-match Athletico-PR Corinthians
 
 Run from project root.
 """
 import argparse
 import asyncio
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -30,6 +34,30 @@ from app.models.odds import Odds
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+async def inspect_match(db, home_pattern: str, away_pattern: str) -> None:
+    """List all rows matching home/away team (ILIKE) to debug why duplicates aren't grouped."""
+    q = (
+        select(Odds)
+        .where(
+            Odds.home_team.ilike(f"%{home_pattern}%"),
+            Odds.away_team.ilike(f"%{away_pattern}%"),
+        )
+        .order_by(Odds.date, Odds.time)
+    )
+    result = await db.execute(q)
+    rows = result.scalars().all()
+    if not rows:
+        print(f"No rows found for home~'{home_pattern}' vs away~'{away_pattern}'")
+        return
+    print(f"Found {len(rows)} row(s) for {home_pattern} vs {away_pattern}:\n")
+    for r in rows:
+        print(f"  id={r.id}  date={r.date}  time={r.time}")
+        print(f"    country={repr(r.country)}  league={repr(r.league)}  season={r.season}")
+        print(f"    home_team={repr(r.home_team)}  away_team={repr(r.away_team)}")
+        print(f"    odd_1={r.odd_1} odd_X={r.odd_X} odd_2={r.odd_2}  bets={r.bets}")
+        print()
 
 
 async def list_duplicates(db) -> None:
@@ -58,36 +86,30 @@ async def list_duplicates(db) -> None:
     print("To remove all duplicate rows (keep latest date/time per match): --remove-all-dupes")
 
 
+def _norm(s: str | None) -> str:
+    return (s or "").strip().lower()
+
+
 async def remove_all_duplicates(db, dry_run: bool) -> None:
-    """For each duplicate group (same country/league/season/home/away), keep the row with latest (date, time); delete the rest."""
-    q = (
-        select(
-            Odds.country,
-            Odds.league,
-            Odds.season,
-            Odds.home_team,
-            Odds.away_team,
-        )
-        .group_by(Odds.country, Odds.league, Odds.season, Odds.home_team, Odds.away_team)
-        .having(func.count(Odds.id) > 1)
-    )
+    """For each duplicate group (same country/league/season/home/away, normalized), keep the row with latest (date, time) and most bookmakers; delete the rest."""
+    # Fetch all odds and group in Python with normalized keys (catches case/whitespace differences)
+    q = select(Odds).order_by(Odds.date, Odds.time)
     result = await db.execute(q)
-    groups = result.all()
-    if not groups:
+    all_rows = result.scalars().all()
+    groups: dict[tuple, list] = defaultdict(list)
+    for row in all_rows:
+        # Exclude season from key: same match can be scraped with season 2025 vs 2026 (results vs next-matches)
+        key = (_norm(row.country), _norm(row.league), row.date, row.time, _norm(row.home_team), _norm(row.away_team))
+        groups[key].append(row)
+    dup_groups = [(k, v) for k, v in groups.items() if len(v) > 1]
+    if not dup_groups:
         print("No duplicate matches found. Nothing to remove.")
         return
+    print(f"Found {len(dup_groups)} match(es) with duplicate rows (using normalized country/league/teams)\n")
     total_deleted = 0
-    for g in groups:
-        rows_q = select(Odds).where(
-            Odds.country == g.country,
-            Odds.league == g.league,
-            Odds.season == g.season,
-            Odds.home_team == g.home_team,
-            Odds.away_team == g.away_team,
-        ).order_by(Odds.date.desc(), Odds.time.desc().nulls_last())
-        r = await db.execute(rows_q)
-        rows = list(r.scalars().all())
-        # keep first (latest date/time), delete the rest
+    for key, rows in dup_groups:
+        # Sort: keep latest date/time, then most bookmakers
+        rows.sort(key=lambda r: (r.date, r.time, -(r.bets or 0)), reverse=True)
         to_delete = rows[1:]
         for row in to_delete:
             print(f"  delete id={row.id} date={row.date} time={row.time} {row.home_team} vs {row.away_team}")
@@ -156,10 +178,14 @@ def main() -> None:
     p.add_argument("--home", type=str, help="Home team name")
     p.add_argument("--away", type=str, help="Away team name")
     p.add_argument("--dry-run", action="store_true", help="Only show what would be deleted")
+    p.add_argument("--inspect-match", nargs=2, metavar=("HOME", "AWAY"), help="Inspect all rows for a match (e.g. --inspect-match Athletico-PR Corinthians)")
     args = p.parse_args()
 
     async def run():
         async with AsyncSessionLocal() as db:
+            if args.inspect_match:
+                await inspect_match(db, args.inspect_match[0], args.inspect_match[1])
+                return
             if args.list_dupes:
                 await list_duplicates(db)
                 return

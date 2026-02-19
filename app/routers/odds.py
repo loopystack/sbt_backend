@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, text
+from sqlalchemy import select, func, and_, or_, case, text
 from sqlalchemy.orm import load_only
+from collections import defaultdict
 from typing import Optional, List
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import math
 
 from app.core.database import get_db
@@ -730,6 +731,204 @@ async def get_statistics(db: AsyncSession = Depends(get_db)):
             status_code=500,
             detail=f"Failed to fetch statistics: {str(e)}"
         )
+
+
+# (country_lower, league_lower) for featured / famous leagues (big 5 + other well-known)
+FEATURED_LEAGUES = [
+    ("england", "premier league"),
+    ("spain", "laliga"),
+    ("spain", "la liga"),
+    ("germany", "bundesliga"),
+    ("italy", "serie a"),
+    ("france", "ligue 1"),
+    ("brazil", "serie a betano"),
+    ("brazil", "serie a"),
+    ("portugal", "liga portugal"),
+    ("netherlands", "eredivisie"),
+    ("turkey", "super lig"),
+    ("belgium", "jupiler pro league"),
+    ("argentina", "torneo betano"),
+]
+FEATURED_LEAGUES_SET = frozenset(FEATURED_LEAGUES)
+
+# Country order for featured: Big 5 first (Premier League, La Liga, Bundesliga, Serie A, Ligue 1),
+# then other well-known countries, so we show one match from different countries / well-known teams.
+COUNTRY_PRIORITY = [
+    "england", "spain", "germany", "italy", "france",
+    "brazil", "portugal", "netherlands", "turkey", "belgium", "argentina",
+]
+# Max matches per country in featured list (ensures variety: different countries displayed)
+FEATURED_CAP_PER_COUNTRY = 2
+
+
+def _league_key(o: Odds) -> tuple:
+    """(country_lower, league_lower) for grouping."""
+    c = (o.country or "").strip().lower()
+    l = (o.league or "").strip().lower()
+    return (c, l)
+
+
+def _country_key(o: Odds) -> str:
+    """country_lower for country-based capping."""
+    return (o.country or "").strip().lower()
+
+
+def _is_featured_league(o: Odds) -> bool:
+    return _league_key(o) in FEATURED_LEAGUES_SET
+
+
+@router.get("/featured", response_model=OddsListResponse)
+async def get_featured_matches(
+    limit: int = Query(50, ge=1, le=100, description="Max number of matches to return"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get upcoming matches with variety by country. Prefer well-known leagues/teams
+    (e.g. Real Madrid, Barcelona, Premier League) when available (Big 5 first, cap
+    2 per country). If there aren't enough such matches, fill with other upcoming
+    matches also capped per country so we still show one match from different
+    countries rather than many from a single country.
+    """
+    today = datetime.now().date()
+    end_of_week = today + timedelta(days=6)
+    base_filter = and_(
+        Odds.date >= today,
+        Odds.date <= end_of_week,
+        Odds.result.is_(None),
+    )
+
+    fetch_size = min(300, max(limit * 4, 150))
+    query = (
+        select(Odds)
+        .where(base_filter)
+        .order_by(Odds.date.asc(), Odds.time.asc())
+        .limit(fetch_size)
+    )
+    count_query = select(func.count(Odds.id)).where(base_filter)
+
+    result = await db.execute(query)
+    all_odds = result.scalars().all()
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    # Split featured vs non-featured
+    featured_list: List[Odds] = []
+    non_featured_list: List[Odds] = []
+    for o in all_odds:
+        if _is_featured_league(o):
+            featured_list.append(o)
+        else:
+            non_featured_list.append(o)
+
+    # Group featured by country (already in date order within full list)
+    by_country: dict = defaultdict(list)
+    for o in featured_list:
+        by_country[_country_key(o)].append(o)
+
+    # Take up to FEATURED_CAP_PER_COUNTRY per country, in COUNTRY_PRIORITY order,
+    # so Big 5 (England, Spain, Germany, Italy, France) get slots first → well-known teams.
+    capped_featured: List[Odds] = []
+    for country in COUNTRY_PRIORITY:
+        matches = by_country.get(country, [])
+        for o in matches[:FEATURED_CAP_PER_COUNTRY]:
+            capped_featured.append(o)
+    # Any featured country not in COUNTRY_PRIORITY (e.g. typo or new country)
+    for country, matches in by_country.items():
+        if country in COUNTRY_PRIORITY:
+            continue
+        for o in matches[:FEATURED_CAP_PER_COUNTRY]:
+            capped_featured.append(o)
+
+    # Sort by date/time so display order is chronological
+    capped_featured.sort(key=lambda o: (o.date or today, o.time or ""))
+
+    # When there aren't enough well-known matches, still show one match from different
+    # countries (cap per country on non-featured too), so we don't get e.g. 9 from one country.
+    non_featured_by_country: dict = defaultdict(list)
+    for o in non_featured_list:
+        non_featured_by_country[_country_key(o)].append(o)
+    capped_non_featured: List[Odds] = []
+    for country in COUNTRY_PRIORITY:
+        for o in non_featured_by_country.get(country, [])[:FEATURED_CAP_PER_COUNTRY]:
+            capped_non_featured.append(o)
+    for country, matches in non_featured_by_country.items():
+        if country in COUNTRY_PRIORITY:
+            continue
+        for o in matches[:FEATURED_CAP_PER_COUNTRY]:
+            capped_non_featured.append(o)
+    capped_non_featured.sort(key=lambda o: (o.date or today, o.time or ""))
+
+    # Build final list: capped featured first, then capped non-featured (both varied by country)
+    combined = capped_featured + capped_non_featured
+    seen_ids = {o.id for o in combined}
+    # If we have fewer than limit (e.g. only 3 countries × 2 = 6), fill from remaining all_odds so we return 9+ when requested
+    if len(combined) < limit:
+        for o in all_odds:
+            if len(combined) >= limit:
+                break
+            if o.id not in seen_ids:
+                seen_ids.add(o.id)
+                combined.append(o)
+        combined.sort(key=lambda o: (o.date or today, o.time or ""))
+    odds = combined[:limit]
+
+    return OddsListResponse(
+        odds=odds,
+        total=total,
+        page=1,
+        size=limit,
+        pages=1 if total <= limit else math.ceil(total / limit),
+    )
+
+
+@router.get("/upcoming", response_model=OddsListResponse)
+async def get_upcoming_matches(
+    limit: int = Query(50, ge=1, le=100, description="Max number of matches to return"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get upcoming matches for the current week across all leagues and countries.
+    Returns matches from today through end of week (next 7 days) that have no result yet.
+    Ordered by date and time ascending (soonest first).
+    """
+    today = datetime.now().date()
+    # Current week: today through today + 6 days (7 days total)
+    end_of_week = today + timedelta(days=6)
+
+    query = (
+        select(Odds)
+        .where(
+            and_(
+                Odds.date >= today,
+                Odds.date <= end_of_week,
+                Odds.result.is_(None),  # Only upcoming (no result yet)
+            )
+        )
+        .order_by(Odds.date.asc(), Odds.time.asc())
+        .limit(limit)
+    )
+    count_query = (
+        select(func.count(Odds.id))
+        .where(
+            and_(
+                Odds.date >= today,
+                Odds.date <= end_of_week,
+                Odds.result.is_(None),
+            )
+        )
+    )
+    result = await db.execute(query)
+    odds = result.scalars().all()
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    return OddsListResponse(
+        odds=odds,
+        total=total,
+        page=1,
+        size=limit,
+        pages=1 if total <= limit else math.ceil(total / limit),
+    )
 
 
 @router.get("/{odds_id}", response_model=OddsResponse)
