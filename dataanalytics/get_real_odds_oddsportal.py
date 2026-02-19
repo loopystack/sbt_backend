@@ -495,6 +495,18 @@ def scroll_to_bottom_until_stable(driver, *, expected_rows_per_page=50, min_stab
             break
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(0.2)
+    
+    # Wait for odds to load (they might be loaded dynamically)
+    try:
+        WebDriverWait(driver, 5).until(
+            lambda d: d.execute_script("""
+                return document.querySelectorAll("[data-testid*='odd-container'], [class*='odd']").length > 0;
+            """)
+        )
+        time.sleep(0.5)  # Additional wait for odds to fully render
+    except Exception:
+        pass  # Continue even if odds aren't found immediately
+    
     return _row_count(driver)
 
 def locate_next_button(driver):
@@ -869,29 +881,58 @@ def extract_teams_and_result(row) -> Tuple[Optional[str], Optional[str], Optiona
     return home_name, away_name, result
 
 def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+    """
+    Extract odds (1, X, 2) and bookmakers count from a match row.
+    Uses multiple strategies to find odds, including waiting for dynamic content.
+    """
     odd_1 = odd_x = odd_2 = None
     bs_value = None
+    
+    # Strategy 1: Look for data-testid='odd-container' elements (primary method)
     try:
         odd_cells = row.find_elements(By.XPATH, ".//div[contains(@data-testid,'odd-container')]")
         def get_odd(cell):
             try:
+                # Try to find the <p> tag inside the odd-container
                 p = cell.find_element(By.XPATH, ".//p[contains(@data-testid,'odd-container')]")
-                return p.text.strip()
+                txt = p.text.strip()
+                if txt:
+                    return txt
             except Exception:
-                return None
+                pass
+            try:
+                # Fallback: get text directly from the cell
+                txt = cell.text.strip()
+                if txt:
+                    return txt
+            except Exception:
+                pass
+            try:
+                # Fallback: get textContent attribute
+                txt = cell.get_dom_attribute("textContent") or ""
+                txt = txt.strip()
+                if txt:
+                    return txt
+            except Exception:
+                pass
+            return None
+        
         if len(odd_cells) >= 1: odd_1 = get_odd(odd_cells[0])
         if len(odd_cells) >= 2: odd_x = get_odd(odd_cells[1])
         if len(odd_cells) >= 3: odd_2 = get_odd(odd_cells[2])
     except Exception:
         pass
+    
+    # Strategy 2: If primary method failed, try broader selectors
     if not any([odd_1, odd_x, odd_2]):
         try:
+            # Look for any element with 'odd' in data-testid or class
             odd_cells = row.find_elements(
                 By.XPATH,
                 ".//*[contains(@data-testid,'odd') or contains(@class,'odd') or contains(@class,'odds')]"
             )
             raw_values: List[str] = []
-            for cell in odd_cells:
+            for cell in odd_cells[:6]:  # Limit to first 6 to avoid noise
                 txt = (cell.text or "").strip()
                 if not txt:
                     try:
@@ -901,23 +942,67 @@ def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str
                     txt = txt.strip()
                 if txt:
                     raw_values.append(txt)
+            
             # Extract odds from raw text candidates (decimal or American)
             decs = []
             for txt in raw_values:
+                # Look for decimal odds (1.50, 2.10, etc.) or American odds (+150, -200)
                 for m in re.findall(r"[-+]?\d+(?:\.\d+)?", txt):
                     try:
                         val = float(m)
                     except ValueError:
                         continue
+                    # Valid odds range: 1.01 to 10000 (decimal) or -10000 to +10000 (American)
                     if 1.01 <= abs(val) <= 10000:
                         decs.append(f"{val:g}")
                 if len(decs) >= 3:
                     break
+            
             if len(decs) >= 1: odd_1 = odd_1 or decs[0]
             if len(decs) >= 2: odd_x = odd_x or decs[1]
             if len(decs) >= 3: odd_2 = odd_2 or decs[2]
         except Exception:
             pass
+    
+    # Strategy 3: JavaScript extraction fallback (for dynamically loaded odds)
+    if not any([odd_1, odd_x, odd_2]):
+        try:
+            odds_js = row._parent.execute_script("""
+                const row = arguments[0];
+                const odds = [];
+                
+                // Try multiple selectors
+                const selectors = [
+                    "div[data-testid*='odd-container'] p",
+                    "div[data-testid*='odd']",
+                    "[class*='odd']",
+                    "[class*='odds']"
+                ];
+                
+                for (const sel of selectors) {
+                    const els = row.querySelectorAll(sel);
+                    for (const el of els) {
+                        const txt = (el.textContent || el.innerText || '').trim();
+                        if (txt && /^[-+]?\\d+(\\.\\d+)?$/.test(txt)) {
+                            const val = parseFloat(txt);
+                            if (val >= 1.01 && val <= 10000) {
+                                odds.push(txt);
+                            }
+                        }
+                    }
+                    if (odds.length >= 3) break;
+                }
+                
+                return odds.slice(0, 3);
+            """, row)
+            
+            if odds_js and len(odds_js) >= 1: odd_1 = odd_1 or odds_js[0]
+            if odds_js and len(odds_js) >= 2: odd_x = odd_x or odds_js[1]
+            if odds_js and len(odds_js) >= 3: odd_2 = odd_2 or odds_js[2]
+        except Exception:
+            pass
+    
+    # Extract bookmakers count
     try:
         bs_el = row.find_element(By.XPATH, ".//div[@data-testid='bookies-amount-item']//div[contains(@class,'height-content')]")
         bs_value = bs_el.text.strip()
@@ -927,6 +1012,7 @@ def extract_odds_and_bs(row) -> Tuple[Optional[str], Optional[str], Optional[str
             bs_value = bs_el.text.strip()
         except Exception:
             pass
+    
     return odd_1, odd_x, odd_2, bs_value
 
 # -------------------- Data model --------------------
