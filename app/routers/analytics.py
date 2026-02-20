@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, and_, or_
+from sqlalchemy import select, func, desc, and_, or_, cast
+from sqlalchemy.types import Date
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
@@ -490,7 +491,8 @@ async def get_roi_dashboard(
         # Could add: ad spend, promotional costs, etc.
         
         net_profit = total_revenue - total_cost
-        roi_percentage = (net_profit / total_cost * 100) if total_cost > 0 else 0
+        # When cost is 0 but we have revenue, treat as 100% profit margin (ROI undefined but meaningful display)
+        roi_percentage = (net_profit / total_cost * 100) if total_cost > 0 else (100.0 if total_revenue > 0 else 0.0)
         
         # ROI by source (from conversion events and page views)
         roi_by_source = {}
@@ -511,24 +513,22 @@ async def get_roi_dashboard(
                     source_revenue[source] = 0.0
                 source_revenue[source] += float(conv.value or 0)
             
-            # Calculate ROI for each source
+            # If no conversion events, show platform revenue as "direct" when we have revenue (e.g. from betting)
+            if not source_revenue and total_revenue > 0:
+                source_revenue["direct"] = total_revenue
+            
+            # Calculate ROI for each source; when cost is 0, use 100% (profit margin)
             for source, revenue in source_revenue.items():
                 cost = 0  # Simplified - in production, track cost per source
-                # Since cost tracking isn't implemented, show revenue instead of ROI
-                # ROI would be infinite/undefined when cost is 0, so we'll use revenue as a proxy
-                # In production, you'd track actual marketing costs per source
                 if cost > 0:
                     roi = ((revenue - cost) / cost * 100)
                     roi_by_source[source] = round(roi, 2)
-                else:
-                    # When cost is 0, we can't calculate ROI, so skip or use revenue as metric
-                    # For now, skip sources without cost tracking
-                    pass
+                elif revenue > 0:
+                    roi_by_source[source] = 100.0  # 100% profit margin when no cost
         except Exception as e:
             print(f"Error calculating ROI by source: {e}")
             import traceback
             traceback.print_exc()
-            # Return empty dict if there's an error
             roi_by_source = {}
         
         # ROI by campaign (from referrals)
@@ -554,42 +554,56 @@ async def get_roi_dashboard(
             print(f"Error calculating ROI by campaign: {e}")
             pass
         
-        # Daily ROI trend (simplified - calculate daily for last N days)
+        # Daily ROI trend: two batched queries (by day) instead of 2*N per-day queries
+        end_date = start_date + timedelta(days=days)
+        day_rev_query = select(
+            cast(BettingRecord.created_at, Date).label("day"),
+            func.sum(func.abs(BettingRecord.actual_profit)).label("revenue"),
+        ).where(
+            and_(
+                BettingRecord.created_at >= start_date,
+                BettingRecord.created_at < end_date,
+                BettingRecord.is_settled == True,
+                BettingRecord.actual_profit < 0,
+            )
+        ).group_by(cast(BettingRecord.created_at, Date))
+        day_rev_result = await db.execute(day_rev_query)
+        daily_revenue = {}
+        for row in day_rev_result.all():
+            k = row.day.isoformat() if hasattr(row.day, "isoformat") else str(row.day)
+            daily_revenue[k] = float(row.revenue or 0)
+
+        day_cost_query = select(
+            cast(AffiliateCommission.created_at, Date).label("day"),
+            func.sum(AffiliateCommission.commission_amount).label("cost"),
+        ).where(
+            and_(
+                AffiliateCommission.created_at >= start_date,
+                AffiliateCommission.created_at < end_date,
+                AffiliateCommission.status.in_(["approved", "paid"]),
+            )
+        ).group_by(cast(AffiliateCommission.created_at, Date))
+        day_cost_result = await db.execute(day_cost_query)
+        daily_cost = {}
+        for row in day_cost_result.all():
+            k = row.day.isoformat() if hasattr(row.day, "isoformat") else str(row.day)
+            daily_cost[k] = float(row.cost or 0)
+
         daily_roi_trend = []
         for i in range(days):
-            day_date = start_date + timedelta(days=i)
-            day_end = day_date + timedelta(days=1)
-            
-            day_revenue_query = select(func.sum(func.abs(BettingRecord.actual_profit))).where(
-                and_(
-                    BettingRecord.created_at >= day_date,
-                    BettingRecord.created_at < day_end,
-                    BettingRecord.is_settled == True,
-                    BettingRecord.actual_profit < 0
-                )
-            )
-            day_revenue_result = await db.execute(day_revenue_query)
-            day_revenue = float(day_revenue_result.scalar() or 0)
-            
-            day_cost_query = select(func.sum(AffiliateCommission.commission_amount)).where(
-                and_(
-                    AffiliateCommission.created_at >= day_date,
-                    AffiliateCommission.created_at < day_end,
-                    AffiliateCommission.status.in_(["approved", "paid"])
-                )
-            )
-            day_cost_result = await db.execute(day_cost_query)
-            day_cost = float(day_cost_result.scalar() or 0)
-            
-            day_roi = ((day_revenue - day_cost) / day_cost * 100) if day_cost > 0 else 0
-            
+            day_dt = start_date + timedelta(days=i)
+            day_date = day_dt.date() if hasattr(day_dt, "date") else day_dt
+            day_iso = day_date.isoformat() if hasattr(day_date, "isoformat") else str(day_date)
+            day_revenue = daily_revenue.get(day_iso, 0.0)
+            day_cost = daily_cost.get(day_iso, 0.0)
+            day_roi = ((day_revenue - day_cost) / day_cost * 100) if day_cost > 0 else (100.0 if day_revenue > 0 else 0.0)
             daily_roi_trend.append({
-                "date": day_date.isoformat(),
+                "date": day_iso,
                 "revenue": day_revenue,
                 "cost": day_cost,
-                "roi": round(day_roi, 2)
+                "roi": round(day_roi, 2),
             })
-    
+
         return ROIMetrics(
             total_revenue=total_revenue,
             total_cost=total_cost,

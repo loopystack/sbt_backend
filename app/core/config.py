@@ -112,6 +112,8 @@ class Settings(BaseSettings):
 
     # Admin Security Configuration
     ADMIN_IP_ALLOWLIST: Optional[str] = None  # Comma-separated IPs, e.g., "192.168.1.100,10.0.0.1"
+    # Emails that are always treated as admin (e.g. for testing). Still requires valid auth; overrides is_superuser if not set in DB.
+    ADMIN_EMAILS: Optional[str] = None  # Comma-separated, e.g. "adminuser@gmail.com"
 
     # Environment-Specific Features
     ALLOW_ADMIN_SIMULATION: bool = True  # Allow admin deposit/withdrawal simulation (staging only)
