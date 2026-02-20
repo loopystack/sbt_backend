@@ -330,6 +330,26 @@ def _revenue_report_to_dict(r):
     }
 
 
+def _computed_report_to_dict(data: dict):
+    """Build API dict from compute_for_date() result (no id/created_at)."""
+    return {
+        "id": None,
+        "report_date": data["report_date"].isoformat() if data.get("report_date") else None,
+        "asset": data.get("asset", "USDT"),
+        "total_staked": float(data.get("total_staked", 0)),
+        "losing_stakes": float(data.get("losing_stakes", 0)),
+        "winning_profit_paid": float(data.get("winning_profit_paid", 0)),
+        "ggr": float(data.get("ggr", 0)),
+        "bonuses": float(data.get("bonuses", 0)),
+        "fees": float(data.get("fees", 0)),
+        "ngr": float(data.get("ngr", 0)),
+        "total_deposited_onchain": float(data.get("total_deposited_onchain", 0)),
+        "total_withdrawn_onchain": float(data.get("total_withdrawn_onchain", 0)),
+        "net_inflow": float(data.get("net_inflow", 0)),
+        "created_at": None,
+    }
+
+
 @router.get("/revenue-report")
 async def get_revenue_report(
     report_date: date = Query(..., description="Date (YYYY-MM-DD)"),
@@ -354,12 +374,26 @@ async def list_revenue_reports(
     db: AsyncSession = Depends(get_db),
     admin_user: User = Depends(get_current_superuser),
 ):
-    """List daily revenue reports in date range (newest first)."""
-    reports = await revenue_report_service.get_reports(
-        from_date, to_date, asset, limit, offset, db
+    """List daily revenue reports in date range (newest first). Fills missing dates from ledger."""
+    # All dates in range, newest first
+    num_days = (to_date - from_date).days + 1
+    all_dates = [to_date - timedelta(days=i) for i in range(num_days)]
+    # Stored reports in range
+    stored = await revenue_report_service.get_reports(
+        from_date, to_date, asset, limit=num_days, offset=0, db=db
     )
+    stored_by_date = {r.report_date: r for r in stored}
+    # Build list: use stored when present, else compute from ledger
+    combined = []
+    for d in all_dates:
+        if d in stored_by_date:
+            combined.append(_revenue_report_to_dict(stored_by_date[d]))
+        else:
+            data = await revenue_report_service.compute_for_date(d, asset, db)
+            combined.append(_computed_report_to_dict(data))
+    paginated = combined[offset : offset + limit]
     return {
-        "reports": [_revenue_report_to_dict(r) for r in reports],
+        "reports": paginated,
         "from_date": from_date.isoformat(),
         "to_date": to_date.isoformat(),
         "asset": asset,

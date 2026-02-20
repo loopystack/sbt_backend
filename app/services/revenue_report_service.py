@@ -22,6 +22,13 @@ def _day_bounds(d: date):
     return start, end
 
 
+def _range_bounds(from_date: date, to_date: date):
+    """Return (start_utc, end_utc) for the given date range in UTC."""
+    start = datetime(from_date.year, from_date.month, from_date.day, 0, 0, 0, tzinfo=timezone.utc)
+    end = datetime(to_date.year, to_date.month, to_date.day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+    return start, end
+
+
 class RevenueReportService:
     """Compute and store daily GGR/NGR and cashflow from ledger."""
 
@@ -191,44 +198,82 @@ class RevenueReportService:
         return list(result.scalars().all())
 
     @staticmethod
+    async def compute_summary_for_range(
+        from_date: date,
+        to_date: date,
+        asset: str,
+        db: AsyncSession,
+    ) -> dict:
+        """
+        Compute GGR/NGR and cashflow summary directly from wallet_transactions
+        for the given date range (live data, does not depend on stored reports).
+        """
+        start_utc, end_utc = _range_bounds(from_date, to_date)
+
+        q = select(
+            WalletTransaction.type,
+            func.coalesce(func.sum(WalletTransaction.amount), 0).label("total"),
+        ).where(
+            and_(
+                WalletTransaction.asset == asset,
+                WalletTransaction.created_at >= start_utc,
+                WalletTransaction.created_at <= end_utc,
+            )
+        ).group_by(WalletTransaction.type)
+
+        result = await db.execute(q)
+        rows = {r.type: r.total for r in result.all()}
+
+        def _get(t: WalletTransactionType) -> Decimal:
+            return Decimal(str(rows.get(t, 0) or 0))
+
+        total_staked = _get(WalletTransactionType.BET_LOCK)
+        losing_stakes = _get(WalletTransactionType.BET_LOSS_DEDUCT)
+        win_deduct_stake = _get(WalletTransactionType.BET_WIN_DEDUCT_STAKE)
+        win_payout = _get(WalletTransactionType.BET_WIN_PAYOUT_CREDIT)
+        losing_stakes += _get(WalletTransactionType.BET_LOSS) + _get(WalletTransactionType.BET_DEBIT)
+        win_payout += _get(WalletTransactionType.BET_WIN) + _get(WalletTransactionType.BET_PAYOUT)
+
+        winning_profit_paid = win_payout - win_deduct_stake
+        if winning_profit_paid < 0:
+            winning_profit_paid = Decimal("0")
+
+        ggr = losing_stakes - winning_profit_paid
+        ngr = ggr - Decimal("0") - Decimal("0")
+
+        total_deposited_onchain = _get(WalletTransactionType.DEPOSIT_CREDIT)
+        total_withdrawn_onchain = _get(WalletTransactionType.WITHDRAWAL_DEBIT)
+        net_inflow = total_deposited_onchain - total_withdrawn_onchain
+
+        return {
+            "total_staked": total_staked,
+            "losing_stakes": losing_stakes,
+            "winning_profit_paid": winning_profit_paid,
+            "ggr": ggr,
+            "ngr": ngr,
+            "total_deposited_onchain": total_deposited_onchain,
+            "total_withdrawn_onchain": total_withdrawn_onchain,
+            "net_inflow": net_inflow,
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
+            "asset": asset,
+        }
+
+    @staticmethod
     async def get_summary(
         from_date: date,
         to_date: date,
         asset: str = "USDT",
         db: AsyncSession = None,
     ) -> dict:
-        """Aggregate totals over date range from stored reports."""
-        stmt = select(
-            func.coalesce(func.sum(DailyRevenueReport.total_staked), 0).label("total_staked"),
-            func.coalesce(func.sum(DailyRevenueReport.losing_stakes), 0).label("losing_stakes"),
-            func.coalesce(func.sum(DailyRevenueReport.winning_profit_paid), 0).label("winning_profit_paid"),
-            func.coalesce(func.sum(DailyRevenueReport.ggr), 0).label("ggr"),
-            func.coalesce(func.sum(DailyRevenueReport.ngr), 0).label("ngr"),
-            func.coalesce(func.sum(DailyRevenueReport.total_deposited_onchain), 0).label("total_deposited_onchain"),
-            func.coalesce(func.sum(DailyRevenueReport.total_withdrawn_onchain), 0).label("total_withdrawn_onchain"),
-            func.coalesce(func.sum(DailyRevenueReport.net_inflow), 0).label("net_inflow"),
-        ).where(
-            and_(
-                DailyRevenueReport.report_date >= from_date,
-                DailyRevenueReport.report_date <= to_date,
-                DailyRevenueReport.asset == asset,
-            )
+        """
+        Return aggregated totals over date range.
+        Uses live data from wallet_transactions so the summary is correct
+        even when no stored reports exist.
+        """
+        return await RevenueReportService.compute_summary_for_range(
+            from_date, to_date, asset, db
         )
-        result = await db.execute(stmt)
-        row = result.one()
-        return {
-            "total_staked": row.total_staked,
-            "losing_stakes": row.losing_stakes,
-            "winning_profit_paid": row.winning_profit_paid,
-            "ggr": row.ggr,
-            "ngr": row.ngr,
-            "total_deposited_onchain": row.total_deposited_onchain,
-            "total_withdrawn_onchain": row.total_withdrawn_onchain,
-            "net_inflow": row.net_inflow,
-            "from_date": from_date.isoformat(),
-            "to_date": to_date.isoformat(),
-            "asset": asset,
-        }
 
 
 revenue_report_service = RevenueReportService()

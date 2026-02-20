@@ -60,8 +60,16 @@ class TronSendService:
         
         # Load private key (never log this!)
         try:
-            # Private key should be in hex format
-            self._private_key = PrivateKey(bytes.fromhex(self.hot_wallet_private_key))
+            # Private key must be hex (64 chars). Strip whitespace and optional 0x prefix.
+            key_str = (self.hot_wallet_private_key or "").strip()
+            if key_str.lower().startswith("0x"):
+                key_str = key_str[2:]
+            if not key_str or not all(c in "0123456789abcdefABCDEF" for c in key_str):
+                raise ValueError(
+                    "TRON_HOT_WALLET_PRIVATE_KEY must be a 64-character hex string "
+                    "(optionally with 0x prefix). Check for extra spaces, quotes, or wrong format."
+                )
+            self._private_key = PrivateKey(bytes.fromhex(key_str))
             # Verify the address matches
             expected_address = self._private_key.public_key.to_base58check_address()
             if expected_address != self.hot_wallet_address:
